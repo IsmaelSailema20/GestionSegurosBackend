@@ -3,17 +3,24 @@ package com.app.seguros.AplicacionSeguros.Auth.Jwt;
 import com.app.seguros.AplicacionSeguros.Auth.AuthResponse;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoUnit.YEARS;
 
 @Service
 public class JwtService {
@@ -52,13 +59,18 @@ public class JwtService {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    private Claims getAllClaims(String token){
-        return Jwts.parser()
-                .setSigningKey(getKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    private Claims getAllClaims(String token) {
+        try {
+            return Jwts.parser()
+                    .setSigningKey(getKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException ex) {
+            return ex.getClaims();
+        }
     }
+
     public <T> T getClaim(String token, Function<Claims,T> claimsResolver){
         final Claims claims=getAllClaims(token);
         return claimsResolver.apply(claims);

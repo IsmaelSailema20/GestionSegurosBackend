@@ -23,9 +23,6 @@ public class UsuariosController {
 
     @PostMapping("/guardar")
     public ResponseEntity<?> postUsuario(@RequestBody UsuarioCrearRequest usuario){
-        if(usuario==null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuario nulo");
-        }
         try {
             Usuario u=usuarioService.register(usuario);
             return ResponseEntity.created(new URI("/Usuarios/"+u.getID_Usuario())).body(u);

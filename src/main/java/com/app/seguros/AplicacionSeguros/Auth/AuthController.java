@@ -17,7 +17,7 @@ public class AuthController {
         try{
             return ResponseEntity.ok(authService.login(request));
         }catch (RuntimeException e){
-            return ResponseEntity.internalServerError().body("Mal Autenticacion");
+            return ResponseEntity.internalServerError().body("Error: "+e.getMessage());
         }
     }
 
