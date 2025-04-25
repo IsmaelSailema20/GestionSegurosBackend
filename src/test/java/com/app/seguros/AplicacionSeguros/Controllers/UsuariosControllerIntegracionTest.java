@@ -8,12 +8,16 @@ import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @TestPropertySource(locations = "classpath:application-test.properties")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class UsuariosControllerIntegracionTest {
 
     @Autowired
@@ -53,7 +56,7 @@ class UsuariosControllerIntegracionTest {
     }
 
     private String token="";
-
+    private int idGenerado=0;
 
     @BeforeEach
     void setUp(){
@@ -64,10 +67,9 @@ class UsuariosControllerIntegracionTest {
                 .apellido("apellido")
                 .estado(Estado.Activo)
                 .email("email")
-                //.ID_Usuario(1)
                 .contraseña(passwordEncoder.encode("contraseña"))
                 .build();
-        System.out.println(usuariosRepository.save(u).getID_Usuario());
+        idGenerado=usuariosRepository.save(u).getID_Usuario();
 
         Usuario u1= Usuario.builder()
                 .rol(Rol.Administrador)
@@ -75,10 +77,9 @@ class UsuariosControllerIntegracionTest {
                 .apellido("apellido1")
                 .estado(Estado.Activo)
                 .email("email1")
-                //.ID_Usuario(2)
                 .contraseña(passwordEncoder.encode("contraseña1"))
                 .build();
-        System.out.println(usuariosRepository.save(u1).getID_Usuario());
+        usuariosRepository.save(u1);
         JwtService jwtService=new JwtService();
         token= jwtService.getToken(u);
     }
@@ -116,12 +117,11 @@ class UsuariosControllerIntegracionTest {
 
 
     @Test
-    @Order(1)
     void getById() throws  Exception{
-        mockMvc.perform(get("/Usuarios/2")
+        mockMvc.perform(get("/Usuarios/"+idGenerado)
                         .header("Authorization","Bearer "+token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("nombre1"));
+                .andExpect(jsonPath("$.nombre").value("nombre"));
 
     }
 
@@ -134,9 +134,8 @@ class UsuariosControllerIntegracionTest {
     }
 
     @Test
-    @Order(2)
     void deleteById() throws Exception{
-        mockMvc.perform(delete("/Usuarios/3")
+        mockMvc.perform(delete("/Usuarios/"+idGenerado)
                         .header("Authorization","Bearer "+token))
                 .andExpect(status().isOk());
     }
