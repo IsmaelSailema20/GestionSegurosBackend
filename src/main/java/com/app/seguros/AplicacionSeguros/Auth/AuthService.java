@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +23,16 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
 
     public AuthResponse login(LoginRequest request) {
+        try {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
-        UserDetails user=usuariosRepository.findByEmail(request.getEmail()).orElseThrow();
-        String token= jwtService.getToken(user);
+        Usuario usuario=usuariosRepository.findByEmail(request.getEmail()).orElseThrow();
+        String token= jwtService.getToken(usuario);
         return AuthResponse.builder()
                 .token(token)
                 .build();
+        } catch (AuthenticationException | NullPointerException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
