@@ -5,9 +5,11 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -31,6 +34,8 @@ class TokenUnitariasTest {
     private MockMvc mockMvc;
     @MockBean
     private UsuarioService usuarioService;
+    @MockBean
+    private UsuariosRepository usuariosRepository;
 
     private ObjectMapper objectMapper=new ObjectMapper();
 
@@ -52,6 +57,11 @@ class TokenUnitariasTest {
     static void generarToken(){
         JwtService jwtService=new JwtService();
         token= jwtService.getToken(create(1));
+    }
+
+    @BeforeEach
+    void setup(){
+        when(usuariosRepository.findByEmail(anyString())).thenReturn(Optional.of(create(1)));
     }
 
     @Test

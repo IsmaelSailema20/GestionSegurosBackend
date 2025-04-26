@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authRequest->
                         authRequest.requestMatchers("/login").permitAll()
                                 .requestMatchers("/dev/inicio/**").hasAuthority("Administrador")
-                                .requestMatchers("/Usuarios").hasAnyAuthority("Administrador","Agente")
+                                .requestMatchers("/Usuarios").hasAuthority("Administrador")
                                 .requestMatchers("/Usuarios/**").hasAuthority("Administrador")
                                 .anyRequest().authenticated()
                         )
