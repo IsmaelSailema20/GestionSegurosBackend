@@ -33,7 +33,7 @@ public class Cliente {
     private String telefono;
 
     @Column(nullable = false,length = 100,unique = true)
-    private String emial;
+    private String email;
 
     @Column(nullable = false,length = 20)
     private String genero;
