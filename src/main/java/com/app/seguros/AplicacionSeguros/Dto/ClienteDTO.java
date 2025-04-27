@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -35,8 +36,9 @@ public class ClienteDTO {
     @Size(max = 10, message = "La cedula no deebe tener mas de 10 caracteres")
     private String cedula;
 
-    @NotBlank(message = "La fecha de nacimeinto es obligatoria")
+    //@NotBlank(message = "La fecha de nacimeinto es obligatoria")
     @Past(message = "La fecha de nacimiento debe ser en el pasado")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date fecha_nacimiento;
 
     @Nonnull

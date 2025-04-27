@@ -32,10 +32,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authRequest->
                         authRequest.requestMatchers("/login").permitAll()
-                                .requestMatchers("/dev/inicio/**").hasAuthority("Administrador")
                                 .requestMatchers("/Usuarios").hasAuthority("Administrador")
                                 .requestMatchers("/Usuarios/**").hasAuthority("Administrador")
-                                .requestMatchers("/Clientes").hasAuthority("Administrador")
+                                .requestMatchers("/Clientes").hasAnyAuthority("Administrador","Agente")
                                 .requestMatchers("/Clientes/**").hasAuthority("Administrador")
                                 .anyRequest().authenticated()
                         )
