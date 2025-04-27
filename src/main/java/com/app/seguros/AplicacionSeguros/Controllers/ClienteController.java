@@ -17,8 +17,12 @@ public class ClienteController {
     private ClienteService clienteService;
 
     @PostMapping
-    public ResponseEntity<ClienteDTO> saveCliente(@Valid @RequestBody ClienteDTO clienteDTO){
-        return ResponseEntity.ok(clienteService.saveCliente(clienteDTO));
+    public ResponseEntity<?> saveCliente(@Valid @RequestBody ClienteDTO clienteDTO){
+        try {
+            return ResponseEntity.ok(clienteService.saveCliente(clienteDTO));
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
