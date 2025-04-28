@@ -1,0 +1,154 @@
+package com.app.seguros.AplicacionSeguros.Controllers;
+
+import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Entities.Cliente;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.app.seguros.AplicacionSeguros.Entities.Usuario;
+import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Services.ClienteService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+class ClienteControllerUnitariasTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ClienteService clienteService;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    private String token = "";
+
+    private ClienteDTO createDTO(Long id) {
+        ClienteDTO dto = new ClienteDTO(Estado.Activo);
+        dto.setId_Cliente(id);
+        dto.setNombre("Juan");
+        dto.setApellido("Pérez");
+        dto.setCedula("1234567890");
+        dto.setDireccion("Calle Principal 123");
+        dto.setTelefono("987654321");
+        dto.setEmail("juan.perez@example.com");
+        dto.setGenero("Masculino");
+        dto.setFecha_nacimiento(new Date(1990 - 1900, 5 - 1, 15));
+        dto.setEstado(Estado.Activo);
+        return dto;
+    }
+
+    private Usuario createUsuario(int id) {
+        Usuario u = new Usuario();
+        u.setID_Usuario(id);
+        u.setApellido("apellido");
+        u.setContraseña("contraseña");
+        u.setNombre("nombre");
+        u.setEstado(Estado.Activo);
+        u.setEmail("email");
+        u.setRol(Rol.Administrador);
+        return u;
+    }
+
+    @BeforeEach
+    void setUpSecurity() {
+        Usuario u = createUsuario(1);
+        JwtService jwtService = new JwtService();
+        token = jwtService.getToken(u);
+    }
+
+    @Test
+    void saveCliente() throws Exception {
+        ClienteDTO dto = createDTO(null);
+        ClienteDTO savedDto = createDTO(1L);
+        when(clienteService.saveCliente(any(ClienteDTO.class))).thenReturn(savedDto);
+
+        mockMvc.perform(post("/Clientes")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id_Cliente").value(1L));
+    }
+
+    @Test
+    void saveClienteException() throws Exception {
+        ClienteDTO dto = createDTO(null);
+        when(clienteService.saveCliente(any(ClienteDTO.class))).thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(post("/Clientes")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void getClienteById() throws Exception {
+        ClienteDTO dto = createDTO(1L);
+        when(clienteService.getCliente(anyLong())).thenReturn(Optional.of(dto));
+
+        mockMvc.perform(get("/Clientes/1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Juan"));
+    }
+
+    @Test
+    void getClienteByIdNotFound() throws Exception {
+        when(clienteService.getCliente(anyLong())).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/Clientes/1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAllClientes() throws Exception {
+        List<ClienteDTO> clientes = List.of(createDTO(1L), createDTO(2L));
+        when(clienteService.getAllClientes()).thenReturn(clientes);
+
+        mockMvc.perform(get("/Clientes")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void updateCliente() throws Exception {
+        ClienteDTO dto = createDTO(1L);
+        when(clienteService.updateCliente(anyLong(), any(ClienteDTO.class))).thenReturn(dto);
+
+        mockMvc.perform(put("/Clientes/1")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id_Cliente").value(1L));
+    }
+
+    @Test
+    void deleteCliente() throws Exception {
+        doNothing().when(clienteService).deleteCliente(anyLong());
+
+        mockMvc.perform(delete("/Clientes/1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+}
