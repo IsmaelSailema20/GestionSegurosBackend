@@ -1,7 +1,9 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
-import com.app.seguros.AplicacionSeguros.Entities.Seguro;
+import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
 import com.app.seguros.AplicacionSeguros.Services.SeguroService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,40 +11,40 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/Seguros")
-@CrossOrigin(origins = "*")
 public class SeguroController {
 
-    private final SeguroService seguroService;
+    @Autowired
+    private SeguroService seguroService;
 
-    public SeguroController(SeguroService seguroService) {
-        this.seguroService = seguroService;
-    }
-
-    @GetMapping
-    public List<Seguro> listar() {
-        return seguroService.getAll();
+    @PostMapping
+    public ResponseEntity<?> saveSeguro(@Valid @RequestBody SeguroDTO seguroDTO) {
+        try {
+            return ResponseEntity.ok(seguroService.saveSeguro(seguroDTO));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Seguro> obtener(@PathVariable Integer id) {
-        return seguroService.getAllById(id)
+    public ResponseEntity<SeguroDTO> getSeguroById(@PathVariable Integer id) {
+        return seguroService.getSeguro(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Seguro> create(@RequestBody Seguro seguro) {
-        return ResponseEntity.ok(seguroService.create(seguro));
+    @GetMapping
+    public ResponseEntity<List<SeguroDTO>> getAllSeguros() {
+        return ResponseEntity.ok(seguroService.getAllSeguros());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Seguro> update(@PathVariable Integer id, @RequestBody Seguro seguro) {
-        return ResponseEntity.ok(seguroService.update(id, seguro));
+    public ResponseEntity<SeguroDTO> updateSeguro(@PathVariable Integer id, @Valid @RequestBody SeguroDTO seguroDTO) {
+        return ResponseEntity.ok(seguroService.updateSeguro(id, seguroDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        seguroService.delete(id);
+    public ResponseEntity<Void> deleteSeguro(@PathVariable Integer id) {
+        seguroService.deleteSeguro(id);
         return ResponseEntity.noContent().build();
     }
 }
