@@ -10,6 +10,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Seguro {
 
     @Id
@@ -23,13 +24,13 @@ public class Seguro {
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 250)
     private String descripcion;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 250)
     private String cobertura;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 250)
     private String beneficios;
 
     private Double precio;
