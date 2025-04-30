@@ -6,6 +6,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.SeguroService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class SeguroControllerUnitariasTest {
 
     @MockBean
     private SeguroService seguroService;
+
+    @MockBean
+    private UsuariosRepository usuariosRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -68,6 +72,7 @@ class SeguroControllerUnitariasTest {
         Usuario u = createUsuario(1);
         JwtService jwtService = new JwtService();
         token = jwtService.getToken(u);
+        when(usuariosRepository.findByEmail(anyString())).thenReturn(Optional.of(u));
     }
 
     @Test

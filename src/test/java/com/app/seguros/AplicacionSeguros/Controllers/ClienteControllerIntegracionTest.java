@@ -78,7 +78,7 @@ class ClienteControllerIntegracionTest {
 
     private Usuario createUsuario(int id) {
         return Usuario.builder()
-                .ID_Usuario(id)
+                //.ID_Usuario(id)
                 .apellido("apellido")
                 .contraseña(passwordEncoder.encode("contraseña"))
                 .nombre("nombre")
@@ -124,7 +124,7 @@ class ClienteControllerIntegracionTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(""))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test

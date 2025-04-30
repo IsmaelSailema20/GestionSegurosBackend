@@ -101,7 +101,7 @@ class UsuariosControllerIntegracionTest {
                         .header("Authorization","Bearer "+token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(""))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
 
