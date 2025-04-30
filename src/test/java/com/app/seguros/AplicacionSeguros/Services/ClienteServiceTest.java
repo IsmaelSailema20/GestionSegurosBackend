@@ -122,20 +122,51 @@ class ClienteServiceUnitariasTest {
     void updateCliente() {
         Cliente cliente = createEntity(1L);
         ClienteDTO dto = createDTO(1L);
+
         // Cambiar cédula y email para que se ejecuten las validaciones
-        dto.setCedula("1122334455"); // Diferente a "1234567890"
-        dto.setEmail("updated.client@example.com"); // Diferente a "juan.perez@example.com"
+        dto.setNombre("1122334455"); // Diferente a "1234567890"
+        dto.setApellido("updated.client@example.com"); // Diferente a "juan.perez@example.com"
         when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.empty());
-        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
 
         ClienteDTO result = clienteService.updateCliente(1L, dto);
         assertEquals(1L, result.getId_Cliente());
         verify(clienteRepository, times(1)).findById(anyLong());
-        verify(clienteRepository, times(1)).findByCedula(anyString());
-        verify(clienteRepository, times(1)).findByEmail(anyString());
         verify(clienteRepository, times(1)).save(any(Cliente.class));
+    }
+
+    @Test
+    void updateClienteCedulaModificada() {
+        Cliente cliente = createEntity(1L);
+        ClienteDTO dto = createDTO(1L);
+        dto.setCedula("cedulaCambiada");
+        // Cambiar cédula y email para que se ejecuten las validaciones
+        dto.setCedula("1122334455"); // Diferente a "1234567890"
+        dto.setEmail("updated.client@example.com"); // Diferente a "juan.perez@example.com"
+        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.of(cliente));
+
+
+        assertThrows(RuntimeException.class,() -> {
+            ClienteDTO result = clienteService.updateCliente(1L, dto);
+        });
+
+    }
+    @Test
+    void updateClienteEmailModificado() {
+        Cliente cliente = createEntity(1L);
+        ClienteDTO dto = createDTO(1L);
+        dto.setEmail("emailCodificado");
+        // Cambiar cédula y email para que se ejecuten las validaciones
+        dto.setCedula("1122334455"); // Diferente a "1234567890"
+        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.of(cliente));
+
+
+        assertThrows(RuntimeException.class,() -> {
+            ClienteDTO result = clienteService.updateCliente(1L, dto);
+        });
     }
 
     @Test
