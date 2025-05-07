@@ -47,13 +47,13 @@ class CondicionMedicaServiceUnitariasTest {
     @Test
     void testGetById() {
         CondicionMedica cm = new CondicionMedica();
-        cm.setID_Condicion(1);
+        cm.setId_condicion(1);
         when(repository.findById(1)).thenReturn(Optional.of(cm));
 
         CondicionMedica result = service.getById(1);
 
         assertNotNull(result);
-        assertEquals(1, result.getID_Condicion());
+        assertEquals(1, result.getId_condicion());
         verify(repository).findById(1);
     }
 
@@ -63,10 +63,10 @@ class CondicionMedicaServiceUnitariasTest {
                 new java.sql.Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000) // +30 días
         );
         CondicionMedica cm = CondicionMedica.builder()
-                .Diagnostico(post.getDiagnostico())
-                .ID_Cliente(post.getID_Cliente())
-                .FechaDesde(post.getFechaDesde())
-                .FechaHasta(post.getFechaHasta())
+                .diagnostico(post.getDiagnostico())
+                .id_cliente(post.getId_cliente())
+                .fechaDesde(post.getFechaDesde())
+                .fechaHasta(post.getFechaHasta())
                 .build();
 
         when(repository.save(any(CondicionMedica.class))).thenReturn(cm);
@@ -80,12 +80,12 @@ class CondicionMedicaServiceUnitariasTest {
     @Test
     void testPut() {
         CondicionMedica cm = new CondicionMedica();
-        cm.setID_Condicion(1);
+        cm.setId_condicion(1);
         when(repository.save(cm)).thenReturn(cm);
 
         CondicionMedica result = service.put(cm);
 
-        assertEquals(1, result.getID_Condicion());
+        assertEquals(1, result.getId_condicion());
         verify(repository).save(cm);
     }
 

@@ -83,7 +83,7 @@ class CondicionMedicaControllerUnitariasTest {
         @Test
         void getByIdFound() throws Exception {
             CondicionMedica cm = new CondicionMedica();
-            cm.setID_Condicion(1);
+            cm.setId_condicion(1);
             cm.setDiagnostico("Dolor de cabeza");
             when(condicionMedicaService.getById(1)).thenReturn(cm);
 
@@ -123,7 +123,7 @@ class CondicionMedicaControllerUnitariasTest {
         @Test
         void putCondicion() throws Exception {
             CondicionMedica cm = new CondicionMedica();
-            cm.setID_Condicion(1);
+            cm.setId_condicion(1);
             cm.setDiagnostico("Actualizado");
 
             when(condicionMedicaService.put(any())).thenReturn(cm);

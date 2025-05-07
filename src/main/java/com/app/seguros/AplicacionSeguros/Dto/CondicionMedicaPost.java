@@ -1,6 +1,8 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,11 +15,11 @@ import java.util.Date;
 @NoArgsConstructor
 public class CondicionMedicaPost {
 
-    private Integer ID_Cliente;
+    int id_cliente;
 
-    private  String Diagnostico;
+    String diagnostico;
 
-    private  Date FechaDesde;
+    Date fechaDesde;
 
-    private Date FechaHasta;
+    Date fechaHasta;
 }

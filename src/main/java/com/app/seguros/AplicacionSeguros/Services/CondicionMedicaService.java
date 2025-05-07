@@ -21,10 +21,10 @@ public class CondicionMedicaService {
     }
     public CondicionMedica post(CondicionMedicaPost cm){
         CondicionMedica condicionMedica=CondicionMedica.builder()
-                .Diagnostico(cm.getDiagnostico())
-                .ID_Cliente(cm.getID_Cliente())
-                .FechaDesde(cm.getFechaDesde())
-                .FechaHasta(cm.getFechaHasta())
+                .diagnostico(cm.getDiagnostico())
+                .id_cliente(cm.getId_cliente())
+                .fechaDesde(cm.getFechaDesde())
+                .fechaHasta(cm.getFechaHasta())
                 .build();
         return condicionMedicaRepository.save(condicionMedica);
     }
