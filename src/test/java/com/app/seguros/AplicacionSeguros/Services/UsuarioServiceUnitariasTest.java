@@ -5,6 +5,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Entities.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -118,8 +119,8 @@ class UsuarioServiceUnitariasTest {
     void putUsuario() {
         Usuario u=create(1);
         when(usuariosRepository.save(any(Usuario.class))).thenReturn(u);
-
-        assertEquals(usuarioService.putUsuario(u).getAuthorities().iterator().next().getAuthority(),Rol.Administrador.toString());
+        UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
+        assertEquals(usuarioService.putUsuario(uGuardar).getAuthorities().iterator().next().getAuthority(),Rol.Administrador.toString());
         verify(usuariosRepository,times(1)).save(any(Usuario.class));
     }
 

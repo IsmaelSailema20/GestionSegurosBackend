@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Auth.AuthResponse;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Entities.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,8 +42,18 @@ public class UsuarioService {
                 .build();
         return usuariosRepository.save(u);
     }
-    public Usuario putUsuario(Usuario usuario){
-        return usuariosRepository.save(usuario);
+    public Usuario putUsuario(UsuarioEditarRequest usuario){
+        Usuario u=Usuario.builder()
+                .ID_Usuario(usuario.getID_Usuario())
+                .rol(usuario.getRol())
+                .email(usuario.getEmail())
+                .contraseña(passwordEncoder.encode(usuario.getContraseña()))
+                .estado(usuario.getEstado())
+                .nombre(usuario.getNombre())
+                .apellido(usuario.getApellido())
+                .build();
+
+        return usuariosRepository.save(u);
     }
     public void deleteUsuario(int id){
         usuariosRepository.deleteById(id);

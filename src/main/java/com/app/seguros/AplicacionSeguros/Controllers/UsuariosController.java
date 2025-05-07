@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Entities.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
 import io.jsonwebtoken.security.Password;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,16 @@ public class UsuariosController {
     public ResponseEntity<?> postUsuario(@RequestBody UsuarioCrearRequest usuario){
         try {
             Usuario u=usuarioService.register(usuario);
+            return ResponseEntity.created(new URI("/Usuarios/"+u.getID_Usuario())).body(u);
+        } catch (URISyntaxException | RuntimeException  e) {
+            return ResponseEntity.internalServerError().body("Error: "+e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<?> putUsuario(@RequestBody UsuarioEditarRequest usuario){
+        try {
+            Usuario u=usuarioService.putUsuario(usuario);
             return ResponseEntity.created(new URI("/Usuarios/"+u.getID_Usuario())).body(u);
         } catch (URISyntaxException | RuntimeException  e) {
             return ResponseEntity.internalServerError().body("Error: "+e.getMessage());

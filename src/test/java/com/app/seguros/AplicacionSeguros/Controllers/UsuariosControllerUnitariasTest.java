@@ -9,6 +9,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Entities.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -112,6 +113,41 @@ class UsuariosControllerUnitariasTest {
                 .andExpect(status().isInternalServerError());
 
     }
+
+    @Test
+    void putUsuario() throws  Exception{
+        Usuario u=create(1);
+        UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
+        when(usuarioService.putUsuario(any(UsuarioEditarRequest.class))).thenReturn(u);
+        mockMvc.perform(post("/Usuarios/1")
+                        .header("Authorization","Bearer "+token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(uGuardar)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("email"));
+
+    }
+    @Test
+    void putUsuarioNull() throws  Exception{
+        mockMvc.perform(post("/Usuarios/1")
+                        .header("Authorization","Bearer "+token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void putUsuarioRuntimeException() throws  Exception{
+        UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
+        doThrow(new RuntimeException("error")).when(usuarioService).register(any(UsuarioCrearRequest.class));
+        mockMvc.perform(post("/Usuarios/guardar")
+                        .header("Authorization","Bearer "+token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(uGuardar)))
+                .andExpect(status().isInternalServerError());
+
+    }
+
 
     @Test
     void getAll() throws Exception{
