@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Auth;
 
-import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

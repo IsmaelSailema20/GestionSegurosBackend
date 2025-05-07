@@ -1,10 +1,9 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Auth.AuthResponse;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
-import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
-import com.app.seguros.AplicacionSeguros.Entities.UsuarioEditarRequest;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
