@@ -39,6 +39,8 @@ public class ClienteService {
                 .genero(clienteDTO.getGenero())
                 .fecha_nacimiento(clienteDTO.getFecha_nacimiento())
                 .estado(clienteDTO.getEstado())
+                .pesoKg(clienteDTO.getPesoKg())
+                .estaturaMetros(clienteDTO.getEstaturaMetros())
                 .build();
 
         cliente = clienteRepository.save(cliente);
@@ -60,6 +62,8 @@ public class ClienteService {
                     dto.setGenero(cliente.getGenero());
                     dto.setFecha_nacimiento(cliente.getFecha_nacimiento());
                     dto.setEstado(cliente.getEstado());
+                    dto.setPesoKg(cliente.getPesoKg());
+                    dto.setEstaturaMetros(cliente.getEstaturaMetros());
                     return dto;
                 });
     }
@@ -79,6 +83,8 @@ public class ClienteService {
                     dto.setGenero(cliente.getGenero());
                     dto.setFecha_nacimiento(cliente.getFecha_nacimiento());
                     dto.setEstado(cliente.getEstado());
+                    dto.setPesoKg(cliente.getPesoKg());
+                    dto.setEstaturaMetros(cliente.getEstaturaMetros());
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -111,7 +117,8 @@ public class ClienteService {
         cliente.setGenero(clienteDTO.getGenero());
         cliente.setFecha_nacimiento(clienteDTO.getFecha_nacimiento());
         cliente.setEstado(clienteDTO.getEstado());
-
+        cliente.setPesoKg(clienteDTO.getPesoKg());
+        cliente.setEstaturaMetros(clienteDTO.getEstaturaMetros());
         cliente = clienteRepository.save(cliente);
         clienteDTO.setId_Cliente(cliente.getId_Cliente());
         return clienteDTO;

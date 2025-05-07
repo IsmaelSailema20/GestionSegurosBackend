@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
@@ -43,5 +44,9 @@ public class ClienteDTO {
 
     @Nonnull
     private Estado estado;
+
+    private double estaturaMetros;
+
+    private double pesoKg;
 
 }
