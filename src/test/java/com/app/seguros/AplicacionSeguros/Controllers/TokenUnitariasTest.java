@@ -92,6 +92,7 @@ class TokenUnitariasTest {
         List<Usuario> u=List.of(create(2),create(1));
         Usuario us=new Usuario();
         us.setRol(Rol.Cliente);
+        us.setEstado(Estado.Activo);
         when(usuarioService.getUsuarios()).thenReturn(u);
         JwtService jwtService=new JwtService();
         mockMvc.perform(get("/Usuarios")

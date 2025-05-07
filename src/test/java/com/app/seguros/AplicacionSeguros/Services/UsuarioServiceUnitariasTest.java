@@ -109,6 +109,7 @@ class UsuarioServiceUnitariasTest {
     void putUsuario() {
         Usuario u=create(1);
         when(usuariosRepository.save(any(Usuario.class))).thenReturn(u);
+        when(usuariosRepository.findById(anyInt())).thenReturn(Optional.of(u));
         UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
         assertEquals(usuarioService.putUsuario(uGuardar).getAuthorities().iterator().next().getAuthority(),Rol.Administrador.toString());
         verify(usuariosRepository,times(1)).save(any(Usuario.class));
