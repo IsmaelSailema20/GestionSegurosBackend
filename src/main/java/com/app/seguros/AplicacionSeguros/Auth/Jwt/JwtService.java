@@ -32,6 +32,7 @@ public class JwtService {
         claims.put("rol",user.getAuthorities().iterator().next().getAuthority());
         claims.put("nombre",user.getNombre());
         claims.put("apellido",user.getApellido());
+        claims.put("estado",user.getEstado().toString());
         return getToken(claims,user);
     }
 

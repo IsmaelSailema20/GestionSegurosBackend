@@ -41,18 +41,18 @@ public class UsuarioService {
                 .build();
         return usuariosRepository.save(u);
     }
-    public Usuario putUsuario(UsuarioEditarRequest usuario){
-        Usuario u=Usuario.builder()
-                .ID_Usuario(usuario.getID_Usuario())
-                .rol(usuario.getRol())
-                .email(usuario.getEmail())
-                .contraseña(passwordEncoder.encode(usuario.getContraseña()))
-                .estado(usuario.getEstado())
-                .nombre(usuario.getNombre())
-                .apellido(usuario.getApellido())
-                .build();
-
-        return usuariosRepository.save(u);
+    public Usuario putUsuario(UsuarioEditarRequest request) {
+        Usuario usuario = usuariosRepository.findById(request.getID_Usuario())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        usuario.setNombre(request.getNombre());
+        usuario.setApellido(request.getApellido());
+        usuario.setEmail(request.getEmail());
+        if (request.getContraseña() != null && !request.getContraseña().trim().isEmpty()) {
+            usuario.setContraseña(passwordEncoder.encode(request.getContraseña()));
+        }
+        usuario.setRol(request.getRol());
+        usuario.setEstado(request.getEstado());
+        return usuariosRepository.save(usuario);
     }
     public void deleteUsuario(int id){
         usuariosRepository.deleteById(id);
