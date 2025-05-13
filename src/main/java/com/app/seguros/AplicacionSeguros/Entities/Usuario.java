@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Entities;
 
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,11 +28,13 @@ public class Usuario implements UserDetails {
     String nombre;
     String apellido;
     String email;
+    @JsonIgnore
     String contraseña;
     @Enumerated(EnumType.STRING)
     Rol rol;
     @Enumerated(EnumType.STRING)
     Estado estado;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
