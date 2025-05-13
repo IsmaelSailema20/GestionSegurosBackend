@@ -1,5 +1,6 @@
-package com.app.seguros.AplicacionSeguros.Entities;
+package com.app.seguros.AplicacionSeguros.Dto;
 
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,10 +11,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UsuarioCrearRequest {
-    String email;
-    String password;
+public class UsuarioEditarRequest {
+    Integer ID_Usuario;
     String nombre;
     String apellido;
+    String email;
+    String contraseña;
     Rol rol;
+    Estado estado;
 }

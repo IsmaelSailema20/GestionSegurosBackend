@@ -1,9 +1,9 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Auth.AuthResponse;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
-import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,7 +41,17 @@ public class UsuarioService {
                 .build();
         return usuariosRepository.save(u);
     }
-    public Usuario putUsuario(Usuario usuario){
+    public Usuario putUsuario(UsuarioEditarRequest request) {
+        Usuario usuario = usuariosRepository.findById(request.getID_Usuario())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        usuario.setNombre(request.getNombre());
+        usuario.setApellido(request.getApellido());
+        usuario.setEmail(request.getEmail());
+        if (request.getContraseña() != null && !request.getContraseña().trim().isEmpty()) {
+            usuario.setContraseña(passwordEncoder.encode(request.getContraseña()));
+        }
+        usuario.setRol(request.getRol());
+        usuario.setEstado(request.getEstado());
         return usuariosRepository.save(usuario);
     }
     public void deleteUsuario(int id){

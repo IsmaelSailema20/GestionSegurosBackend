@@ -32,6 +32,12 @@ public class Cliente {
     @Column(nullable = false,length = 10)
     private String telefono;
 
+    @Column(nullable = false)
+    private double estaturaMetros;
+
+    @Column(nullable = false)
+    private double pesoKg;
+
     @Column(nullable = false,length = 100,unique = true)
     private String email;
 

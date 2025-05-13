@@ -1,33 +1,22 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
-import com.app.seguros.AplicacionSeguros.Auth.AuthService;
-import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtAuthenticationFilter;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
-import com.app.seguros.AplicacionSeguros.Auth.LoginRequest;
-import com.app.seguros.AplicacionSeguros.Config.ApplicationConfig;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
-import com.app.seguros.AplicacionSeguros.Entities.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -112,6 +101,41 @@ class UsuariosControllerUnitariasTest {
                 .andExpect(status().isInternalServerError());
 
     }
+
+    @Test
+    void putUsuario() throws  Exception{
+        Usuario u=create(1);
+        UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
+        when(usuarioService.putUsuario(any(UsuarioEditarRequest.class))).thenReturn(u);
+        mockMvc.perform(post("/Usuarios/1")
+                        .header("Authorization","Bearer "+token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(uGuardar)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("email"));
+
+    }
+    @Test
+    void putUsuarioNull() throws  Exception{
+        mockMvc.perform(post("/Usuarios/1")
+                        .header("Authorization","Bearer "+token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void putUsuarioRuntimeException() throws  Exception{
+        UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
+        doThrow(new RuntimeException("error")).when(usuarioService).register(any(UsuarioCrearRequest.class));
+        mockMvc.perform(post("/Usuarios/guardar")
+                        .header("Authorization","Bearer "+token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(uGuardar)))
+                .andExpect(status().isInternalServerError());
+
+    }
+
 
     @Test
     void getAll() throws Exception{
