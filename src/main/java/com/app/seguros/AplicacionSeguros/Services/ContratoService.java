@@ -73,8 +73,8 @@ public class ContratoService {
                 .cliente(c.getCliente())
                 .id(c.getId())
                 .agente(agenteDTO)
-                .beneficiarios(benRepo.findAll())
-                .condicionesMedicas(condRepo.findAll())
+                .beneficiarios(benRepo.findByContratoId(c.getId()))
+                .condicionesMedicas(condRepo.findByContratoId(c.getId()))
                 .build()
                 ;
         return contratoResponse;
@@ -135,8 +135,8 @@ public class ContratoService {
                 .cliente(c.getCliente())
                 .id(c.getId())
                 .agente(agenteDTO)
-                .beneficiarios(benRepo.findAll())
-                .condicionesMedicas(condRepo.findAll())
+                .beneficiarios(benRepo.findByContratoId(c.getId()))
+                .condicionesMedicas(condRepo.findByContratoId(c.getId()))
                 .build()
         ;
         return contratoResponse;
@@ -163,8 +163,8 @@ public class ContratoService {
                     .cliente(contrato.getCliente())
                     .id(contrato.getId())
                     .agente(agenteDTO)
-                    .beneficiarios(benRepo.findAll())
-                    .condicionesMedicas(condRepo.findAll())
+                    .beneficiarios(benRepo.findByContratoId(contrato.getId()))
+                    .condicionesMedicas(condRepo.findByContratoId(contrato.getId()))
                     .build()
                     ;
             contratos.add(contratoResponse);
@@ -192,8 +192,8 @@ public class ContratoService {
                     .cliente(contrato.getCliente())
                     .agente(agenteDTO)
                     .id(contrato.getId())
-                    .beneficiarios(benRepo.findAll())
-                    .condicionesMedicas(condRepo.findAll())
+                    .beneficiarios(benRepo.findByContratoId(contrato.getId()))
+                    .condicionesMedicas(condRepo.findByContratoId(contrato.getId()))
                     .build()
                     ;
         }
