@@ -38,7 +38,6 @@ public class SecurityConfig {
                                 .requestMatchers("/Clientes/**").hasAuthority("Administrador")
                                 .requestMatchers("/Seguros").hasAnyAuthority("Administrador","Agente")
                                 .requestMatchers("/Seguros/**").hasAuthority("Administrador")
-                                .requestMatchers("/pdf/**").permitAll()
                                 .anyRequest().authenticated()
                         )
                 .sessionManagement( sessionManager->
