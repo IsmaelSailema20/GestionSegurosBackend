@@ -1,7 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 
-import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
+/*import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
@@ -58,3 +58,4 @@ public class ContratoController {
     }
 }
 
+*/

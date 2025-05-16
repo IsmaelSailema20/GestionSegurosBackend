@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,19 +27,19 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}")
-    public  ResponseEntity<ClienteDTO> getClienteById(@PathVariable Long id){
+    public  ResponseEntity<ClienteRespuestaDTO> getClienteById(@PathVariable Long id){
         return clienteService.getCliente(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(()-> ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public  ResponseEntity<List<ClienteDTO>> getAllClientes(){
+    public  ResponseEntity<List<ClienteRespuestaDTO>> getAllClientes(){
         return ResponseEntity.ok(clienteService.getAllClientes());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClienteDTO> updateCliente(@PathVariable Long id, @Valid @RequestBody ClienteDTO clienteDTO){
+    public ResponseEntity<ClienteRespuestaDTO> updateCliente(@PathVariable Long id, @Valid @RequestBody ClienteDTO clienteDTO){
         return  ResponseEntity.ok(clienteService.updateCliente(id,clienteDTO));
 
     }

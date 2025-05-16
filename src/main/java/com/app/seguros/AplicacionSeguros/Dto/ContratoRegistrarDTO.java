@@ -19,7 +19,4 @@ public class ContratoRegistrarDTO {
     private Date fechaInicio;
     private Date fechaFin;
 
-    private List<CondicionMedica> condicionesMedicas;
-    private List<Beneficiario> beneficiarios;
-
 }

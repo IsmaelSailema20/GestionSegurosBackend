@@ -18,14 +18,12 @@ import java.util.List;
 @NoArgsConstructor
 public class ContratoRespuestaDTO {
     private Integer id;
-    private Cliente cliente;
+    private ClienteRespuestaDTO cliente;
     private Seguro seguro;
-    private AgenteDTO agente;            // sin password
+    private AgenteDTO agente;
     private Date fechaInicio;
     private Date fechaFin;
     private EstadoContrato estado;
-    private List<Beneficiario> beneficiarios;
-    private List<CondicionMedica> condicionesMedicas;
 }
 
 

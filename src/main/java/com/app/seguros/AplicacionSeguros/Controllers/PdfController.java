@@ -1,5 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
-
+/*
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
@@ -46,3 +46,4 @@ public class PdfController {
         }
     }
 }
+*/

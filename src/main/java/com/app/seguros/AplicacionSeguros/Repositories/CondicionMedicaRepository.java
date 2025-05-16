@@ -12,9 +12,6 @@ import java.util.List;
 
 @Repository
 public interface CondicionMedicaRepository extends JpaRepository<CondicionMedica,Integer> {
-    List<CondicionMedica> findByContratoId(Integer idContrato);
-    @Modifying
-    @Transactional
-    void deleteByContratoId(Integer idContrato);
+
 
 }

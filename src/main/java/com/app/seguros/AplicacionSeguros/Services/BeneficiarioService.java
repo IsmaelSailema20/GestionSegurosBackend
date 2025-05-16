@@ -12,16 +12,16 @@ public class BeneficiarioService {
     @Autowired
     private BeneficiarioRepository beneficiarioRepository;
 
-    public List<Beneficiario> listarPorContrato(Integer idContrato) {
-        return beneficiarioRepository.findByContratoId(idContrato);
+    public List<Beneficiario> listarPorContrato(Integer idCliente) {
+        return beneficiarioRepository.findByClienteId(idCliente);
     }
 
     public Beneficiario guardar(Beneficiario beneficiario) {
         return beneficiarioRepository.save(beneficiario);
     }
 
-    public void eliminarPorContrato(Integer idContrato) {
-        beneficiarioRepository.deleteByContratoId(idContrato);
+    public void eliminarPorContrato(Integer idCliente) {
+        beneficiarioRepository.deleteByClienteId(idCliente);
     }
 
     public void eliminarPorId(Integer idBeneficiario) {
