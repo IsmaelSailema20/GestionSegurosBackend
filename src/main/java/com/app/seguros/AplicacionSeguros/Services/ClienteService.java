@@ -174,7 +174,7 @@ public class ClienteService {
                 benRepo.save(b);
             });
         }
-        condService.deleteById((int)cliente.getId());
+        condService.deleteByClienteId((int)cliente.getId());
         if (clienteDTO.getCondicionesMedicas() != null) {
             Cliente finalCliente = cliente;
             clienteDTO.getCondicionesMedicas().forEach(cm -> {
@@ -205,7 +205,7 @@ public class ClienteService {
     public void deleteCliente(Long id) {
         clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-        condService.deleteById(id.intValue());
+        condService.deleteByClienteId(id.intValue());
         benRepo.deleteByClienteId(id.intValue());
 
         clienteRepository.deleteById(id);
