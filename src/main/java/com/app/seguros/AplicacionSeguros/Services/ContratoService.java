@@ -127,6 +127,7 @@ public class ContratoService {
 
     public Optional<ContratoRespuestaDTO> buscarPorId(Integer id) {
         Contrato contrato=contratoRepo.findById(id).orElse(null);
+
         ContratoRespuestaDTO contratoResponse=null;
         Usuario agente=usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
         AgenteDTO agenteDTO=AgenteDTO.builder()

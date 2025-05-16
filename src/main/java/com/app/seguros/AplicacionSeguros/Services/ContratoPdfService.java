@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.AgenteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class ContratoPdfService {
     private SpringTemplateEngine templateEngine;
 
     public byte[] generarContratoPdf(
-            Cliente cliente,
+            ClienteRespuestaDTO cliente,
             Seguro seguro,
             AgenteDTO agente,
             java.util.Date fechaInicio,

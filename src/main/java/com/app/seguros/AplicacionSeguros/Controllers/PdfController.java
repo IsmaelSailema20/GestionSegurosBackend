@@ -1,5 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
-/*
+
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
@@ -30,8 +30,8 @@ public class PdfController {
                     c.getAgente(),
                     c.getFechaInicio(),
                     c.getFechaFin(),
-                    c.getBeneficiarios(),
-                    c.getCondicionesMedicas()
+                    c.getCliente().getBeneficiarios(),
+                    c.getCliente().getCondicionesMedicas()
             );
 
             HttpHeaders headers = new HttpHeaders();
@@ -46,4 +46,3 @@ public class PdfController {
         }
     }
 }
-*/

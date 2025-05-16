@@ -1,7 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 
-/*import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
+import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
@@ -43,13 +43,6 @@ public class ContratoController {
         return ResponseEntity.ok(nuevo);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ContratoRespuestaDTO> actualizarContrato(
-            @PathVariable Integer id,
-            @RequestBody ContratoRegistrarDTO dto) {
-        ContratoRespuestaDTO actualizado = contratoService.actualizarContrato(id, dto);
-        return ResponseEntity.ok(actualizado);
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarContrato(@PathVariable Integer id) {
@@ -58,4 +51,3 @@ public class ContratoController {
     }
 }
 
-*/

@@ -23,7 +23,6 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-4 text-center d-lg-flex align-items-lg-center caja-redondeada">
-            <img src="logo.png"/>
             <h2>
             WALK SEGUROS
             </h2>
@@ -39,37 +38,36 @@
     —
     <span th:text="${#dates.format(fechaFin, 'dd/MM/yyyy')}"></span>
 </p>
+<div th:if="${!condicionesMedicas.empty}">
+    <h2>Condiciones Médicas</h2>
+    <table>
+        <thead>
+        <tr><th>Diagnóstico</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${condicionesMedicas}">
+            <td th:text="${c.diagnostico}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 <div th:if="${!beneficiarios.empty}">
     <h2>Beneficiarios</h2>
     <table>
         <thead>
-        <tr><th>Nombre</th><th>Parentesco</th><th>% Cobertura</th></tr>
+        <tr><th>Nombre</th><th>Genero</th><th>Direccion</th><th>Fecha de Nacimiento</th></tr>
         </thead>
         <tbody>
         <tr th:each="b : ${beneficiarios}">
-            <td th:text="${b.nombre} + ' ' + ${b.apellido}"></td>
-            <td th:text="${b.parentesco}"></td>
-            <td th:text="${b.porcentaje} + '%'"></td>
+            <td th:text="${b.nombre}"></td>
+            <td th:text="${b.genero}"></td>
+            <td th:text="${b.direccion}"></td>
+            <td th:text="${b.fecha_nacimiento}"></td>
         </tr>
         </tbody>
     </table>
 </div>
 
-<div th:if="${!condicionesMedicas.empty}">
-    <h2>Condiciones Médicas</h2>
-    <table>
-        <thead>
-        <tr><th>Persona</th><th>Diagnóstico</th><th>Desde</th><th>Hasta</th></tr>
-        </thead>
-        <tbody>
-        <tr th:each="c : ${condicionesMedicas}">
-            <td th:text="${c.nombrePersona}"></td>
-            <td th:text="${c.diagnostico}"></td>
-            <td th:text="${#dates.format(c.fechaDesde, 'dd/MM/yyyy')}"></td>
-            <td th:text="${#dates.format(c.fechaHasta, 'dd/MM/yyyy')}"></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+
 </body>
 </html>
