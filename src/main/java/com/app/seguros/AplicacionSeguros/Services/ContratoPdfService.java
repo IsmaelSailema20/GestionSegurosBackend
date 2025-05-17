@@ -2,7 +2,9 @@ package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.AgenteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
@@ -19,6 +21,7 @@ public class ContratoPdfService {
 
     public byte[] generarContratoPdf(
             ClienteRespuestaDTO cliente,
+            EstadoContrato estadoContrato,
             Seguro seguro,
             AgenteDTO agente,
             java.util.Date fechaInicio,
@@ -29,6 +32,7 @@ public class ContratoPdfService {
         // 1) Preparar el contexto Thymeleaf
         Context ctx = new Context();
         ctx.setVariable("cliente", cliente);
+        ctx.setVariable("estado",estadoContrato);
         ctx.setVariable("seguro", seguro);
         ctx.setVariable("agente", agente);
         ctx.setVariable("fechaInicio", fechaInicio);

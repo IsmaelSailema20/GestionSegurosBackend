@@ -10,27 +10,56 @@
         table { width: 100%; border-collapse: collapse; margin-top: 1em; }
         th, td { border: 1px solid #666; padding: 4px; }
         .caja-redondeada {
-          background-color: #08645c;   /* color de fondo */
-          color: white;               /* color del texto */
-          padding: 10px;              /* espacio interno */
-          border-radius: 12px;        /* radios de las esquinas */
-          width: 200px;               /* ancho fijo (opcional) */
-          text-align: center;         /* centrar texto */
+            background-color: #08645c;
+            color: white;
+            padding: 10px;
+            border-radius: 12px;
+            width: 200px;
+            text-align: center;
         }
+        .logo-img {
+            width: 50px;
+            height: auto;
+            margin: 0 10px;
+        }
+        .signature-section {
+            margin-top: 40px;
+            border-top: 1px solid #666;
+            padding-top: 20px;
+        }
+        .signature-box {
+            margin-top: 20px;
+            border-top: 1px solid #000;
+            width: 300px;
+            text-align: center;
+        }
+        .signature-box h1 {
+        font-size: x-large;
+        margin-bottom: -15px;
+        margin-top: 15px;
+        }
+
     </style>
 </head>
 <body>
 <div class="container-fluid">
-    <div class="row">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-md-2 text-center">
+            <img src="/logo.png" alt="Logo Walk Seguros" class="logo-img"/>
+        </div>
         <div class="col-md-4 text-center d-lg-flex align-items-lg-center caja-redondeada">
-            <h2>
-            WALK SEGUROS
-            </h2>
+            <h2>WALK SEGUROS</h2>
+        </div>
+        <div class="col-md-2 text-center">
+            <img src="/logo.png" alt="Logo Walk Seguros" class="logo-img"/>
         </div>
     </div>
 </div>
+
 <h1 style="padding: 10px;">Contrato de Seguro</h1>
+<!-- Información básica -->
 <p><strong>Cliente:</strong> <span th:text="${cliente.nombre} + ' ' + ${cliente.apellido}"></span></p>
+<p><strong>Número de cédula:</strong> <span th:text="${cliente.cedula}"></span></p>
 <p><strong>Plan:</strong> <span th:text="${seguro.nombre}"></span></p>
 <p><strong>Agente:</strong> <span th:text="${agente.nombre} + ' ' + ${agente.apellido}"></span></p>
 <p th:if="${fechaInicio!=null || fechaFin!=null}"><strong>Periodo:</strong>
@@ -38,6 +67,19 @@
     —
     <span th:text="${#dates.format(fechaFin, 'dd/MM/yyyy')}"></span>
 </p>
+<!-- Introducción del contrato -->
+<p><strong>CONTRATO DE SEGURO</strong></p>
+<p>Este contrato de seguro se celebra entre <strong>WALK SEGUROS</strong>, representada por su agente <strong><span th:text="${agente.apellido}+ ' ' +${agente.nombre}"></span></strong>, y el cliente <strong><span th:text="${cliente.nombre} + ' ' + ${cliente.apellido}"></span></strong> con número de cédula: <strong><span th:text="${cliente.cedula}"></span></strong>, con el propósito de establecer los términos y condiciones bajo los cuales se prestará la cobertura de seguro descrita a continuación.</p>
+
+
+
+<!-- Cláusulas del contrato -->
+<h2>Términos y Condiciones</h2>
+<p><strong>1. Cobertura:</strong> El seguro <span th:text="${seguro.nombre}"></span> cubre los eventos y riesgos especificados en la póliza, según lo acordado entre las partes. WALK SEGUROS se compromete a indemnizar al cliente o a los beneficiarios designados en caso de siniestro, conforme a las condiciones de la póliza.</p>
+<p><strong>2. Obligaciones del Cliente:</strong> El cliente se compromete a pagar las primas correspondientes en las fechas estipuladas y a proporcionar información veraz sobre su estado de salud y condiciones preexistentes, según lo declarado en este contrato.</p>
+<p><strong>3. Duración y Terminación:</strong> Este contrato entra en vigencia a partir de la fecha de inicio indicada y finalizará en la fecha de fin establecida, salvo que se termine anticipadamente por mutuo acuerdo o incumplimiento de las condiciones aquí establecidas.</p>
+
+<!-- Condiciones Médicas -->
 <div th:if="${!condicionesMedicas.empty}">
     <h2>Condiciones Médicas</h2>
     <table>
@@ -51,23 +93,61 @@
         </tbody>
     </table>
 </div>
+
+<!-- Beneficiarios -->
 <div th:if="${!beneficiarios.empty}">
     <h2>Beneficiarios</h2>
     <table>
         <thead>
-        <tr><th>Nombre</th><th>Genero</th><th>Direccion</th><th>Fecha de Nacimiento</th></tr>
+        <tr><th>Nombre</th><th>Género</th><th>Dirección</th><th>Fecha de Nacimiento</th></tr>
         </thead>
         <tbody>
         <tr th:each="b : ${beneficiarios}">
             <td th:text="${b.nombre}"></td>
             <td th:text="${b.genero}"></td>
             <td th:text="${b.direccion}"></td>
-            <td th:text="${b.fecha_nacimiento}"></td>
+            <td th:text="${#dates.format(b.fecha_nacimiento, 'dd/MM/yyyy')}"></td>
         </tr>
         </tbody>
     </table>
 </div>
 
+<!-- Sección de Firmas -->
+<div class="signature-section">
+    <h2 class="mb-3">Firmas</h2>
+    <div class="row">
+        <!-- Información del Cliente -->
+        <div class="col-md-6">
+            <div class="signature-box text-center">
+                <h1><strong><span th:text="${estado.name() == 'ACTIVO' ? 'FIRMADO ELECTRONICAMENTE' : 'SIN FIRMAR'}"></span></strong></h1>
+                <p>______________________________</p>
+                <p>Firma del Cliente</p>
+            </div>
+            <div class="mt-3">
+                <h3>Cliente</h3>
+                <p><strong>Nombre:</strong> <span th:text="${cliente.nombre} + ' ' + ${cliente.apellido}"></span></p>
+                <p><strong>Cédula:</strong> <span th:text="${cliente.cedula}"></span></p>
+                <p><strong>Email:</strong> <span th:text="${cliente.email}"></span></p>
+                <p><strong>Teléfono:</strong> <span th:text="${cliente.telefono}"></span></p>
+                <p><strong>Dirección:</strong> <span th:text="${cliente.direccion}"></span></p>
+            </div>
+        </div>
 
+        <!-- Información del Agente -->
+        <div class="col-md-6">
+            <div class="signature-box text-center">
+                <h1><strong>FIRMADO ELECTRONICAMENTE</strong></h1>
+                <p>______________________________</p>
+                <p>Firma del Agente</p>
+            </div>
+            <div class="mt-3">
+                <h3>Agente</h3>
+                <p><strong>Nombre:</strong> <span th:text="${agente.nombre} + ' ' + ${agente.apellido}"></span></p>
+                <p><strong>Email:</strong> <span th:text="${agente.email}"></span></p>
+                <p><strong>Representante de:</strong> WALK SEGUROS</p>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
