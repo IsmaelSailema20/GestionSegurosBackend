@@ -3,15 +3,11 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
-import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
-import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
-import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +39,11 @@ public class ContratoController {
         return ResponseEntity.ok(nuevo);
     }
 
+    @PutMapping("/activar/{id}")
+    public ResponseEntity<ContratoRespuestaDTO> activarContrato(@PathVariable Integer id) {
+        ContratoRespuestaDTO response = contratoService.editarContrato(id);
+        return ResponseEntity.ok(response);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarContrato(@PathVariable Integer id) {
