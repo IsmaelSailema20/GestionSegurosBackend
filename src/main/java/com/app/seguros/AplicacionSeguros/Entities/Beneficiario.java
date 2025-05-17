@@ -40,6 +40,9 @@ public class Beneficiario {
     @Column(nullable = false, length = 100)
     private String direccion;
 
+    @Column(nullable = false, length = 100)
+    private String parentesco;
+
     @Past(message = "La fecha de nacimiento debe ser en el pasado")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date fecha_nacimiento;
