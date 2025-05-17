@@ -33,7 +33,7 @@
 <p><strong>Cliente:</strong> <span th:text="${cliente.nombre} + ' ' + ${cliente.apellido}"></span></p>
 <p><strong>Plan:</strong> <span th:text="${seguro.nombre}"></span></p>
 <p><strong>Agente:</strong> <span th:text="${agente.nombre} + ' ' + ${agente.apellido}"></span></p>
-<p><strong>Periodo:</strong>
+<p th:if="${fechaInicio!=null || fechaFin!=null}"><strong>Periodo:</strong>
     <span th:text="${#dates.format(fechaInicio, 'dd/MM/yyyy')}"></span>
     —
     <span th:text="${#dates.format(fechaFin, 'dd/MM/yyyy')}"></span>

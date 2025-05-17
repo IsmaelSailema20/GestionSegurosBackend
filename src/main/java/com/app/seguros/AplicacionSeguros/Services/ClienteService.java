@@ -1,16 +1,20 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Condiciones_Clientes;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.CondicionMedicaClienteRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +26,9 @@ public class ClienteService {
     ClienteRepository clienteRepository;
     @Autowired private BeneficiarioRepository benRepo;
     @Autowired private CondicionMedicaService condService;
+    @Autowired private ContratoService contratoService;
+    @Autowired private JwtService jwtService;
+    @Autowired private UsuarioService usuarioService;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
@@ -69,6 +76,26 @@ public class ClienteService {
             });
         }
 
+        AgenteDTO agente=obtenerAgente();
+
+        contratoService.registrarContrato(ContratoRegistrarDTO.builder()
+                .idCliente((int)cliente.getId())
+                .fechaFin(null)
+                .fechaInicio(null)
+                .idAgente(agente.getId())
+                .idSeguro(clienteDTO.getIdSeguro())
+                .build()
+        );
+        usuarioService.register(
+                UsuarioCrearRequest.builder()
+                        .apellido(cliente.getApellido())
+                        .email(cliente.getEmail())
+                        .nombre(cliente.getNombre())
+                        .rol(Rol.Cliente)
+                        .password("123456")
+                        .build()
+        );
+
         return ClienteRespuestaDTO.builder()
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
                 .fecha_nacimiento(clienteDTO.getFecha_nacimiento())
@@ -85,6 +112,26 @@ public class ClienteService {
                 .estado(clienteDTO.getEstado())
                 .nombre(clienteDTO.getNombre())
                 .build();
+    }
+
+    private AgenteDTO obtenerAgente() {
+        String token="";
+        AgenteDTO agenteDTO=null;
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof UsernamePasswordAuthenticationToken tokenAuth) {
+            token= tokenAuth.getCredentials().toString(); // si lo pusiste como credential
+        }
+        if(token!=null && !token.isBlank()){
+            String email=jwtService.getClaim(token,claims -> claims.get("sub", String.class));
+            Usuario agente=usuarioService.getUsuarioByEmail(email);
+            agenteDTO=AgenteDTO.builder()
+                    .apellido(agente.getApellido())
+                    .id(agente.getID_Usuario())
+                    .email(agente.getEmail())
+                    .nombre(agente.getNombre())
+                    .build();
+        }
+        return agenteDTO;
     }
 
     public Optional<ClienteRespuestaDTO> getCliente(Long id) {

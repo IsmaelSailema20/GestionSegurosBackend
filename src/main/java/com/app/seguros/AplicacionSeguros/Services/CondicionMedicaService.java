@@ -6,9 +6,9 @@ import com.app.seguros.AplicacionSeguros.Entities.Condiciones_Clientes;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Repositories.CondicionMedicaClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.CondicionMedicaRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

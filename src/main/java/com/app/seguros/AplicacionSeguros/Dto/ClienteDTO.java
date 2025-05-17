@@ -54,4 +54,5 @@ public class ClienteDTO {
     private List<CondicionMedica> condicionesMedicas;
     private List<Beneficiario> beneficiarios;
 
+    private int idSeguro;
 }
