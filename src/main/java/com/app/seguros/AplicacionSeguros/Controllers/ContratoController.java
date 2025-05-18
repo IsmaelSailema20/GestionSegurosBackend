@@ -32,7 +32,14 @@ public class ContratoController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
+    @GetMapping("/cliente/{cedula}")
+    public ResponseEntity<List<ContratoRespuestaDTO>> obtenerContratosPorCedula(@PathVariable String cedula) {
+        List<ContratoRespuestaDTO> contratos = contratoService.buscarContratosPorCedula(cedula);
+        if (contratos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(contratos);
+    }
     @PostMapping
     public ResponseEntity<ContratoRespuestaDTO> crearContrato(@RequestBody ContratoRegistrarDTO dto) {
         ContratoRespuestaDTO nuevo = contratoService.registrarContrato(dto);

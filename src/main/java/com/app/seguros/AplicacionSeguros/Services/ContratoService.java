@@ -225,6 +225,51 @@ public class ContratoService {
 
         return contratoResponse;
     }
+    public List<ContratoRespuestaDTO> buscarContratosPorCedula(String cedula) {
+        List<Contrato> contratos = contratoRepo.findByClienteCedula(cedula);
+        List<ContratoRespuestaDTO> respuesta = new ArrayList<>();
+
+        for (Contrato contrato : contratos) {
+            Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
+            AgenteDTO agenteDTO = AgenteDTO.builder()
+                    .nombre(agente.getNombre())
+                    .email(agente.getEmail())
+                    .apellido(agente.getApellido())
+                    .id(agente.getID_Usuario())
+                    .build();
+
+            ContratoRespuestaDTO contratoResponse = ContratoRespuestaDTO.builder()
+                    .cliente(
+                            ClienteRespuestaDTO.builder()
+                                    .estaturaMetros(contrato.getCliente().getEstaturaMetros())
+                                    .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
+                                    .direccion(contrato.getCliente().getDireccion())
+                                    .id_Cliente(contrato.getCliente().getId())
+                                    .genero(contrato.getCliente().getGenero())
+                                    .cedula(contrato.getCliente().getCedula())
+                                    .pesoKg(contrato.getCliente().getPesoKg())
+                                    .telefono(contrato.getCliente().getTelefono())
+                                    .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
+                                    .beneficiarios(benRepo.findByClienteId((int) contrato.getCliente().getId()))
+                                    .apellido(contrato.getCliente().getApellido())
+                                    .email(contrato.getCliente().getEmail())
+                                    .estado(contrato.getCliente().getEstado())
+                                    .nombre(contrato.getCliente().getNombre())
+                                    .build()
+                    )
+                    .estado(contrato.getEstado())
+                    .fechaFin(contrato.getFechaFin())
+                    .fechaInicio(contrato.getFechaInicio())
+                    .seguro(contrato.getSeguro())
+                    .id(contrato.getId())
+                    .agente(agenteDTO)
+                    .build();
+
+            respuesta.add(contratoResponse);
+        }
+
+        return respuesta;
+    }
 
     @Transactional
     public void eliminarContrato(Integer id) {
