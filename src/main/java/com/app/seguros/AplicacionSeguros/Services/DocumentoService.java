@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
@@ -124,15 +125,20 @@ public class DocumentoService {
     }
 
     @Transactional
-    public void rechazarDocumento(Long idDocumento, String motivo) {
+    public void rechazarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
-        doc.setEstado(EstadoDocumento.Rechazado);
-        doc.setMotivoRechazo(motivo);
-        documentoRepository.save(doc);
 
-        //contratoService.actualizarEstadoContrato(doc.getContrato().getIdContrato(), EstadoContrato.PENDIENTE);
+        // 1. Eliminar archivo físico
+        try {
+            Path path = Paths.get(doc.getRutaArchivo());
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Error al eliminar el archivo: " + e.getMessage());
+        }
+
+        // 2. Eliminar registro de la base de datos
+        documentoRepository.delete(doc);
     }
 
-    // Métodos adicionales (eliminar, listar, verificar existencia)
 }
