@@ -5,9 +5,8 @@ import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
-import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.core.io.Resource;
 
 @RestController
 @RequestMapping("/documentos")
@@ -77,19 +77,33 @@ public class DocumentoController {
     @GetMapping("/descargar/{idDocumento}")
     public ResponseEntity<Resource> descargarDocumento(@PathVariable Long idDocumento) {
         Documento documento = documentoService.obtenerDocumento(idDocumento);
-        Path filePath = Paths.get(documento.getRutaArchivo());
-        Resource resource = null;
-        try {
-            resource = (Resource) new InputStreamResource(Files.newInputStream(filePath));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + documento.getNombreArchivo() + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(resource);
+        try {
+            // 1. Cargar el recurso correctamente
+            Path filePath = Paths.get(documento.getRutaArchivo());
+            Resource resource = new UrlResource(filePath.toUri());
+
+            // 2. Verificar que el archivo exista y sea legible
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("No se pudo leer el archivo: " + documento.getNombreArchivo());
+            }
+
+            // 3. Determinar el tipo de contenido dinámicamente
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            // 4. Configurar headers para descarga
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + documento.getNombreArchivo() + "\"")
+                    .body(resource);
+
+        } catch (IOException ex) {
+            throw new RuntimeException("Error al cargar el documento: " + ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}/aprobar")
