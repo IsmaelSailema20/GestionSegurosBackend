@@ -1,24 +1,25 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
 public class ClienteService {
     @Autowired
     ClienteRepository clienteRepository;
-
-
-    public ClienteDTO saveCliente(ClienteDTO clienteDTO) {
+    @Autowired private CondicionMedicaService condService;
+    @Autowired private UsuarioService usuarioService;
+    @Transactional
+    public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
         clienteRepository.findByCedula(clienteDTO.getCedula())
                 .ifPresent(cliente -> {
@@ -28,6 +29,8 @@ public class ClienteService {
                 .ifPresent(cliente -> {
                     throw new RuntimeException("El email ya está registrado");
                 });
+
+
 
         Cliente cliente = Cliente.builder()
                 .nombre(clienteDTO.getNombre())
@@ -42,55 +45,95 @@ public class ClienteService {
                 .pesoKg(clienteDTO.getPesoKg())
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
                 .build();
-
         cliente = clienteRepository.save(cliente);
-        clienteDTO.setId_Cliente(cliente.getId_Cliente());
-        return clienteDTO;
+
+
+
+        if (clienteDTO.getCondicionesMedicas() != null) {
+            Cliente finalCliente = cliente;
+            clienteDTO.getCondicionesMedicas().forEach(cm -> {
+                if (cm.getId_condicion() == null) {
+                    cm = condService.post(cm);
+                }
+                condService.postRelacion(cm,finalCliente);
+            });
+        }
+
+        usuarioService.register(
+                UsuarioCrearRequest.builder()
+                        .apellido(cliente.getApellido())
+                        .email(cliente.getEmail())
+                        .nombre(cliente.getNombre())
+                        .rol(Rol.Cliente)
+                        .password("123456")
+                        .build()
+        );
+
+        return ClienteRespuestaDTO.builder()
+                .estaturaMetros(clienteDTO.getEstaturaMetros())
+                .fecha_nacimiento(clienteDTO.getFecha_nacimiento())
+                .direccion(clienteDTO.getDireccion())
+                .id_Cliente(cliente.getId())
+                .genero(clienteDTO.getGenero())
+                .cedula(clienteDTO.getCedula())
+                .pesoKg(clienteDTO.getPesoKg())
+                .telefono(clienteDTO.getTelefono())
+                .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                .apellido(clienteDTO.getApellido())
+                .email(clienteDTO.getEmail())
+                .estado(clienteDTO.getEstado())
+                .nombre(clienteDTO.getNombre())
+                .build();
     }
 
-    public Optional<ClienteDTO> getCliente(Long id) {
+
+    public Optional<ClienteRespuestaDTO> getCliente(Long id) {
         return clienteRepository.findById(id)
                 .map(cliente -> {
-                    ClienteDTO dto = new ClienteDTO(Estado.Activo);
-                    dto.setId_Cliente(cliente.getId_Cliente());
-                    dto.setNombre(cliente.getNombre());
-                    dto.setApellido(cliente.getApellido());
-                    dto.setCedula(cliente.getCedula());
-                    dto.setDireccion(cliente.getDireccion());
-                    dto.setTelefono(cliente.getTelefono());
-                    dto.setEmail(cliente.getEmail());
-                    dto.setGenero(cliente.getGenero());
-                    dto.setFecha_nacimiento(cliente.getFecha_nacimiento());
-                    dto.setEstado(cliente.getEstado());
-                    dto.setPesoKg(cliente.getPesoKg());
-                    dto.setEstaturaMetros(cliente.getEstaturaMetros());
+                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                            .estaturaMetros(cliente.getEstaturaMetros())
+                            .fecha_nacimiento(cliente.getFecha_nacimiento())
+                            .direccion(cliente.getDireccion())
+                            .id_Cliente(cliente.getId())
+                            .genero(cliente.getGenero())
+                            .cedula(cliente.getCedula())
+                            .pesoKg(cliente.getPesoKg())
+                            .telefono(cliente.getTelefono())
+                            .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                            .apellido(cliente.getApellido())
+                            .email(cliente.getEmail())
+                            .estado(cliente.getEstado())
+                            .nombre(cliente.getNombre())
+                            .build();
                     return dto;
                 });
     }
 
-    public List<ClienteDTO> getAllClientes() {
+    public List<ClienteRespuestaDTO> getAllClientes() {
         return clienteRepository.findAll()
                 .stream()
                 .map(cliente -> {
-                    ClienteDTO dto = new ClienteDTO(Estado.Activo);
-                    dto.setId_Cliente(cliente.getId_Cliente());
-                    dto.setNombre(cliente.getNombre());
-                    dto.setApellido(cliente.getApellido());
-                    dto.setCedula(cliente.getCedula());
-                    dto.setDireccion(cliente.getDireccion());
-                    dto.setTelefono(cliente.getTelefono());
-                    dto.setEmail(cliente.getEmail());
-                    dto.setGenero(cliente.getGenero());
-                    dto.setFecha_nacimiento(cliente.getFecha_nacimiento());
-                    dto.setEstado(cliente.getEstado());
-                    dto.setPesoKg(cliente.getPesoKg());
-                    dto.setEstaturaMetros(cliente.getEstaturaMetros());
+                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                            .estaturaMetros(cliente.getEstaturaMetros())
+                            .fecha_nacimiento(cliente.getFecha_nacimiento())
+                            .direccion(cliente.getDireccion())
+                            .id_Cliente(cliente.getId())
+                            .genero(cliente.getGenero())
+                            .cedula(cliente.getCedula())
+                            .pesoKg(cliente.getPesoKg())
+                            .telefono(cliente.getTelefono())
+                            .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                            .apellido(cliente.getApellido())
+                            .email(cliente.getEmail())
+                            .estado(cliente.getEstado())
+                            .nombre(cliente.getNombre())
+                            .build();
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
 
-    public ClienteDTO updateCliente(Long id, ClienteDTO clienteDTO) {
+    public ClienteRespuestaDTO updateCliente(Long id, ClienteDTO clienteDTO) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
@@ -120,14 +163,55 @@ public class ClienteService {
         cliente.setPesoKg(clienteDTO.getPesoKg());
         cliente.setEstaturaMetros(clienteDTO.getEstaturaMetros());
         cliente = clienteRepository.save(cliente);
-        clienteDTO.setId_Cliente(cliente.getId_Cliente());
-        return clienteDTO;
+
+        condService.deleteByClienteId((int)cliente.getId());
+        if (clienteDTO.getCondicionesMedicas() != null) {
+            Cliente finalCliente = cliente;
+            clienteDTO.getCondicionesMedicas().forEach(cm -> {
+                if (cm.getId_condicion() == null) {
+                    cm = condService.post(cm);
+                }
+                condService.postRelacion(cm,finalCliente);
+            });
+        }
+        return ClienteRespuestaDTO.builder()
+                .estaturaMetros(cliente.getEstaturaMetros())
+                .fecha_nacimiento(cliente.getFecha_nacimiento())
+                .direccion(cliente.getDireccion())
+                .id_Cliente(cliente.getId())
+                .genero(cliente.getGenero())
+                .cedula(cliente.getCedula())
+                .pesoKg(cliente.getPesoKg())
+                .telefono(cliente.getTelefono())
+                .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                .apellido(cliente.getApellido())
+                .email(cliente.getEmail())
+                .estado(cliente.getEstado())
+                .nombre(cliente.getNombre())
+                .build();
     }
 
-    public void deleteCliente(Long id) {
-        clienteRepository.findById(id)
+
+    public ClienteRespuestaDTO actualizarEstado(Long id,EstadoDTO estado){
+        Cliente cliente=clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-        clienteRepository.deleteById(id);
+        cliente.setEstado(estado.getEstado());
+        clienteRepository.save(cliente);
+        return ClienteRespuestaDTO.builder()
+                .estaturaMetros(cliente.getEstaturaMetros())
+                .fecha_nacimiento(cliente.getFecha_nacimiento())
+                .direccion(cliente.getDireccion())
+                .id_Cliente(cliente.getId())
+                .genero(cliente.getGenero())
+                .cedula(cliente.getCedula())
+                .pesoKg(cliente.getPesoKg())
+                .telefono(cliente.getTelefono())
+                .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                .apellido(cliente.getApellido())
+                .email(cliente.getEmail())
+                .estado(cliente.getEstado())
+                .nombre(cliente.getNombre())
+                .build();
     }
 
 

@@ -33,11 +33,11 @@ public class Contrato {
     @JoinColumn(name = "ID_Agente", nullable = false)
     private Usuario agente;
 
-    @Column(name = "Fecha_Inicio", nullable = false)
+    @Column(name = "Fecha_Inicio")
     @Temporal(TemporalType.DATE)
     private Date fechaInicio;
 
-    @Column(name = "Fecha_Fin", nullable = false)
+    @Column(name = "Fecha_Fin")
     @Temporal(TemporalType.DATE)
     private Date fechaFin;
 

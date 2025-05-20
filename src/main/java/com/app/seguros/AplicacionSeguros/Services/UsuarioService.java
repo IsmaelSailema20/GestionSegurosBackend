@@ -8,6 +8,7 @@ import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class UsuarioService {
     public Usuario getUsuarioById(int id){
         return usuariosRepository.findById(id).orElse(null);
     }
+    @Transactional
     public Usuario register(UsuarioCrearRequest request) {
         Usuario u= Usuario.builder()
                 .rol(request.getRol())
