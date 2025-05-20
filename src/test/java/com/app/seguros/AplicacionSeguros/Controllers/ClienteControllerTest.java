@@ -168,12 +168,12 @@ class ClienteControllerUnitariasTest {
                 .andExpect(jsonPath("$.id_Cliente").value(1L));
     }
 
-    @Test
+   /* @Test
     void deleteCliente() throws Exception {
         doNothing().when(clienteService).deleteCliente(anyLong());
 
         mockMvc.perform(delete("/Clientes/1")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
-    }
+    }*/
 }

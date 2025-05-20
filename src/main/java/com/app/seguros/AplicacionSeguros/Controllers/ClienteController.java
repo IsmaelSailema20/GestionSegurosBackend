@@ -2,6 +2,8 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Dto.EstadoDTO;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +46,8 @@ public class ClienteController {
 
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCliente(@PathVariable Long id){
-        clienteService.deleteCliente(id);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/estado/{id}")
+    public ResponseEntity<ClienteRespuestaDTO> deleteCliente(@PathVariable Long id, @RequestBody EstadoDTO estado){
+        return  ResponseEntity.ok(clienteService.actualizarEstado(id,estado));
     }
 }
