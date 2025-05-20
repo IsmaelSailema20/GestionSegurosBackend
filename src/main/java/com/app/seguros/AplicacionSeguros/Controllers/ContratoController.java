@@ -43,7 +43,7 @@ public class ContratoController {
 
     @GetMapping("/agente/{idAgente}")
     public ResponseEntity<List<ContratoRespuestaDTO>> obtenerContratosPorAgente(
-            @PathVariable Integer idAgente) {
+            @PathVariable Long idAgente) {
 
         List<ContratoRespuestaDTO> contratos = contratoService.buscarContratosPorAgente(idAgente);
 
