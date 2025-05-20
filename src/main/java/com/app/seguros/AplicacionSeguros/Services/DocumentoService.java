@@ -53,7 +53,7 @@ public class DocumentoService {
         Path directorio = Paths.get(directorioBase, nombreCarpeta);
         Files.createDirectories(directorio);
 
-        String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + archivo.getOriginalFilename();
+        String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + contrato.getCliente().getNombre()+" "+contrato.getCliente().getApellido();
         Path rutaCompleta = directorio.resolve(nombreArchivo);
         Files.copy(archivo.getInputStream(), rutaCompleta);
         Documento documento = new Documento();
@@ -106,8 +106,8 @@ public class DocumentoService {
                 .build();
     }
 
-    public List<Documento> obtenerDocumentosPorCliente(Long idCliente) {
-        return documentoRepository.findByClienteId(idCliente);
+    public List<Documento> obtenerDocumentosPorContrato(Long idContrato) {
+        return documentoRepository.findByContratoId(idContrato);
     }
 
     public Documento obtenerDocumento(Long idDocumento) {

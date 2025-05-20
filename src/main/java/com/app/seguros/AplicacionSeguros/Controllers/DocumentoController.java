@@ -66,9 +66,9 @@ public class DocumentoController {
         return dto;
     }
 
-    @GetMapping("/cliente/{idCliente}")
-    public ResponseEntity<List<DocumentoDTO>> obtenerDocumentosPorCliente(@PathVariable Long idCliente) {
-        List<Documento> documentos = documentoService.obtenerDocumentosPorCliente(idCliente);
+    @GetMapping("/cliente/{idContrato}")
+    public ResponseEntity<List<DocumentoDTO>> obtenerDocumentosPorCliente(@PathVariable Long idContrato) {
+        List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
         return ResponseEntity.ok(documentos.stream()
                 .map(this::convertirADTO)
                 .collect(Collectors.toList()));
