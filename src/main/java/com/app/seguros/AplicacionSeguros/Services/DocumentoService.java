@@ -49,7 +49,7 @@ public class DocumentoService {
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-                String nombreCarpeta = contrato.getCliente().getNombre().replace(" ", "_");
+                String nombreCarpeta = contrato.getCliente().getCedula()+"_"+ contrato.getCliente().getNombre().replace(" ", "_") +"_"+ contrato.getCliente().getApellido().replace(" ", "_");
         Path directorio = Paths.get(directorioBase, nombreCarpeta);
         Files.createDirectories(directorio);
 
