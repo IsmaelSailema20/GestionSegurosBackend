@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ContratoRepository extends JpaRepository<Contrato,Integer> {
     List<Contrato> findByClienteCedula(String cedula);
+    List<Contrato> findByIdAgente(Integer idAgente);
 }
