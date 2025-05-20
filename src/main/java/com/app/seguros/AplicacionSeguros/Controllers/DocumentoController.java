@@ -58,11 +58,6 @@ public class DocumentoController {
             dto.setIdContrato(documento.getContrato().getId().longValue());
         }
 
-        // Mostrar motivo solo si está rechazado
-        if(documento.getEstado() == EstadoDocumento.Rechazado) {
-            dto.setMotivoRechazo(documento.getMotivoRechazo());
-        }
-
         return dto;
     }
 
@@ -101,22 +96,36 @@ public class DocumentoController {
                             "attachment; filename=\"" + documento.getNombreArchivo() + "\"")
                     .body(resource);
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException("Error al cargar el documento: " + ex.getMessage());
         }
     }
 
-    @PutMapping("/{id}/aprobar")
-    public ResponseEntity<Void> aprobarDocumento(@PathVariable Long id) {
-        documentoService.aprobarDocumento(id);
+    @PutMapping("/{idContrato}/aprobar")
+    public ResponseEntity<Void> aprobarDocumento(@PathVariable Long idContrato) {
+        try {
+            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
+            documentos.forEach(
+                    documento -> {
+                        documentoService.aprobarDocumento(documento.getIdDocumento());
+                    }
+            );
+        }catch (Exception e){
+           throw new RuntimeException("Error al aprobar el documento: " + e.getMessage());
+        }
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}/rechazar")
-    public ResponseEntity<Void> rechazarDocumento(
-            @PathVariable Long id,
-            @RequestBody String motivo) {
-        documentoService.rechazarDocumento(id, motivo);
+    @PutMapping("/{idContrato}/rechazar")
+    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idContrato) {
+        try{
+            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
+            documentos.forEach(documento -> {
+                documentoService.rechazarDocumento(documento.getIdDocumento());
+            });
+        }catch (Exception e){
+            throw new RuntimeException("Error al rechazar el documento: " + e.getMessage());
+        }
         return ResponseEntity.ok().build();
     }
 }
