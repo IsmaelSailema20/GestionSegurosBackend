@@ -1,12 +1,14 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
+import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.Contrato;
-import com.app.seguros.AplicacionSeguros.Entities.Documento;
+import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
+import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,27 +35,79 @@ public class DocumentoService {
     @Autowired
     private ContratoService contratoService;
 
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    @Autowired
+    private SeguroRepository seguroRepository;
+
+    @Autowired
+    private UsuariosRepository usuarioRepository;
+
 
 
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-                String nombreCarpeta = contrato.getCliente().getNombre().replace(" ", "_");
+                String nombreCarpeta = contrato.getCliente().getCedula()+"_"+ contrato.getCliente().getNombre().replace(" ", "_") +"_"+ contrato.getCliente().getApellido().replace(" ", "_");
         Path directorio = Paths.get(directorioBase, nombreCarpeta);
         Files.createDirectories(directorio);
 
-        String nombreArchivo = UUID.randomUUID() + "_" + archivo.getOriginalFilename();
+        String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + contrato.getCliente().getNombre()+" "+contrato.getCliente().getApellido();
         Path rutaCompleta = directorio.resolve(nombreArchivo);
         Files.copy(archivo.getInputStream(), rutaCompleta);
-
         Documento documento = new Documento();
         documento.setRutaArchivo(rutaCompleta.toString());
+        documento.setContrato(convertirDTOAContrato(contrato));
+        documento.setCliente(convertirDTOACliente(contrato.getCliente()));
         documento.setEstado(EstadoDocumento.Pendiente);
-        // ... setear otros campos
+        documento.setNombreArchivo(nombreArchivo);
+        documento.setTipo(dto.getTipo());
+        documento.setFechaSubida(LocalDateTime.now());
         return documentoRepository.save(documento);
     }
-    public List<Documento> obtenerDocumentosPorCliente(Long idCliente) {
-        return documentoRepository.findByClienteId(idCliente);
+
+    public Cliente convertirDTOACliente(ClienteRespuestaDTO dto) {
+        return Cliente.builder()
+                .id(dto.getId_Cliente())
+                .nombre(dto.getNombre())
+                .apellido(dto.getApellido())
+                .cedula(dto.getCedula())
+                .direccion(dto.getDireccion())
+                .telefono(dto.getTelefono())
+                .estaturaMetros(dto.getEstaturaMetros())
+                .pesoKg(dto.getPesoKg())
+                .email(dto.getEmail())
+                .genero(dto.getGenero())
+                .fecha_nacimiento(dto.getFecha_nacimiento())
+                .estado(dto.getEstado())
+                .build();
+    }
+
+    public Contrato convertirDTOAContrato(ContratoRespuestaDTO dto) {
+
+        Cliente cliente = clienteRepository.findById(dto.getCliente().getId_Cliente())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        Seguro seguro = seguroRepository.findById(dto.getSeguro().getIdSeguro())
+                .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+
+        Usuario agente = usuarioRepository.findById(dto.getAgente().getId())
+                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+
+        return Contrato.builder()
+                .id(dto.getId())
+                .cliente(cliente)
+                .seguro(seguro)
+                .agente(agente)
+                .fechaInicio(dto.getFechaInicio())
+                .fechaFin(dto.getFechaFin())
+                .estado(dto.getEstado())
+                .build();
+    }
+
+    public List<Documento> obtenerDocumentosPorContrato(Long idContrato) {
+        return documentoRepository.findByContratoId(idContrato);
     }
 
     public Documento obtenerDocumento(Long idDocumento) {
