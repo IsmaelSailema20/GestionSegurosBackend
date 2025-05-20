@@ -40,6 +40,18 @@ public class ContratoController {
         }
         return ResponseEntity.ok(contratos);
     }
+
+    @GetMapping("/agente/{idAgente}")
+    public ResponseEntity<List<ContratoRespuestaDTO>> obtenerContratosPorAgente(
+            @PathVariable Integer idAgente) {
+
+        List<ContratoRespuestaDTO> contratos = contratoService.buscarContratosPorAgente(idAgente);
+
+        if(contratos.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(contratos);
+    }
     @PostMapping
     public ResponseEntity<ContratoRespuestaDTO> crearContrato(@RequestBody ContratoRegistrarDTO dto) {
         ContratoRespuestaDTO nuevo = contratoService.registrarContrato(dto);
