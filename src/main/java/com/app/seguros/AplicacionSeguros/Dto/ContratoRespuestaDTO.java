@@ -24,6 +24,8 @@ public class ContratoRespuestaDTO {
     private Date fechaInicio;
     private Date fechaFin;
     private EstadoContrato estado;
+    private List<Beneficiario> beneficiarios;
+
 }
 
 

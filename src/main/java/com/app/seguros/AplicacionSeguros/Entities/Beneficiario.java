@@ -23,11 +23,6 @@ public class Beneficiario {
     @Column(name = "ID_Beneficiario")
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_Cliente", nullable = false)
-    @JsonIgnore
-    private Cliente cliente;
-
     @Column(nullable = false, length = 100)
     private String cedula;
 

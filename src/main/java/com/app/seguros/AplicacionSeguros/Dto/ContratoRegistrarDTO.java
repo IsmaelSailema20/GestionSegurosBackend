@@ -21,4 +21,7 @@ public class ContratoRegistrarDTO {
     private Date fechaInicio;
     private Date fechaFin;
 
+    private List<Beneficiario> beneficiarios;
+
+
 }

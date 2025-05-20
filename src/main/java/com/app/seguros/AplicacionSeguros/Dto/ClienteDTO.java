@@ -52,7 +52,5 @@ public class ClienteDTO {
 
     private double pesoKg;
     private List<CondicionMedica> condicionesMedicas;
-    private List<Beneficiario> beneficiarios;
 
-    private int idSeguro;
 }

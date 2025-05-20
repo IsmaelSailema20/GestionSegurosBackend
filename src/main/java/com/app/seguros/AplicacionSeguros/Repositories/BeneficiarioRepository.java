@@ -10,8 +10,5 @@ import java.util.List;
 
 @Repository
 public interface BeneficiarioRepository extends JpaRepository < Beneficiario,Integer> {
-    List<Beneficiario> findByClienteId(Integer idCliente);
-    @Modifying
-    @Transactional
-    void deleteByClienteId(Integer idCliente);
+
 }

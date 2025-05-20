@@ -24,7 +24,7 @@ public class ContratoService {
     @Autowired private ClienteRepository clienteRepo;
     @Autowired private SeguroRepository seguroRepo;
     @Autowired private UsuariosRepository usuarioRepo;
-    @Autowired private BeneficiarioRepository benRepo;
+    @Autowired private BeneficiarioService benService;
     @Autowired private CondicionMedicaClienteRepository condRepo;
     @Autowired
     private EntityManager entityManager;
@@ -53,6 +53,17 @@ public class ContratoService {
                 .apellido(agente.getApellido())
                 .id(agente.getID_Usuario())
                 .build();
+
+        if (dto.getBeneficiarios() != null) {
+            Contrato finalCcontrato = c;
+            dto.getBeneficiarios().forEach(b -> {
+                if(b.getId()==null){
+                    b=benService.guardar(b);
+                }
+                benService.guardarRelacion(b,finalCcontrato);
+            });
+        }
+
         ContratoRespuestaDTO contratoResponse=ContratoRespuestaDTO.builder()
                 .cliente(
                         ClienteRespuestaDTO.builder()
@@ -65,7 +76,6 @@ public class ContratoService {
                                 .pesoKg(c.getCliente().getPesoKg())
                                 .telefono(c.getCliente().getTelefono())
                                 .condicionesMedicas(condRepo.findByClienteId((int) c.getCliente().getId()))
-                                .beneficiarios(benRepo.findByClienteId((int)c.getCliente().getId()))
                                 .apellido(c.getCliente().getApellido())
                                 .email(c.getCliente().getEmail())
                                 .estado(c.getCliente().getEstado())
@@ -78,6 +88,7 @@ public class ContratoService {
                 .seguro(c.getSeguro())
                 .id(c.getId())
                 .agente(agenteDTO)
+                .beneficiarios(benService.listarPorContrato(c.getId()))
                 .build()
                 ;
         return contratoResponse;
@@ -107,7 +118,6 @@ public class ContratoService {
                                     .pesoKg(contrato.getCliente().getPesoKg())
                                     .telefono(contrato.getCliente().getTelefono())
                                     .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
-                                    .beneficiarios(benRepo.findByClienteId((int)contrato.getCliente().getId()))
                                     .apellido(contrato.getCliente().getApellido())
                                     .email(contrato.getCliente().getEmail())
                                     .estado(contrato.getCliente().getEstado())
@@ -119,6 +129,7 @@ public class ContratoService {
                     .fechaInicio(contrato.getFechaInicio())
                     .seguro(contrato.getSeguro())
                     .id(contrato.getId())
+                    .beneficiarios(benService.listarPorContrato(contrato.getId()))
                     .agente(agenteDTO)
                     .build()
                     ;
@@ -181,7 +192,6 @@ public class ContratoService {
                                     .pesoKg(contrato.getCliente().getPesoKg())
                                     .telefono(contrato.getCliente().getTelefono())
                                     .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
-                                    .beneficiarios(benRepo.findByClienteId((int)contrato.getCliente().getId()))
                                     .apellido(contrato.getCliente().getApellido())
                                     .email(contrato.getCliente().getEmail())
                                     .estado(contrato.getCliente().getEstado())
@@ -193,6 +203,7 @@ public class ContratoService {
                     .fechaInicio(contrato.getFechaInicio())
                     .seguro(contrato.getSeguro())
                     .id(contrato.getId())
+                    .beneficiarios(benService.listarPorContrato(contrato.getId()))
                     .agente(agenteDTO)
                     .build()
                     ;
@@ -202,61 +213,131 @@ public class ContratoService {
 
 
     @Transactional
-    public ContratoRespuestaDTO editarContrato(Integer id) {
+    public ContratoRespuestaDTO editarContrato(Integer id, ContratoRegistrarDTO dto) {
         Contrato contrato = contratoRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
 
-        // Actualizar el estado a ACTIVO
-        contrato.setEstado(EstadoContrato.ACTIVO);
+        if(contrato.getEstado()!=EstadoContrato.PENDIENTE){
+            throw new RuntimeException("Contrato no esta pendiente");
+        }
 
-        // Establecer la fecha de inicio como la fecha actual
-        LocalDate fechaInicioLocal = LocalDate.now();
-        Date fechaInicio = Date.from(fechaInicioLocal.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        contrato.setFechaInicio(fechaInicio);
+        // Actualizar solo los campos permitidos
+        if (dto.getFechaInicio() != null) {
+            contrato.setFechaInicio(dto.getFechaInicio());
+        }
 
-        // Calcular la fecha de fin
-        LocalDate fechaFinLocal = fechaInicioLocal.plusMonths(12);
-        Date fechaFin = Date.from(fechaFinLocal.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        contrato.setFechaFin(fechaFin);
+        if (dto.getFechaFin() != null) {
+            contrato.setFechaFin(dto.getFechaFin());
+        }
+
+        if (dto.getIdSeguro() != null) {
+            Seguro seguro = seguroRepo.findById(dto.getIdSeguro())
+                    .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+            contrato.setSeguro(seguro);
+        }
+
 
         contrato = contratoRepo.save(contrato);
 
-        Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
+        // Actualizar beneficiarios
+        benService.eliminarPorContrato(contrato.getId());
+        if (dto.getBeneficiarios() != null) {
+            Contrato finalCcontrato = contrato;
+            dto.getBeneficiarios().forEach(b -> {
+                if (b.getId() == null) {
+                    b = benService.guardar(b); // nuevo beneficiario
+                } else {
+                    b = benService.buscarPorId(b.getId())
+                            .orElseThrow(() -> new RuntimeException("Beneficiario no encontrado"));
+                }
+                benService.guardarRelacion(b, finalCcontrato);
+            });
+
+        }
+
+        Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario())
+                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+
         AgenteDTO agenteDTO = AgenteDTO.builder()
                 .nombre(agente.getNombre())
-                .email(agente.getEmail())
                 .apellido(agente.getApellido())
+                .email(agente.getEmail())
                 .id(agente.getID_Usuario())
                 .build();
 
-        ContratoRespuestaDTO contratoResponse = ContratoRespuestaDTO.builder()
+        return ContratoRespuestaDTO.builder()
+                .id(contrato.getId())
+                .estado(contrato.getEstado())
+                .fechaInicio(contrato.getFechaInicio())
+                .fechaFin(contrato.getFechaFin())
+                .seguro(contrato.getSeguro())
+                .beneficiarios(benService.listarPorContrato(contrato.getId()))
+                .agente(agenteDTO)
                 .cliente(
                         ClienteRespuestaDTO.builder()
-                                .estaturaMetros(contrato.getCliente().getEstaturaMetros())
-                                .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
-                                .direccion(contrato.getCliente().getDireccion())
                                 .id_Cliente(contrato.getCliente().getId())
-                                .genero(contrato.getCliente().getGenero())
-                                .cedula(contrato.getCliente().getCedula())
-                                .pesoKg(contrato.getCliente().getPesoKg())
-                                .telefono(contrato.getCliente().getTelefono())
-                                .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
-                                .beneficiarios(benRepo.findByClienteId((int) contrato.getCliente().getId()))
-                                .apellido(contrato.getCliente().getApellido())
-                                .email(contrato.getCliente().getEmail())
-                                .estado(contrato.getCliente().getEstado())
                                 .nombre(contrato.getCliente().getNombre())
+                                .apellido(contrato.getCliente().getApellido())
+                                .cedula(contrato.getCliente().getCedula())
+                                .email(contrato.getCliente().getEmail())
+                                .direccion(contrato.getCliente().getDireccion())
+                                .telefono(contrato.getCliente().getTelefono())
+                                .genero(contrato.getCliente().getGenero())
+                                .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
+                                .pesoKg(contrato.getCliente().getPesoKg())
+                                .estaturaMetros(contrato.getCliente().getEstaturaMetros())
+                                .estado(contrato.getCliente().getEstado())
+                                .condicionesMedicas(condRepo.findByClienteId((int)contrato.getCliente().getId()))
                                 .build()
                 )
-                .estado(contrato.getEstado())
-                .fechaFin(contrato.getFechaFin())
-                .fechaInicio(contrato.getFechaInicio())
-                .seguro(contrato.getSeguro())
-                .id(contrato.getId())
-                .agente(agenteDTO)
+                .build();
+    }
+
+    @Transactional
+    public ContratoRespuestaDTO editarEstadoContrato(Integer id, EstadoContratoDTO dto) {
+        Contrato contrato = contratoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+
+        contrato.setEstado(dto.getEstado());
+
+        contrato = contratoRepo.save(contrato);
+
+        Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario())
+                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+
+        AgenteDTO agenteDTO = AgenteDTO.builder()
+                .nombre(agente.getNombre())
+                .apellido(agente.getApellido())
+                .email(agente.getEmail())
+                .id(agente.getID_Usuario())
                 .build();
 
-        return contratoResponse;
+        return ContratoRespuestaDTO.builder()
+                .id(contrato.getId())
+                .estado(contrato.getEstado())
+                .fechaInicio(contrato.getFechaInicio())
+                .fechaFin(contrato.getFechaFin())
+                .seguro(contrato.getSeguro())
+                .beneficiarios(benService.listarPorContrato(contrato.getId()))
+                .agente(agenteDTO)
+                .cliente(
+                        ClienteRespuestaDTO.builder()
+                                .id_Cliente(contrato.getCliente().getId())
+                                .nombre(contrato.getCliente().getNombre())
+                                .apellido(contrato.getCliente().getApellido())
+                                .cedula(contrato.getCliente().getCedula())
+                                .email(contrato.getCliente().getEmail())
+                                .direccion(contrato.getCliente().getDireccion())
+                                .telefono(contrato.getCliente().getTelefono())
+                                .genero(contrato.getCliente().getGenero())
+                                .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
+                                .pesoKg(contrato.getCliente().getPesoKg())
+                                .estaturaMetros(contrato.getCliente().getEstaturaMetros())
+                                .estado(contrato.getCliente().getEstado())
+                                .condicionesMedicas(condRepo.findByClienteId((int)contrato.getCliente().getId()))
+                                .build()
+                )
+                .build();
     }
     public List<ContratoRespuestaDTO> buscarContratosPorCedula(String cedula) {
         List<Contrato> contratos = contratoRepo.findByClienteCedula(cedula);
@@ -283,7 +364,6 @@ public class ContratoService {
                                     .pesoKg(contrato.getCliente().getPesoKg())
                                     .telefono(contrato.getCliente().getTelefono())
                                     .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
-                                    .beneficiarios(benRepo.findByClienteId((int) contrato.getCliente().getId()))
                                     .apellido(contrato.getCliente().getApellido())
                                     .email(contrato.getCliente().getEmail())
                                     .estado(contrato.getCliente().getEstado())
@@ -295,6 +375,7 @@ public class ContratoService {
                     .fechaInicio(contrato.getFechaInicio())
                     .seguro(contrato.getSeguro())
                     .id(contrato.getId())
+                    .beneficiarios(benService.listarPorContrato(contrato.getId()))
                     .agente(agenteDTO)
                     .build();
 

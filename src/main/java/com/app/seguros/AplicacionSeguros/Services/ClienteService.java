@@ -1,18 +1,10 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
 import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.Condiciones_Clientes;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
-import com.app.seguros.AplicacionSeguros.Entities.Usuario;
-import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
-import com.app.seguros.AplicacionSeguros.Repositories.CondicionMedicaClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +16,7 @@ import java.util.stream.Collectors;
 public class ClienteService {
     @Autowired
     ClienteRepository clienteRepository;
-    @Autowired private BeneficiarioRepository benRepo;
     @Autowired private CondicionMedicaService condService;
-    @Autowired private ContratoService contratoService;
-    @Autowired private JwtService jwtService;
     @Autowired private UsuarioService usuarioService;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
@@ -58,13 +47,7 @@ public class ClienteService {
                 .build();
         cliente = clienteRepository.save(cliente);
 
-        if (clienteDTO.getBeneficiarios() != null) {
-            Cliente finalCliente = cliente;
-            clienteDTO.getBeneficiarios().forEach(b -> {
-                b.setCliente(finalCliente);
-                benRepo.save(b);
-            });
-        }
+
 
         if (clienteDTO.getCondicionesMedicas() != null) {
             Cliente finalCliente = cliente;
@@ -76,16 +59,6 @@ public class ClienteService {
             });
         }
 
-        AgenteDTO agente=obtenerAgente();
-
-        contratoService.registrarContrato(ContratoRegistrarDTO.builder()
-                .idCliente((int)cliente.getId())
-                .fechaFin(null)
-                .fechaInicio(null)
-                .idAgente(agente.getId())
-                .idSeguro(clienteDTO.getIdSeguro())
-                .build()
-        );
         usuarioService.register(
                 UsuarioCrearRequest.builder()
                         .apellido(cliente.getApellido())
@@ -106,7 +79,6 @@ public class ClienteService {
                 .pesoKg(clienteDTO.getPesoKg())
                 .telefono(clienteDTO.getTelefono())
                 .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                .beneficiarios(benRepo.findByClienteId((int)cliente.getId()))
                 .apellido(clienteDTO.getApellido())
                 .email(clienteDTO.getEmail())
                 .estado(clienteDTO.getEstado())
@@ -114,25 +86,6 @@ public class ClienteService {
                 .build();
     }
 
-    private AgenteDTO obtenerAgente() {
-        String token="";
-        AgenteDTO agenteDTO=null;
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof UsernamePasswordAuthenticationToken tokenAuth) {
-            token= tokenAuth.getCredentials().toString(); // si lo pusiste como credential
-        }
-        if(token!=null && !token.isBlank()){
-            String email=jwtService.getClaim(token,claims -> claims.get("sub", String.class));
-            Usuario agente=usuarioService.getUsuarioByEmail(email);
-            agenteDTO=AgenteDTO.builder()
-                    .apellido(agente.getApellido())
-                    .id(agente.getID_Usuario())
-                    .email(agente.getEmail())
-                    .nombre(agente.getNombre())
-                    .build();
-        }
-        return agenteDTO;
-    }
 
     public Optional<ClienteRespuestaDTO> getCliente(Long id) {
         return clienteRepository.findById(id)
@@ -147,7 +100,6 @@ public class ClienteService {
                             .pesoKg(cliente.getPesoKg())
                             .telefono(cliente.getTelefono())
                             .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                            .beneficiarios(benRepo.findByClienteId((int)cliente.getId()))
                             .apellido(cliente.getApellido())
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
@@ -171,7 +123,6 @@ public class ClienteService {
                             .pesoKg(cliente.getPesoKg())
                             .telefono(cliente.getTelefono())
                             .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                            .beneficiarios(benRepo.findByClienteId((int)cliente.getId()))
                             .apellido(cliente.getApellido())
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
@@ -213,14 +164,6 @@ public class ClienteService {
         cliente.setEstaturaMetros(clienteDTO.getEstaturaMetros());
         cliente = clienteRepository.save(cliente);
 
-        benRepo.deleteByClienteId((int)cliente.getId());
-        if (clienteDTO.getBeneficiarios() != null) {
-            Cliente finalCliente = cliente;
-            clienteDTO.getBeneficiarios().forEach(b -> {
-                b.setCliente(finalCliente);
-                benRepo.save(b);
-            });
-        }
         condService.deleteByClienteId((int)cliente.getId());
         if (clienteDTO.getCondicionesMedicas() != null) {
             Cliente finalCliente = cliente;
@@ -241,7 +184,6 @@ public class ClienteService {
                 .pesoKg(cliente.getPesoKg())
                 .telefono(cliente.getTelefono())
                 .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                .beneficiarios(benRepo.findByClienteId((int)cliente.getId()))
                 .apellido(cliente.getApellido())
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
@@ -265,7 +207,6 @@ public class ClienteService {
                 .pesoKg(cliente.getPesoKg())
                 .telefono(cliente.getTelefono())
                 .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                .beneficiarios(benRepo.findByClienteId((int)cliente.getId()))
                 .apellido(cliente.getApellido())
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())

@@ -3,6 +3,7 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Dto.EstadoContratoDTO;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -58,9 +59,15 @@ public class ContratoController {
         return ResponseEntity.ok(nuevo);
     }
 
-    @PutMapping("/activar/{id}")
-    public ResponseEntity<ContratoRespuestaDTO> activarContrato(@PathVariable Integer id) {
-        ContratoRespuestaDTO response = contratoService.editarContrato(id);
+    @PutMapping("/{id}")
+    public ResponseEntity<ContratoRespuestaDTO> editarContrato(@PathVariable Integer id,@RequestBody ContratoRegistrarDTO dto) {
+        ContratoRespuestaDTO response = contratoService.editarContrato(id,dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/estado/{id}")
+    public ResponseEntity<ContratoRespuestaDTO> cambiarEstadoContrato(@PathVariable Integer id,@RequestBody EstadoContratoDTO dto) {
+        ContratoRespuestaDTO response = contratoService.editarEstadoContrato(id,dto);
         return ResponseEntity.ok(response);
     }
 

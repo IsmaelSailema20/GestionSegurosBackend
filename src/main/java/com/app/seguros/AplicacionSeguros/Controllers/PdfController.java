@@ -31,7 +31,7 @@ public class PdfController {
                     c.getAgente(),
                     c.getFechaInicio(),
                     c.getFechaFin(),
-                    c.getCliente().getBeneficiarios(),
+                    c.getBeneficiarios(),
                     c.getCliente().getCondicionesMedicas()
             );
 

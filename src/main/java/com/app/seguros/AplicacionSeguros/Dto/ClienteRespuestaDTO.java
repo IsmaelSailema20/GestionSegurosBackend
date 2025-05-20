@@ -59,5 +59,4 @@ public class ClienteRespuestaDTO {
     private double pesoKg;
 
     private List<CondicionMedica> condicionesMedicas;
-    private List<Beneficiario> beneficiarios;
 }
