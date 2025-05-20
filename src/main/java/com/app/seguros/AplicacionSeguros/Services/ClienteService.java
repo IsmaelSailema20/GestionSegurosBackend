@@ -249,13 +249,28 @@ public class ClienteService {
                 .build();
     }
 
-    public void deleteCliente(Long id) {
-        clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-        condService.deleteByClienteId(id.intValue());
-        benRepo.deleteByClienteId(id.intValue());
 
-        clienteRepository.deleteById(id);
+    public ClienteRespuestaDTO actualizarEstado(Long id,EstadoDTO estado){
+        Cliente cliente=clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        cliente.setEstado(estado.getEstado());
+        clienteRepository.save(cliente);
+        return ClienteRespuestaDTO.builder()
+                .estaturaMetros(cliente.getEstaturaMetros())
+                .fecha_nacimiento(cliente.getFecha_nacimiento())
+                .direccion(cliente.getDireccion())
+                .id_Cliente(cliente.getId())
+                .genero(cliente.getGenero())
+                .cedula(cliente.getCedula())
+                .pesoKg(cliente.getPesoKg())
+                .telefono(cliente.getTelefono())
+                .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                .beneficiarios(benRepo.findByClienteId((int)cliente.getId()))
+                .apellido(cliente.getApellido())
+                .email(cliente.getEmail())
+                .estado(cliente.getEstado())
+                .nombre(cliente.getNombre())
+                .build();
     }
 
 

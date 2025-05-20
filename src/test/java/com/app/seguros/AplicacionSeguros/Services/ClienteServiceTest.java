@@ -197,7 +197,7 @@ class ClienteServiceUnitariasTest {
 
         assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, dto));
     }
-
+/*
     @Test
     void deleteCliente() {
         Cliente cliente = createEntity(1L);
@@ -213,5 +213,5 @@ class ClienteServiceUnitariasTest {
         when(clienteRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> clienteService.deleteCliente(1L));
-    }
+    }*/
 }
