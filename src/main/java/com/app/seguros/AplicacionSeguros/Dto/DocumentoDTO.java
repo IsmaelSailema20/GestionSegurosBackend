@@ -14,6 +14,5 @@ public class DocumentoDTO {
     private LocalDateTime fechaSubida;
     private Long idCliente;
     private Long idContrato;
-    private String motivoRechazo;
     //private String urlDescarga;
 }
