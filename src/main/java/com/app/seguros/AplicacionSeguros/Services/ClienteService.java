@@ -254,6 +254,7 @@ public class ClienteService {
         Cliente cliente=clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
         cliente.setEstado(estado.getEstado());
+        clienteRepository.save(cliente);
         return ClienteRespuestaDTO.builder()
                 .estaturaMetros(cliente.getEstaturaMetros())
                 .fecha_nacimiento(cliente.getFecha_nacimiento())
