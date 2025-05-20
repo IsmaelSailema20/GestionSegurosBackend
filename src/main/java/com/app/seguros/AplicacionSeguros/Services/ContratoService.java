@@ -57,10 +57,13 @@ public class ContratoService {
         if (dto.getBeneficiarios() != null) {
             Contrato finalCcontrato = c;
             dto.getBeneficiarios().forEach(b -> {
-                if(b.getId()==null){
-                    b=benService.guardar(b);
+                if (b.getId() == null) {
+                    b = benService.guardar(b); // nuevo beneficiario
+                } else {
+                    b = benService.buscarPorId(b.getId())
+                            .orElseThrow(() -> new RuntimeException("Beneficiario no encontrado"));
                 }
-                benService.guardarRelacion(b,finalCcontrato);
+                benService.guardarRelacion(b, finalCcontrato);
             });
         }
 
