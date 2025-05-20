@@ -53,7 +53,7 @@ public class DocumentoService {
         Path directorio = Paths.get(directorioBase, nombreCarpeta);
         Files.createDirectories(directorio);
 
-        String nombreArchivo = UUID.randomUUID() + "_" + archivo.getOriginalFilename();
+        String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + archivo.getOriginalFilename();
         Path rutaCompleta = directorio.resolve(nombreArchivo);
         Files.copy(archivo.getInputStream(), rutaCompleta);
         Documento documento = new Documento();
@@ -62,6 +62,7 @@ public class DocumentoService {
         documento.setCliente(convertirDTOACliente(contrato.getCliente()));
         documento.setEstado(EstadoDocumento.Pendiente);
         documento.setNombreArchivo(nombreArchivo);
+        documento.setTipo(dto.getTipo());
         documento.setFechaSubida(LocalDateTime.now());
         return documentoRepository.save(documento);
     }
