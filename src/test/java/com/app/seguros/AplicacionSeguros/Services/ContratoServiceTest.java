@@ -1,16 +1,17 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Dto.AgenteDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.*;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Repositories.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -18,142 +19,318 @@ import java.time.ZoneId;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ContratoServiceTest {
+public class ContratoServiceTest {
 
     @InjectMocks
     private ContratoService contratoService;
 
-    @Mock private ContratoRepository contratoRepo;
-    @Mock private ClienteRepository clienteRepo;
-    @Mock private SeguroRepository seguroRepo;
-    @Mock private UsuariosRepository usuarioRepo;
-    @Mock private BeneficiarioRepository benRepo;
-    @Mock private CondicionMedicaRepository condRepo;
+    @Mock
+    private ContratoRepository contratoRepo;
 
-    private ContratoRegistrarDTO contratoDto;
+    @Mock
+    private ClienteRepository clienteRepo;
+
+    @Mock
+    private SeguroRepository seguroRepo;
+
+    @Mock
+    private UsuariosRepository usuarioRepo;
+
+    @Mock
+    private BeneficiarioService benService;
+
+    @Mock
+    private CondicionMedicaClienteRepository condRepo;
+
+    @Mock
+    private EntityManager entityManager;
+
     private Cliente cliente;
     private Seguro seguro;
     private Usuario agente;
     private Contrato contrato;
+    private Beneficiario beneficiario;
+    private CondicionMedica condicionMedica;
+    private Date fechaInicio;
+    private Date fechaFin;
 
     @BeforeEach
     void setUp() {
+        // Setup test data
         cliente = new Cliente();
-        cliente.setId_Cliente(1L);
+        cliente.setId(1L);
+        cliente.setNombre("Juan");
+        cliente.setApellido("Perez");
+        cliente.setCedula("1234567890");
+        cliente.setEmail("juan@example.com");
+        cliente.setDireccion("Calle 123");
+        cliente.setTelefono("123456789");
+        cliente.setGenero("Masculino");
+        cliente.setFecha_nacimiento(Date.from(LocalDate.of(1990, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        cliente.setPesoKg(70.0);
+        cliente.setEstaturaMetros(1.75);
+        cliente.setEstado(Estado.Activo);
 
         seguro = new Seguro();
-        seguro.setIdSeguro(2);
+        seguro.setIdSeguro(1);
+        seguro.setNombre("Seguro de Vida");
 
         agente = new Usuario();
-        agente.setID_Usuario(3);
-        agente.setNombre("Juan");
-        agente.setApellido("Pérez");
-        agente.setEmail("juan@example.com");
+        agente.setID_Usuario(1);
+        agente.setNombre("Ana");
+        agente.setApellido("Gomez");
+        agente.setEmail("ana@example.com");
 
         contrato = new Contrato();
-        contrato.setId(10);
+        contrato.setId(1);
         contrato.setCliente(cliente);
         contrato.setSeguro(seguro);
         contrato.setAgente(agente);
-        LocalDate hoy = LocalDate.now();
-        LocalDate fin = hoy.plusDays(30);
-        Date fechaInicio = Date.from(hoy.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date fechaFin = Date.from(fin.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        contrato.setEstado(EstadoContrato.PENDIENTE);
+        fechaInicio = Date.from(LocalDate.of(2025, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        fechaFin = Date.from(LocalDate.of(2026, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
         contrato.setFechaInicio(fechaInicio);
         contrato.setFechaFin(fechaFin);
-        contrato.setEstado(EstadoContrato.PENDIENTE);
 
-        contratoDto = new ContratoRegistrarDTO();
-        contratoDto.setIdCliente(1);
-        contratoDto.setIdSeguro(2);
-        contratoDto.setIdAgente(3);
-        contratoDto.setFechaInicio(contrato.getFechaInicio());
-        contratoDto.setFechaFin(contrato.getFechaFin());
+        beneficiario = Beneficiario.builder()
+                .id(1)
+                .cedula("0987654321")
+                .nombre("Maria")
+                .genero("Femenino")
+                .direccion("Calle 456")
+                .parentesco("Hija")
+                .fecha_nacimiento(Date.from(LocalDate.of(2000, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                .build();
+
+        condicionMedica = CondicionMedica.builder()
+                .id_condicion(1)
+                .diagnostico("Hipertension")
+                .build();
     }
 
     @Test
-    void testRegistrarContrato() {
-        when(clienteRepo.findById(1L)).thenReturn(Optional.of(cliente));
-        when(seguroRepo.findById(2)).thenReturn(Optional.of(seguro));
-        when(usuarioRepo.findById(3)).thenReturn(Optional.of(agente));
-        when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
-        when(benRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
-        when(condRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
+    void testRegistrarContrato_Success() {
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idCliente(1)
+                .idSeguro(1)
+                .idAgente(1)
+                .fechaInicio(fechaInicio)
+                .fechaFin(fechaFin)
+                .beneficiarios(List.of(beneficiario))
+                .build();
 
-        ContratoRespuestaDTO result = contratoService.registrarContrato(contratoDto);
+        when(clienteRepo.findById(1L)).thenReturn(Optional.of(cliente));
+        when(seguroRepo.findById(1)).thenReturn(Optional.of(seguro));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
+        lenient().when(benService.guardar(any(Beneficiario.class))).thenReturn(beneficiario);
+        when(benService.buscarPorId(1)).thenReturn(Optional.of(beneficiario));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        ContratoRespuestaDTO result = contratoService.registrarContrato(dto);
 
         assertNotNull(result);
-        assertEquals(10, result.getId());
-        assertEquals(cliente, result.getCliente());
-        assertEquals(seguro, result.getSeguro());
-        assertEquals(agente.getID_Usuario(), result.getAgente().getId());
+        assertEquals(1, result.getId());
+        assertEquals(EstadoContrato.PENDIENTE, result.getEstado());
+        assertEquals(cliente.getNombre(), result.getCliente().getNombre());
+        assertEquals(agente.getNombre(), result.getAgente().getNombre());
+        assertEquals(1, result.getBeneficiarios().size());
+        assertEquals("Hipertension", result.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).save(any(Contrato.class));
+        verify(benService, times(1)).guardarRelacion(any(Beneficiario.class), any(Contrato.class));
+    }
+
+    @Test
+    void testRegistrarContrato_ClienteNotFound() {
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idCliente(1)
+                .idSeguro(1)
+                .idAgente(1)
+                .fechaInicio(fechaInicio)
+                .fechaFin(fechaFin)
+                .build();
+
+        when(clienteRepo.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> contratoService.registrarContrato(dto));
+        assertEquals("Cliente no encontrado", exception.getMessage());
+        verify(contratoRepo, never()).save(any());
+    }
+
+    @Test
+    void testListarTodos_Success() {
+        when(contratoRepo.findAll()).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        List<ContratoRespuestaDTO> result = contratoService.listarTodos();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+    }
+
+    @Test
+    void testBuscarContratosPorAgente_Success() {
+        String jpql = "SELECT c FROM Contrato c WHERE c.agente.ID_Usuario = :idAgente";
+        TypedQuery<Contrato> query = mock(TypedQuery.class);
+        when(entityManager.createQuery(jpql, Contrato.class)).thenReturn(query);
+        when(query.setParameter("idAgente", 1L)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(contrato));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        List<ContratoRespuestaDTO> result = contratoService.buscarContratosPorAgente(1L);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+    }
+
+    @Test
+    void testBuscarPorId_Success() {
+        when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        Optional<ContratoRespuestaDTO> result = contratoService.buscarPorId(1);
+
+        assertTrue(result.isPresent());
+        ContratoRespuestaDTO dto = result.get();
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+    }
+
+    @Test
+    void testEditarContrato_Success() {
+        // Arrange
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idSeguro(2)
+                .fechaInicio(fechaInicio)
+                .fechaFin(fechaFin)
+                .beneficiarios(List.of(beneficiario))
+                .build();
+
+        Seguro nuevoSeguro = new Seguro();
+        nuevoSeguro.setIdSeguro(2);
+        nuevoSeguro.setNombre("Seguro de Salud");
+
+        when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
+        when(seguroRepo.findById(2)).thenReturn(Optional.of(nuevoSeguro));
+        when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        lenient().when(benService.guardar(any(Beneficiario.class))).thenReturn(beneficiario);
+        when(benService.buscarPorId(1)).thenReturn(Optional.of(beneficiario));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        ContratoRespuestaDTO result = contratoService.editarContrato(1, dto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getId());
+        assertEquals(nuevoSeguro.getNombre(), result.getSeguro().getNombre());
+        assertEquals(1, result.getBeneficiarios().size());
+        verify(benService, times(1)).eliminarPorContrato(1);
         verify(contratoRepo, times(1)).save(any(Contrato.class));
     }
 
     @Test
-    void testActualizarContrato() {
-        contratoDto.setIdCliente(1);
-        when(contratoRepo.findById(10)).thenReturn(Optional.of(contrato));
-        lenient().when(clienteRepo.findById(1L)).thenReturn(Optional.of(cliente));
-        lenient().when(seguroRepo.findById(2)).thenReturn(Optional.of(seguro));
-        lenient().when(usuarioRepo.findById(3)).thenReturn(Optional.of(agente));
-        when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
-        when(benRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
-        when(condRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
+    void testEditarContrato_ContratoNotPending() {
+        // Arrange
+        contrato.setEstado(EstadoContrato.ACTIVO);
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idSeguro(2)
+                .fechaInicio(fechaInicio)
+                .fechaFin(fechaFin)
+                .build();
 
-        ContratoRespuestaDTO result = contratoService.actualizarContrato(10, contratoDto);
+        when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> contratoService.editarContrato(1, dto));
+        assertEquals("Contrato no esta pendiente", exception.getMessage());
+        verify(contratoRepo, never()).save(any());
+    }
+
+    @Test
+    void testEditarEstadoContrato_Success() {
+        // Arrange
+        EstadoContratoDTO dto = EstadoContratoDTO.builder()
+                .estado(EstadoContrato.ACTIVO)
+                .build();
+
+        when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
+        when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        ContratoRespuestaDTO result = contratoService.editarEstadoContrato(1, dto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(EstadoContrato.ACTIVO, result.getEstado());
+        verify(contratoRepo, times(1)).save(any(Contrato.class));
+    }
+
+    @Test
+    void testBuscarContratosPorCedula_Success() {
+
+        when(contratoRepo.findByClienteCedula("1234567890")).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        List<ContratoRespuestaDTO> result = contratoService.buscarContratosPorCedula("1234567890");
 
         assertNotNull(result);
-        assertEquals(EstadoContrato.PENDIENTE, result.getEstado());
-        verify(benRepo).deleteByContratoId(10);
-        verify(condRepo).deleteByContratoId(10);
-        verify(contratoRepo).save(contrato);
-    }
-
-    @Test
-    void testListarTodos() {
-        contrato.setId(10);
-        List<Contrato> contratos = List.of(contrato);
-
-        when(contratoRepo.findAll()).thenReturn(contratos);
-        when(usuarioRepo.findById(agente.getID_Usuario())).thenReturn(Optional.of(agente));
-        when(benRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
-        when(condRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
-
-        List<ContratoRespuestaDTO> result = contratoService.listarTodos();
-
         assertEquals(1, result.size());
-        assertEquals(10, result.get(0).getId());
+        assertEquals("1234567890", result.get(0).getCliente().getCedula());
     }
 
     @Test
-    void testBuscarPorId() {
-        contrato.setId(10);
-
-        when(contratoRepo.findById(10)).thenReturn(Optional.of(contrato));
-        when(usuarioRepo.findById(agente.getID_Usuario())).thenReturn(Optional.of(agente));
-        when(benRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
-        when(condRepo.findByContratoId(10)).thenReturn(Collections.emptyList());
-
-        Optional<ContratoRespuestaDTO> result = contratoService.buscarPorId(10);
-
-        assertTrue(result.isPresent());
-        assertEquals(10, result.get().getId());
-    }
-
-    @Test
-    void testEliminarContrato() {
-        contrato.setEstado(EstadoContrato.PENDIENTE);
-
-        when(contratoRepo.findById(10)).thenReturn(Optional.of(contrato));
+    void testEliminarContrato_Success() {
+        // Arrange
+        when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
         when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
 
-        contratoService.eliminarContrato(10);
+        // Act
+        contratoService.eliminarContrato(1);
 
+        // Assert
+        verify(contratoRepo, times(1)).save(any(Contrato.class));
         assertEquals(EstadoContrato.ELIMINADO, contrato.getEstado());
-        verify(contratoRepo).save(contrato);
+    }
+
+    @Test
+    void testEliminarContrato_NotFound() {
+        // Arrange
+        when(contratoRepo.findById(1)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> contratoService.eliminarContrato(1));
+        assertEquals("Contrato no encontrado", exception.getMessage());
+        verify(contratoRepo, never()).save(any());
     }
 }
