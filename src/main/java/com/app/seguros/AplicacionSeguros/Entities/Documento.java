@@ -30,8 +30,6 @@ public class Documento {
     @Enumerated(EnumType.STRING)
     private TipoDocumento tipo;
 
-    private String motivoRechazo;
-
     @ManyToOne
     @JoinColumn(name = "id_cliente")
     private Cliente cliente;

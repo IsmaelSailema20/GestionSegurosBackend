@@ -213,6 +213,10 @@ public class ClienteService {
                 .nombre(cliente.getNombre())
                 .build();
     }
-
+    public String getCorreoCliente(Long idCliente) {
+        Optional<Cliente> cliente = clienteRepository.findById(idCliente);
+        return cliente.map(Cliente::getEmail)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + idCliente));
+    }
 
 }
