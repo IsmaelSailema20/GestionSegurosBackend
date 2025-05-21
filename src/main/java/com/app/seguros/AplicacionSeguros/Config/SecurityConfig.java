@@ -34,10 +34,10 @@ public class SecurityConfig {
                         authRequest.requestMatchers("/login").permitAll()
                                 .requestMatchers("/Usuarios").hasAuthority("Administrador")
                                 .requestMatchers("/Usuarios/**").hasAuthority("Administrador")
-                                .requestMatchers("/Clientes").hasAnyAuthority("Administrador","Agente")
-                                .requestMatchers("/Clientes/**").hasAuthority("Administrador")
+                                .requestMatchers("/Clientes").hasAnyAuthority("Administrador","Agente","Cliente")
+                                .requestMatchers("/Clientes/**").hasAnyAuthority("Administrador","Agente","Cliente")
                                 .requestMatchers("/Seguros").hasAnyAuthority("Administrador","Agente")
-                                .requestMatchers("/Seguros/**").hasAuthority("Administrador")
+                                .requestMatchers("/Seguros/**").hasAnyAuthority("Administrador","Agente")
                                 .anyRequest().authenticated()
                         )
                 .sessionManagement( sessionManager->

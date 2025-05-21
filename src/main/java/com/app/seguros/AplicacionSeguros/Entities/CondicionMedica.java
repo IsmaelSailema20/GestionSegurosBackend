@@ -20,20 +20,7 @@ public class CondicionMedica {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_condicion;
 
-    @Column(nullable = false)
-    private String nombrePersona;
-
     @Column(nullable = false, length = 250)
     private String diagnostico;
 
-    @Column(nullable = false)
-    private Date fechaDesde;
-
-    @Column(nullable = false)
-    private Date fechaHasta;
-
-    @ManyToOne
-    @JoinColumn(name = "id_contrato", nullable = false)
-    @JsonIgnore
-    private Contrato contrato;
 }

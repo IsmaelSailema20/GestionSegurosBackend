@@ -26,12 +26,13 @@ public class PdfController {
 
             byte[] pdf = pdfService.generarContratoPdf(
                     c.getCliente(),
+                    c.getEstado(),
                     c.getSeguro(),
                     c.getAgente(),
                     c.getFechaInicio(),
                     c.getFechaFin(),
                     c.getBeneficiarios(),
-                    c.getCondicionesMedicas()
+                    c.getCliente().getCondicionesMedicas()
             );
 
             HttpHeaders headers = new HttpHeaders();
