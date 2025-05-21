@@ -163,7 +163,7 @@ public class ContratoService {
                     .build();
 
             ContratoRespuestaDTO contratoResponse = ContratoRespuestaDTO.builder()
-                    //... (todo el mapeo existente)
+                    .agente(agenteDTO)
                     .build();
 
             respuesta.add(contratoResponse);
