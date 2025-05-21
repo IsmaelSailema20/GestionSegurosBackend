@@ -8,12 +8,14 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.CondicionMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,12 +31,11 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class ClienteControllerUnitariasTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @MockBean
     private ClienteService clienteService;
     @MockBean
@@ -43,9 +44,14 @@ class ClienteControllerUnitariasTest {
     private CondicionMedicaService condicionMedicaService;
     @MockBean
     private BeneficiarioRepository beneficiarioRepository;
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private ClienteRepository clienteRepository;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-    private String token = "";
+    private String token = "mock-valid-token";
 
     private ClienteDTO createDTO(Long id) {
         ClienteDTO dto = new ClienteDTO(Estado.Activo);
@@ -92,9 +98,8 @@ class ClienteControllerUnitariasTest {
     @BeforeEach
     void setUpSecurity() {
         Usuario u = createUsuario(1);
-        JwtService jwtService = new JwtService();
-        token = jwtService.getToken(u);
-        when(usuariosRepository.findByEmail(anyString())).thenReturn(Optional.of(u));
+        JwtService jwtMock = Mockito.mock(JwtService.class);
+        when(jwtMock.getToken(any(Usuario.class))).thenReturn("mock-token");
     }
 
     @Test
