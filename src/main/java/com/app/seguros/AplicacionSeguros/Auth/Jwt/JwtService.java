@@ -42,9 +42,12 @@ public class JwtService {
         claims.put("apellido", user.getApellido());
         claims.put("estado", user.getEstado().toString());
         if (rol.equals("Cliente")) {
-            clienteRepository.findByEmail(user.getEmail()).ifPresent(cliente ->
-                    claims.put("cedula", cliente.getCedula())
+            clienteRepository.findByEmail(user.getEmail()).ifPresent(cliente -> {
+                        claims.put("cedula", cliente.getCedula());
+                        claims.put("idCliente", cliente.getId());
+                    }
             );
+
         }
         return getToken(claims, user);
     }
