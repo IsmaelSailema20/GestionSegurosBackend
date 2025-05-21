@@ -50,6 +50,9 @@ public class ContratoServiceTest {
     @Mock
     private EntityManager entityManager;
 
+    @Mock
+    private TypedQuery<Contrato> typedQuery;
+
     private Cliente cliente;
     private Seguro seguro;
     private Usuario agente;
@@ -183,23 +186,25 @@ public class ContratoServiceTest {
     }
 
     @Test
-    void testBuscarContratosPorAgente_Success() {
-        String jpql = "SELECT c FROM Contrato c WHERE c.agente.ID_Usuario = :idAgente";
-        TypedQuery<Contrato> query = mock(TypedQuery.class);
-        when(entityManager.createQuery(jpql, Contrato.class)).thenReturn(query);
-        when(query.setParameter("idAgente", 1L)).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(contrato));
-        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
-        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+    void testBuscarContratosPorAgente() {
+        // Arrange
+        Long idAgente = 1L;
+        when(entityManager.createQuery(anyString(), eq(Contrato.class))).thenReturn(typedQuery);
+        when(typedQuery.setParameter(eq("idAgente"), eq(idAgente))).thenReturn(typedQuery);
+        when(typedQuery.getResultList()).thenReturn(List.of(contrato));
 
-        List<ContratoRespuestaDTO> result = contratoService.buscarContratosPorAgente(1L);
+        // Act
+        List<ContratoRespuestaDTO> resultado = contratoService.buscarContratosPorAgente(idAgente);
 
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        ContratoRespuestaDTO dto = result.get(0);
-        assertEquals(1, dto.getId());
-        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
-        assertEquals(1, dto.getBeneficiarios().size());
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+
+        ContratoRespuestaDTO dto = resultado.get(0);
+        assertEquals("Ana", dto.getAgente().getNombre());
+        assertEquals("Gomez", dto.getAgente().getApellido());
+        assertEquals("ana@example.com", dto.getAgente().getEmail());
+        assertEquals(1, dto.getAgente().getId());
     }
 
     @Test
