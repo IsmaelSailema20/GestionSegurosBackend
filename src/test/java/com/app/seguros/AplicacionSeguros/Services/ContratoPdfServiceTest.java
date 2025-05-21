@@ -95,15 +95,12 @@ public class ContratoPdfServiceTest {
 
     @Test
     void testGenerarContratoPdf_Success() throws Exception {
-        // Arrange
         String htmlContent = "<html><body>Mocked Contract</body></html>";
         when(templateEngine.process(eq("ContratoPlantilla"), any(Context.class))).thenReturn(htmlContent);
 
-        // Mock ITextRenderer behavior indirectly by spying on ByteArrayOutputStream
         ByteArrayOutputStream baos = spy(new ByteArrayOutputStream());
         lenient().doNothing().when(baos).write(any(byte[].class));
 
-        // Act
         byte[] result = contratoPdfService.generarContratoPdf(
                 cliente,
                 EstadoContrato.PENDIENTE,
@@ -115,7 +112,6 @@ public class ContratoPdfServiceTest {
                 List.of(condicionMedica)
         );
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.length > 0, "PDF byte array should not be empty");
         verify(templateEngine, times(1)).process(eq("ContratoPlantilla"), any(Context.class));
@@ -123,11 +119,9 @@ public class ContratoPdfServiceTest {
 
     @Test
     void testGenerarContratoPdf_TemplateProcessingFailure() {
-        // Arrange
         when(templateEngine.process(eq("ContratoPlantilla"), any(Context.class)))
                 .thenThrow(new RuntimeException("Template processing error"));
 
-        // Act & Assert
         Exception exception = assertThrows(Exception.class, () -> contratoPdfService.generarContratoPdf(
                 cliente,
                 EstadoContrato.PENDIENTE,
