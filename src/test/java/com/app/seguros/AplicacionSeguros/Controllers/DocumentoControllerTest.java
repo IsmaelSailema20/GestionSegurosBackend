@@ -249,4 +249,38 @@ class DocumentoControllerUnitariasTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isInternalServerError());
     }
+
+    @Test
+    void descargarDocumento_UnknownContentType() throws Exception {
+        // Arrange
+        Documento documento = createDocumento(1L);
+        documento.setRutaArchivo("/real/path/test.pdf");
+        when(documentoService.obtenerDocumento(1L)).thenReturn(documento);
+
+        URI fileUri = new URI("file:///real/path/test.pdf");
+        Path mockPath = mock(Path.class);
+        when(mockPath.toUri()).thenReturn(fileUri);
+
+        try (MockedStatic<Paths> pathsMock = mockStatic(Paths.class)) {
+            pathsMock.when(() -> Paths.get("/real/path/test.pdf")).thenReturn(mockPath);
+            try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+                filesMock.when(() -> Files.probeContentType(mockPath)).thenReturn(null); // Simulate null content type
+                try (MockedConstruction<UrlResource> mockedConstruction =
+                             Mockito.mockConstruction(UrlResource.class,
+                                     (mock, context) -> {
+                                         when(mock.exists()).thenReturn(true);
+                                         when(mock.isReadable()).thenReturn(true);
+                                     })) {
+                    // Act & Assert
+                    mockMvc.perform(get("/documentos/descargar/1")
+                                    .header("Authorization", "Bearer " + token))
+                            .andExpect(status().isOk())
+                            .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                                    "attachment; filename=\"test.pdf\""))
+                            .andExpect(header().string(HttpHeaders.CONTENT_TYPE,
+                                    "application/octet-stream")); // Verify fallback content type
+                }
+            }
+        }
+    }
 }
