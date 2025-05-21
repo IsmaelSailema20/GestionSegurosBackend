@@ -48,6 +48,7 @@ class PdfControllerUnitTest {
     @MockBean
     private UsuariosRepository usuariosRepository;
 
+    @Autowired
     private ObjectMapper objectMapper = new ObjectMapper();
     private final String token = "mock-valid-token";
 
