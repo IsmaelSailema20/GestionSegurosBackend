@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -20,7 +21,6 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -162,7 +162,7 @@ public class ContratoServiceTest {
         when(clienteRepo.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> contratoService.registrarContrato(dto));
-        assertEquals("Cliente no encontrado", exception.getMessage());
+        assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje(), exception.getMessage());
         verify(contratoRepo, never()).save(any());
     }
 
@@ -273,7 +273,7 @@ public class ContratoServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> contratoService.editarContrato(1, dto));
-        assertEquals("Contrato no esta pendiente", exception.getMessage());
+        assertEquals(MensajeError.CONTRATO_NO_PENDIENTE.getMensaje(), exception.getMessage());
         verify(contratoRepo, never()).save(any());
     }
 
@@ -335,7 +335,7 @@ public class ContratoServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> contratoService.eliminarContrato(1));
-        assertEquals("Contrato no encontrado", exception.getMessage());
+        assertEquals(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje(), exception.getMessage());
         verify(contratoRepo, never()).save(any());
     }
 }

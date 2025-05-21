@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Config;
 
 
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtAuthenticationFilter;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,12 +33,12 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authRequest->
                         authRequest.requestMatchers("/login").permitAll()
-                                .requestMatchers("/Usuarios").hasAuthority("Administrador")
-                                .requestMatchers("/Usuarios/**").hasAuthority("Administrador")
-                                .requestMatchers("/Clientes").hasAnyAuthority("Administrador","Agente","Cliente")
-                                .requestMatchers("/Clientes/**").hasAnyAuthority("Administrador","Agente","Cliente")
-                                .requestMatchers("/Seguros").hasAnyAuthority("Administrador","Agente")
-                                .requestMatchers("/Seguros/**").hasAnyAuthority("Administrador","Agente")
+                                .requestMatchers("/Usuarios").hasAuthority(Rol.Administrador.name())
+                                .requestMatchers("/Usuarios/**").hasAuthority(Rol.Administrador.name())
+                                .requestMatchers("/Clientes").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
+                                .requestMatchers("/Clientes/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
+                                .requestMatchers("/Seguros").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
+                                .requestMatchers("/Seguros/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
                                 .anyRequest().authenticated()
                         )
                 .sessionManagement( sessionManager->

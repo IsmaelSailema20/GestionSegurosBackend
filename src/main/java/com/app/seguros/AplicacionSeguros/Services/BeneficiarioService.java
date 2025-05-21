@@ -58,7 +58,7 @@ public class BeneficiarioService {
     public void eliminarPorContrato(Integer idContrato) {
         beneficiarioContratoRepository.deleteByContratoId(idContrato);
     }
-@Transactional
+    @Transactional
     public void eliminarPorId(Integer idBeneficiario) {
         beneficiarioContratoRepository.deleteByBeneficiarioId(idBeneficiario);
         beneficiarioRepository.deleteById(idBeneficiario);

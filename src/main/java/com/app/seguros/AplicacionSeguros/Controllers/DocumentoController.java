@@ -3,7 +3,6 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
 import com.app.seguros.AplicacionSeguros.Services.EmailService;

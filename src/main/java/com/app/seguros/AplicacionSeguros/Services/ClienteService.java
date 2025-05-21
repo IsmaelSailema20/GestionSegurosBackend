@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,11 @@ public class ClienteService {
         // Validar unicidad de cédula y email
         clienteRepository.findByCedula(clienteDTO.getCedula())
                 .ifPresent(cliente -> {
-                    throw new RuntimeException("La cédula ya está registrada");
+                    throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
                 });
         clienteRepository.findByEmail(clienteDTO.getEmail())
                 .ifPresent(cliente -> {
-                    throw new RuntimeException("El email ya está registrado");
+                    throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                 });
 
 
@@ -89,8 +90,7 @@ public class ClienteService {
 
     public Optional<ClienteRespuestaDTO> getCliente(Long id) {
         return clienteRepository.findById(id)
-                .map(cliente -> {
-                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                .map(cliente -> ClienteRespuestaDTO.builder()
                             .estaturaMetros(cliente.getEstaturaMetros())
                             .fecha_nacimiento(cliente.getFecha_nacimiento())
                             .direccion(cliente.getDireccion())
@@ -104,50 +104,47 @@ public class ClienteService {
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
                             .nombre(cliente.getNombre())
-                            .build();
-                    return dto;
-                });
+                            .build()
+
+                );
     }
 
     public List<ClienteRespuestaDTO> getAllClientes() {
         return clienteRepository.findAll()
                 .stream()
-                .map(cliente -> {
-                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
-                            .estaturaMetros(cliente.getEstaturaMetros())
-                            .fecha_nacimiento(cliente.getFecha_nacimiento())
-                            .direccion(cliente.getDireccion())
-                            .id_Cliente(cliente.getId())
-                            .genero(cliente.getGenero())
-                            .cedula(cliente.getCedula())
-                            .pesoKg(cliente.getPesoKg())
-                            .telefono(cliente.getTelefono())
-                            .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                            .apellido(cliente.getApellido())
-                            .email(cliente.getEmail())
-                            .estado(cliente.getEstado())
-                            .nombre(cliente.getNombre())
-                            .build();
-                    return dto;
-                })
+                .map(cliente -> ClienteRespuestaDTO.builder()
+                        .estaturaMetros(cliente.getEstaturaMetros())
+                        .fecha_nacimiento(cliente.getFecha_nacimiento())
+                        .direccion(cliente.getDireccion())
+                        .id_Cliente(cliente.getId())
+                        .genero(cliente.getGenero())
+                        .cedula(cliente.getCedula())
+                        .pesoKg(cliente.getPesoKg())
+                        .telefono(cliente.getTelefono())
+                        .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                        .apellido(cliente.getApellido())
+                        .email(cliente.getEmail())
+                        .estado(cliente.getEstado())
+                        .nombre(cliente.getNombre())
+                        .build())
                 .collect(Collectors.toList());
     }
 
     public ClienteRespuestaDTO updateCliente(Long id, ClienteDTO clienteDTO) {
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
         // Validar unicidad de cédula y email si cambiaron
         if (!cliente.getCedula().equals(clienteDTO.getCedula())) {
             clienteRepository.findByCedula(clienteDTO.getCedula())
                     .ifPresent(c -> {
-                        throw new RuntimeException("La cédula ya está registrada");
+                        throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
                     });
         }
         if (!cliente.getEmail().equals(clienteDTO.getEmail())) {
             clienteRepository.findByEmail(clienteDTO.getEmail())
                     .ifPresent(c -> {
-                        throw new RuntimeException("El email ya está registrado");
+                        throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                     });
         }
 
@@ -194,7 +191,7 @@ public class ClienteService {
 
     public ClienteRespuestaDTO actualizarEstado(Long id,EstadoDTO estado){
         Cliente cliente=clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
         cliente.setEstado(estado.getEstado());
         clienteRepository.save(cliente);
         return ClienteRespuestaDTO.builder()
@@ -216,7 +213,7 @@ public class ClienteService {
     public String getCorreoCliente(Long idCliente) {
         Optional<Cliente> cliente = clienteRepository.findById(idCliente);
         return cliente.map(Cliente::getEmail)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + idCliente));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()+" ID: " + idCliente));
     }
 
 }

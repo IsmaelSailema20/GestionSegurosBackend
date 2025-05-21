@@ -1,12 +1,11 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.*;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,6 +60,6 @@ class EmailServiceTest {
             emailService.enviarCorreo("test@correo.com", "Asunto", "Mensaje");
         });
 
-        assertTrue(exception.getMessage().contains("Error al enviar correo"));
+        assertTrue(exception.getMessage().contains(MensajeError.EERROR_ENVIAR_CORREO.getMensaje()));
     }
 }

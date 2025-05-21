@@ -4,8 +4,8 @@ import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -23,8 +23,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+
 
 @Service
 public class DocumentoService {
@@ -89,13 +88,13 @@ public class DocumentoService {
     public Contrato convertirDTOAContrato(ContratoRespuestaDTO dto) {
 
         Cliente cliente = clienteRepository.findById(dto.getCliente().getId_Cliente())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
         Seguro seguro = seguroRepository.findById(dto.getSeguro().getIdSeguro())
-                .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
 
         Usuario agente = usuarioRepository.findById(dto.getAgente().getId())
-                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.AGENTE_NO_ENCONTRADO.getMensaje()));
 
         return Contrato.builder()
                 .id(dto.getId())
@@ -114,13 +113,13 @@ public class DocumentoService {
 
     public Documento obtenerDocumento(Long idDocumento) {
         return documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
     }
 
     @Transactional
     public void aprobarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
         doc.setEstado(EstadoDocumento.Aprobado);
         documentoRepository.save(doc);
     }
@@ -128,14 +127,14 @@ public class DocumentoService {
     @Transactional
     public void rechazarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
 
         // 1. Eliminar archivo físico
         try {
             Path path = Paths.get(doc.getRutaArchivo());
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new RuntimeException("Error al eliminar el archivo: " + e.getMessage());
+            throw new RuntimeException(MensajeError.ERROR_ELIMINAR_ARCHIVO.getMensaje()+": " + e.getMessage());
         }
 
         // 2. Eliminar registro de la base de datos

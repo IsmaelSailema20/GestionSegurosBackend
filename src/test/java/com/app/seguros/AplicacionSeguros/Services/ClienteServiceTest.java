@@ -4,7 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,7 +113,7 @@ public class ClienteServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.saveCliente(clienteDTO));
-        assertEquals("La cédula ya está registrada", exception.getMessage());
+        assertEquals(MensajeError.CEDULA_REGISTRADA.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
 
@@ -125,7 +125,7 @@ public class ClienteServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.saveCliente(clienteDTO));
-        assertEquals("El email ya está registrado", exception.getMessage());
+        assertEquals(MensajeError.EMAIL_REGISTRADO.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
 
@@ -225,7 +225,7 @@ public class ClienteServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, clienteDTO));
-        assertEquals("Cliente no encontrado", exception.getMessage());
+        assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
 
@@ -240,7 +240,7 @@ public class ClienteServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
-        assertEquals("La cédula ya está registrada", exception.getMessage());
+        assertEquals(MensajeError.CEDULA_REGISTRADA.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
 
@@ -256,7 +256,7 @@ public class ClienteServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
-        assertEquals("El email ya está registrado", exception.getMessage());
+        assertEquals(MensajeError.EMAIL_REGISTRADO.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
 
@@ -288,7 +288,7 @@ public class ClienteServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.actualizarEstado(1L, estadoDTO));
-        assertEquals("Cliente no encontrado", exception.getMessage());
+        assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
 }

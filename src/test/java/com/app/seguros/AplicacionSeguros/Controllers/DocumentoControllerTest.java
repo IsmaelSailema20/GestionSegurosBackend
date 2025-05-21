@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
-import com.app.seguros.AplicacionSeguros.Dto.DocumentoDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
@@ -27,7 +26,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -66,18 +64,6 @@ class DocumentoControllerUnitariasTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String token;
-
-    private DocumentoDTO createDocumentoDTO(Long id) {
-        DocumentoDTO dto = new DocumentoDTO();
-        dto.setIdDocumento(id);
-        dto.setNombreArchivo("test.pdf");
-        dto.setEstado(EstadoDocumento.Pendiente);
-        dto.setTipo(TipoDocumento.Identificacion);
-        dto.setFechaSubida(LocalDateTime.now());
-        dto.setIdCliente(1L);
-        dto.setIdContrato(1L);
-        return dto;
-    }
 
     private Documento createDocumento(Long id) {
         Documento documento = new Documento();

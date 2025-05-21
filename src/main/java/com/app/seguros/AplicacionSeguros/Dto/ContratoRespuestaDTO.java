@@ -1,8 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import lombok.AllArgsConstructor;

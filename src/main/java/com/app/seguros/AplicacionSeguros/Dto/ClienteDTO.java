@@ -1,9 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Dto;
-import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;

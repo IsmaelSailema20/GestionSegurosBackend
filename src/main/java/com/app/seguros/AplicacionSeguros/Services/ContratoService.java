@@ -3,16 +3,15 @@ package com.app.seguros.AplicacionSeguros.Services;
 import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.*;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,11 +30,11 @@ public class ContratoService {
     @Transactional
     public ContratoRespuestaDTO registrarContrato(ContratoRegistrarDTO dto) {
         Cliente cliente = clienteRepo.findById(Long.valueOf(dto.getIdCliente()))
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
         Seguro seguro = seguroRepo.findById(dto.getIdSeguro())
-                .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
         Usuario agente = usuarioRepo.findById(dto.getIdAgente())
-                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.AGENTE_NO_ENCONTRADO.getMensaje()));
 
         Contrato c = new Contrato();
         c.setCliente(cliente);
@@ -61,13 +60,14 @@ public class ContratoService {
                     b = benService.guardar(b); // nuevo beneficiario
                 } else {
                     b = benService.buscarPorId(b.getId())
-                            .orElseThrow(() -> new RuntimeException("Beneficiario no encontrado"));
+                            .orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIARIO_NO_ENCONTRADO.getMensaje()));
                 }
                 benService.guardarRelacion(b, finalCcontrato);
             });
         }
 
-        ContratoRespuestaDTO contratoResponse=ContratoRespuestaDTO.builder()
+
+        return ContratoRespuestaDTO.builder()
                 .cliente(
                         ClienteRespuestaDTO.builder()
                                 .estaturaMetros(c.getCliente().getEstaturaMetros())
@@ -94,11 +94,10 @@ public class ContratoService {
                 .beneficiarios(benService.listarPorContrato(c.getId()))
                 .build()
                 ;
-        return contratoResponse;
     }
 
     public List<ContratoRespuestaDTO> listarTodos() {
-        List<ContratoRespuestaDTO> contratos = new ArrayList<ContratoRespuestaDTO>();
+        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
 
 
         for(Contrato contrato:contratoRepo.findAll()){
@@ -218,10 +217,10 @@ public class ContratoService {
     @Transactional
     public ContratoRespuestaDTO editarContrato(Integer id, ContratoRegistrarDTO dto) {
         Contrato contrato = contratoRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
 
         if(contrato.getEstado()!=EstadoContrato.PENDIENTE){
-            throw new RuntimeException("Contrato no esta pendiente");
+            throw new RuntimeException(MensajeError.CONTRATO_NO_PENDIENTE.getMensaje());
         }
 
         // Actualizar solo los campos permitidos
@@ -235,7 +234,7 @@ public class ContratoService {
 
         if (dto.getIdSeguro() != null) {
             Seguro seguro = seguroRepo.findById(dto.getIdSeguro())
-                    .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+                    .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
             contrato.setSeguro(seguro);
         }
 
@@ -251,7 +250,7 @@ public class ContratoService {
                     b = benService.guardar(b); // nuevo beneficiario
                 } else {
                     b = benService.buscarPorId(b.getId())
-                            .orElseThrow(() -> new RuntimeException("Beneficiario no encontrado"));
+                            .orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIARIO_NO_ENCONTRADO.getMensaje()));
                 }
                 benService.guardarRelacion(b, finalCcontrato);
             });
@@ -259,7 +258,7 @@ public class ContratoService {
         }
 
         Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario())
-                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.AGENTE_NO_ENCONTRADO.getMensaje()));
 
         AgenteDTO agenteDTO = AgenteDTO.builder()
                 .nombre(agente.getNombre())
@@ -299,14 +298,14 @@ public class ContratoService {
     @Transactional
     public ContratoRespuestaDTO editarEstadoContrato(Integer id, EstadoContratoDTO dto) {
         Contrato contrato = contratoRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
 
         contrato.setEstado(dto.getEstado());
 
         contrato = contratoRepo.save(contrato);
 
         Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario())
-                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.AGENTE_NO_ENCONTRADO.getMensaje()));
 
         AgenteDTO agenteDTO = AgenteDTO.builder()
                 .nombre(agente.getNombre())
@@ -391,7 +390,7 @@ public class ContratoService {
     @Transactional
     public void eliminarContrato(Integer id) {
         Contrato c = contratoRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
         c.setEstado(EstadoContrato.ELIMINADO);
         contratoRepo.save(c);
     }

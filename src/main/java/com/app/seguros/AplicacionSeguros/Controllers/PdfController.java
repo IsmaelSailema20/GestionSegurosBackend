@@ -1,7 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
-import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import org.springframework.web.bind.annotation.*;

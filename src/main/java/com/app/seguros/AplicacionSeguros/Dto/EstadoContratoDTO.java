@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
-import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

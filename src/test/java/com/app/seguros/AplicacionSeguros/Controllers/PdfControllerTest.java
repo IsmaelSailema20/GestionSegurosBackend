@@ -11,15 +11,12 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
@@ -48,7 +45,6 @@ class PdfControllerUnitTest {
     @MockBean
     private UsuariosRepository usuariosRepository;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
     private final String token = "mock-valid-token";
 
     private ContratoRespuestaDTO createContratoRespuesta() {

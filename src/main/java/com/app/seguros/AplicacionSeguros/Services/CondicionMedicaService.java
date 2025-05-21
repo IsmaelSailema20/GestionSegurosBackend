@@ -3,7 +3,7 @@ package com.app.seguros.AplicacionSeguros.Services;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Condiciones_Clientes;
-import com.app.seguros.AplicacionSeguros.Entities.Contrato;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.CondicionMedicaClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.CondicionMedicaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class CondicionMedicaService {
     @Transactional
     public CondicionMedica update(int id, CondicionMedica actualizada) {
         CondicionMedica existente = condicionMedicaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Condición médica no encontrada"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONDICION_MEDICA_NO_ENCONTRADA.getMensaje()));
         existente.setDiagnostico(actualizada.getDiagnostico());
         return condicionMedicaRepository.save(existente);
     }

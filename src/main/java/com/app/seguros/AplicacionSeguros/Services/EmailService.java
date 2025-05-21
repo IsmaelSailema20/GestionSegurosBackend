@@ -1,4 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Services;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -50,7 +51,7 @@ public class EmailService {
             }
         } catch (Exception e) {
             System.err.println("Error al enviar correo: " + e.getMessage());
-            throw new RuntimeException("Error al enviar correo: " + e.getMessage());
+            throw new RuntimeException(MensajeError.EERROR_ENVIAR_CORREO.getMensaje() +": " + e.getMessage());
         }
     }
 }

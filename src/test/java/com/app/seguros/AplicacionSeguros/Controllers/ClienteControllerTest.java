@@ -2,9 +2,7 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
@@ -83,21 +81,10 @@ class ClienteControllerUnitariasTest {
                 .build();
     }
 
-    private Usuario createUsuario(int id) {
-        Usuario u = new Usuario();
-        u.setID_Usuario(id);
-        u.setApellido("apellido");
-        u.setContraseña("contraseña");
-        u.setNombre("nombre");
-        u.setEstado(Estado.Activo);
-        u.setEmail("email");
-        u.setRol(Rol.Administrador);
-        return u;
-    }
+
 
     @BeforeEach
     void setUpSecurity() {
-        Usuario u = createUsuario(1);
         JwtService jwtMock = Mockito.mock(JwtService.class);
         when(jwtMock.getToken(any(Usuario.class))).thenReturn("mock-token");
     }
@@ -173,12 +160,5 @@ class ClienteControllerUnitariasTest {
                 .andExpect(jsonPath("$.id_Cliente").value(1L));
     }
 
-   /* @Test
-    void deleteCliente() throws Exception {
-        doNothing().when(clienteService).deleteCliente(anyLong());
 
-        mockMvc.perform(delete("/Clientes/1")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
-    }*/
 }
