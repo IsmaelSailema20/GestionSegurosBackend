@@ -1,7 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Dto;
+import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
@@ -10,6 +10,7 @@ import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class ClienteDTO {
@@ -48,5 +49,6 @@ public class ClienteDTO {
     private double estaturaMetros;
 
     private double pesoKg;
+    private List<CondicionMedica> condicionesMedicas;
 
 }

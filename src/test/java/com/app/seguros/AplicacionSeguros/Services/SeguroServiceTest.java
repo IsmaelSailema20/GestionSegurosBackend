@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;

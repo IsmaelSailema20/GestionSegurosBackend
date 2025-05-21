@@ -1,8 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import lombok.AllArgsConstructor;
@@ -18,14 +16,14 @@ import java.util.List;
 @NoArgsConstructor
 public class ContratoRespuestaDTO {
     private Integer id;
-    private Cliente cliente;
+    private ClienteRespuestaDTO cliente;
     private Seguro seguro;
-    private AgenteDTO agente;            // sin password
+    private AgenteDTO agente;
     private Date fechaInicio;
     private Date fechaFin;
     private EstadoContrato estado;
     private List<Beneficiario> beneficiarios;
-    private List<CondicionMedica> condicionesMedicas;
+
 }
 
 

@@ -1,13 +1,17 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.EstadoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
+import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
+import com.app.seguros.AplicacionSeguros.Services.CondicionMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Date;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,16 +41,22 @@ class ClienteControllerIntegracionTest {
     private ClienteRepository clienteRepository;
 
     @Autowired
-    private UsuariosRepository usuariosRepository; // Añadido
+    private UsuariosRepository usuariosRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // Añadido para codificar la contraseña
+    private BeneficiarioRepository beneficiarioRepository;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private CondicionMedicaService condicionMedicaService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String token = "";
 
-    private Long idGenerado = 0L;
+    private Long idGenerado;
 
     private ClienteDTO createDTO(Long id) {
         ClienteDTO dto = new ClienteDTO(Estado.Activo);
@@ -57,8 +68,11 @@ class ClienteControllerIntegracionTest {
         dto.setTelefono("987654321");
         dto.setEmail("juan.perez@example.com");
         dto.setGenero("Masculino");
-        dto.setFecha_nacimiento(new Date(1990 - 1900, 5 - 1, 15));
+        dto.setFecha_nacimiento(new Date(1990 - 1900, 4, 15));
         dto.setEstado(Estado.Activo);
+        CondicionMedica cond = new CondicionMedica();
+        cond.setDiagnostico("Hipertensión");
+        dto.setCondicionesMedicas(List.of(cond));
         return dto;
     }
 
@@ -71,16 +85,15 @@ class ClienteControllerIntegracionTest {
                 .telefono("987654321")
                 .email(email)
                 .genero("Masculino")
-                .fecha_nacimiento(new Date(1990 - 1900, 5 - 1, 15))
+                .fecha_nacimiento(new Date(1990 - 1900, 4, 15))
                 .estado(Estado.Activo)
                 .build();
     }
 
-    private Usuario createUsuario(int id) {
+    private Usuario createUsuario() {
         return Usuario.builder()
-                //.ID_Usuario(id)
-                .apellido("apellido")
                 .contraseña(passwordEncoder.encode("contraseña"))
+                .apellido("apellido")
                 .nombre("nombre")
                 .estado(Estado.Activo)
                 .email("email")
@@ -90,16 +103,19 @@ class ClienteControllerIntegracionTest {
 
     @BeforeEach
     void setUp() {
+        beneficiarioRepository.deleteAll();
+        condicionMedicaService.deleteAllRelaciones();
         clienteRepository.deleteAll();
-        usuariosRepository.deleteAll(); // Limpiar también la tabla de usuarios
+        usuariosRepository.deleteAll();
+
         Cliente cliente = createEntity("1234567890", "juan.perez@example.com");
-        idGenerado = clienteRepository.save(cliente).getId_Cliente();
+        idGenerado = clienteRepository.save(cliente).getId();
 
-        Cliente cliente2 = createEntity("0987654321", "juan2.perez@example.com");
-        clienteRepository.save(cliente2);
+        clienteRepository.save(createEntity("0987654321", "juan2.perez@example.com"));
 
-        Usuario u = createUsuario(1);
-        usuariosRepository.save(u); // Guardar el usuario en la base de datos
+        Usuario u = createUsuario();
+        usuariosRepository.save(u);
+
         JwtService jwtService = new JwtService();
         token = jwtService.getToken(u);
     }
@@ -137,7 +153,7 @@ class ClienteControllerIntegracionTest {
 
     @Test
     void getClienteByIdNotFound() throws Exception {
-        mockMvc.perform(get("/Clientes/999")
+        mockMvc.perform(get("/Clientes/99999")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
@@ -166,15 +182,28 @@ class ClienteControllerIntegracionTest {
 
     @Test
     void deleteCliente() throws Exception {
-        mockMvc.perform(delete("/Clientes/" + idGenerado)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
+        EstadoDTO estadoDTO = new EstadoDTO();
+        estadoDTO.setEstado(Estado.Inactivo);
+
+        mockMvc.perform(put("/Clientes/estado/" + idGenerado)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(estadoDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("Inactivo"));
     }
+
 
     @Test
     void deleteClienteNotFound() throws Exception {
-        mockMvc.perform(delete("/Clientes/999")
-                        .header("Authorization", "Bearer " + token))
+        EstadoDTO estadoDTO = new EstadoDTO();
+        estadoDTO.setEstado(Estado.Inactivo);
+
+        mockMvc.perform(put("/Clientes/estado/99999")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(estadoDTO)))
                 .andExpect(status().isInternalServerError());
     }
+
 }

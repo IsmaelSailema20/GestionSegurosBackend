@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
@@ -8,6 +9,7 @@ import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +32,7 @@ public class UsuarioService {
     public Usuario getUsuarioById(int id){
         return usuariosRepository.findById(id).orElse(null);
     }
+    @Transactional
     public Usuario register(UsuarioCrearRequest request) {
         Usuario u= Usuario.builder()
                 .rol(request.getRol())
@@ -43,7 +46,7 @@ public class UsuarioService {
     }
     public Usuario putUsuario(UsuarioEditarRequest request) {
         Usuario usuario = usuariosRepository.findById(request.getID_Usuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.USUARIO_NO_ENCONTRADO.getMensaje()));
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
         usuario.setEmail(request.getEmail());

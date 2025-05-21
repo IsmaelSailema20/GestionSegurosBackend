@@ -1,197 +1,294 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
+import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ClienteServiceUnitariasTest {
-
-    @Mock
-    private ClienteRepository clienteRepository;
+public class ClienteServiceTest {
 
     @InjectMocks
     private ClienteService clienteService;
 
-    private ClienteDTO createDTO(Long id) {
-        ClienteDTO dto = new ClienteDTO(Estado.Activo);
-        dto.setId_Cliente(id);
-        dto.setNombre("Juan");
-        dto.setApellido("Pérez");
-        dto.setCedula("1234567890");
-        dto.setDireccion("Calle Principal 123");
-        dto.setTelefono("987654321");
-        dto.setEmail("juan.perez@example.com");
-        dto.setGenero("Masculino");
-        dto.setFecha_nacimiento(new Date(1990 - 1900, 5 - 1, 15)); // 1990-05-15
-        dto.setEstado(Estado.Activo);
-        return dto;
-    }
+    @Mock
+    private ClienteRepository clienteRepository;
 
-    private Cliente createEntity(Long id) {
-        return Cliente.builder()
-                .id_Cliente(id)
+    @Mock
+    private CondicionMedicaService condService;
+
+    @Mock
+    private UsuarioService usuarioService;
+
+    private Cliente cliente;
+    private ClienteDTO clienteDTO;
+    private CondicionMedica condicionMedica;
+    private Date fechaNacimiento;
+
+    @BeforeEach
+    void setUp() {
+        // Setup test data
+        fechaNacimiento = Date.from(LocalDate.of(1990, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        cliente = Cliente.builder()
+                .id(1L)
                 .nombre("Juan")
-                .apellido("Pérez")
+                .apellido("Perez")
                 .cedula("1234567890")
-                .direccion("Calle Principal 123")
-                .telefono("987654321")
-                .email("juan.perez@example.com")
+                .email("juan@example.com")
+                .direccion("Calle 123")
+                .telefono("123456789")
                 .genero("Masculino")
-                .fecha_nacimiento(new Date(1990 - 1900, 5 - 1, 15))
+                .fecha_nacimiento(fechaNacimiento)
                 .estado(Estado.Activo)
+                .pesoKg(70.0)
+                .estaturaMetros(1.75)
+                .build();
+
+        clienteDTO = new ClienteDTO(Estado.Activo);
+        clienteDTO.setId_Cliente(1L);
+        clienteDTO.setNombre("Juan");
+        clienteDTO.setApellido("Perez");
+        clienteDTO.setCedula("1234567890");
+        clienteDTO.setEmail("juan@example.com");
+        clienteDTO.setDireccion("Calle 123");
+        clienteDTO.setTelefono("123456789");
+        clienteDTO.setGenero("Masculino");
+        clienteDTO.setFecha_nacimiento(fechaNacimiento);
+        clienteDTO.setEstado(Estado.Activo);
+        clienteDTO.setPesoKg(70.0);
+        clienteDTO.setEstaturaMetros(1.75);
+
+        condicionMedica = CondicionMedica.builder()
+                .id_condicion(1)
+                .diagnostico("Hipertension")
                 .build();
     }
 
     @Test
-    void saveCliente() {
-        ClienteDTO dto = createDTO(null);
-        Cliente cliente = createEntity(1L);
-        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.empty());
-        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    void testSaveCliente_Success() {
+        // Arrange
+        clienteDTO.setCondicionesMedicas(List.of(condicionMedica));
+        when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail("juan@example.com")).thenReturn(Optional.empty());
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        lenient().when(condService.post(any(CondicionMedica.class))).thenReturn(condicionMedica);
+        when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
 
-        ClienteDTO result = clienteService.saveCliente(dto);
+        // Act
+        ClienteRespuestaDTO result = clienteService.saveCliente(clienteDTO);
+
+        // Assert
+        assertNotNull(result);
         assertEquals(1L, result.getId_Cliente());
-        verify(clienteRepository, times(1)).findByCedula(anyString());
-        verify(clienteRepository, times(1)).findByEmail(anyString());
+        assertEquals("Juan", result.getNombre());
+        assertEquals("1234567890", result.getCedula());
+        assertEquals("juan@example.com", result.getEmail());
+        assertEquals(1, result.getCondicionesMedicas().size());
+        assertEquals("Hipertension", result.getCondicionesMedicas().get(0).getDiagnostico());
         verify(clienteRepository, times(1)).save(any(Cliente.class));
+        verify(condService, times(1)).postRelacion(any(CondicionMedica.class), any(Cliente.class));
     }
 
     @Test
-    void saveClienteCedulaDuplicada() {
-        ClienteDTO dto = createDTO(null);
-        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.of(createEntity(1L)));
-        assertThrows(RuntimeException.class, () -> clienteService.saveCliente(dto));
-        verify(clienteRepository, times(1)).findByCedula(anyString());
+    void testSaveCliente_DuplicateCedula() {
+        // Arrange
+        when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.of(cliente));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.saveCliente(clienteDTO));
+        assertEquals(MensajeError.CEDULA_REGISTRADA.getMensaje(), exception.getMessage());
+        verify(clienteRepository, never()).save(any());
     }
 
     @Test
-    void saveClienteEmailDuplicado() {
-        ClienteDTO dto = createDTO(null);
-        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.empty());
-        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.of(createEntity(1L)));
-        assertThrows(RuntimeException.class, () -> clienteService.saveCliente(dto));
-        verify(clienteRepository, times(1)).findByEmail(anyString());
+    void testSaveCliente_DuplicateEmail() {
+        // Arrange
+        when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(cliente));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.saveCliente(clienteDTO));
+        assertEquals(MensajeError.EMAIL_REGISTRADO.getMensaje(), exception.getMessage());
+        verify(clienteRepository, never()).save(any());
     }
 
     @Test
-    void getCliente() {
-        Cliente cliente = createEntity(1L);
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
+    void testGetCliente_Success() {
+        // Arrange
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
 
-        Optional<ClienteDTO> result = clienteService.getCliente(1L);
+        // Act
+        Optional<ClienteRespuestaDTO> result = clienteService.getCliente(1L);
+
+        // Assert
         assertTrue(result.isPresent());
-        assertEquals("Juan", result.get().getNombre());
-        verify(clienteRepository, times(1)).findById(anyLong());
+        ClienteRespuestaDTO dto = result.get();
+        assertEquals(1L, dto.getId_Cliente());
+        assertEquals("Juan", dto.getNombre());
+        assertEquals("1234567890", dto.getCedula());
+        assertEquals(1, dto.getCondicionesMedicas().size());
+        assertEquals("Hipertension", dto.getCondicionesMedicas().get(0).getDiagnostico());
     }
 
     @Test
-    void getClienteNotFound() {
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.empty());
+    void testGetCliente_NotFound() {
+        // Arrange
+        when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
 
-        Optional<ClienteDTO> result = clienteService.getCliente(1L);
-        assertFalse(result.isPresent());
-        verify(clienteRepository, times(1)).findById(anyLong());
+        // Act
+        Optional<ClienteRespuestaDTO> result = clienteService.getCliente(1L);
+
+        // Assert
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    void getAllClientes() {
-        List<Cliente> clientes = List.of(createEntity(1L), createEntity(2L));
-        when(clienteRepository.findAll()).thenReturn(clientes);
+    void testGetAllClientes_Success() {
+        // Arrange
+        when(clienteRepository.findAll()).thenReturn(List.of(cliente));
+        when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
 
-        List<ClienteDTO> result = clienteService.getAllClientes();
-        assertEquals(2, result.size());
-        verify(clienteRepository, times(1)).findAll();
+        // Act
+        List<ClienteRespuestaDTO> result = clienteService.getAllClientes();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ClienteRespuestaDTO dto = result.get(0);
+        assertEquals(1L, dto.getId_Cliente());
+        assertEquals("Juan", dto.getNombre());
+        assertEquals("1234567890", dto.getCedula());
+        assertEquals(1, dto.getCondicionesMedicas().size());
     }
 
     @Test
-    void updateCliente() {
-        Cliente cliente = createEntity(1L);
-        ClienteDTO dto = createDTO(1L);
+    void testUpdateCliente_Success() {
+        // Arrange
+        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
+        updatedDTO.setId_Cliente(1L);
+        updatedDTO.setNombre("Carlos");
+        updatedDTO.setApellido("Lopez");
+        updatedDTO.setCedula("0987654321");
+        updatedDTO.setEmail("carlos@example.com");
+        updatedDTO.setDireccion("Calle 456");
+        updatedDTO.setTelefono("987654321");
+        updatedDTO.setGenero("Masculino");
+        updatedDTO.setFecha_nacimiento(fechaNacimiento);
+        updatedDTO.setEstado(Estado.Activo);
+        updatedDTO.setPesoKg(75.0);
+        updatedDTO.setEstaturaMetros(1.80);
+        updatedDTO.setCondicionesMedicas(List.of(condicionMedica));
 
-        // Cambiar cédula y email para que se ejecuten las validaciones
-        dto.setNombre("1122334455"); // Diferente a "1234567890"
-        dto.setApellido("updated.client@example.com"); // Diferente a "juan.perez@example.com"
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.empty());
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        lenient().when(condService.post(any(CondicionMedica.class))).thenReturn(condicionMedica);
+        when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
 
-        ClienteDTO result = clienteService.updateCliente(1L, dto);
-        assertEquals(1L, result.getId_Cliente());
-        verify(clienteRepository, times(1)).findById(anyLong());
+        // Act
+        ClienteRespuestaDTO result = clienteService.updateCliente(1L, updatedDTO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Carlos", result.getNombre());
+        assertEquals("0987654321", result.getCedula());
+        assertEquals("carlos@example.com", result.getEmail());
+        assertEquals(1, result.getCondicionesMedicas().size());
+        verify(clienteRepository, times(1)).save(any(Cliente.class));
+        verify(condService, times(1)).deleteByClienteId(1);
+        verify(condService, times(1)).postRelacion(any(CondicionMedica.class), any(Cliente.class));
+    }
+
+    @Test
+    void testUpdateCliente_ClienteNotFound() {
+        // Arrange
+        when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, clienteDTO));
+        assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje(), exception.getMessage());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void testUpdateCliente_DuplicateCedula() {
+        // Arrange
+        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
+        updatedDTO.setCedula("0987654321");
+        updatedDTO.setEmail("juan@example.com");
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.of(new Cliente()));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
+        assertEquals(MensajeError.CEDULA_REGISTRADA.getMensaje(), exception.getMessage());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void testUpdateCliente_DuplicateEmail() {
+        // Arrange
+        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
+        updatedDTO.setCedula("1234567890");
+        updatedDTO.setEmail("carlos@example.com");
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        lenient().when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.of(cliente));
+        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.of(new Cliente()));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
+        assertEquals(MensajeError.EMAIL_REGISTRADO.getMensaje(), exception.getMessage());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void testActualizarEstado_Success() {
+        // Arrange
+        EstadoDTO estadoDTO = new EstadoDTO();
+        estadoDTO.setEstado(Estado.Inactivo);
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        ClienteRespuestaDTO result = clienteService.actualizarEstado(1L, estadoDTO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(Estado.Inactivo, result.getEstado());
+        assertEquals("Juan", result.getNombre());
         verify(clienteRepository, times(1)).save(any(Cliente.class));
     }
 
     @Test
-    void updateClienteCedulaModificada() {
-        Cliente cliente = createEntity(1L);
-        ClienteDTO dto = createDTO(1L);
-        dto.setCedula("cedulaCambiada");
-        // Cambiar cédula y email para que se ejecuten las validaciones
-        dto.setCedula("1122334455"); // Diferente a "1234567890"
-        dto.setEmail("updated.client@example.com"); // Diferente a "juan.perez@example.com"
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.of(cliente));
+    void testActualizarEstado_ClienteNotFound() {
+        // Arrange
+        EstadoDTO estadoDTO = new EstadoDTO();
+        estadoDTO.setEstado(Estado.Inactivo);
+        when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
 
-
-        assertThrows(RuntimeException.class,() -> {
-            ClienteDTO result = clienteService.updateCliente(1L, dto);
-        });
-
-    }
-    @Test
-    void updateClienteEmailModificado() {
-        Cliente cliente = createEntity(1L);
-        ClienteDTO dto = createDTO(1L);
-        dto.setEmail("emailCodificado");
-        // Cambiar cédula y email para que se ejecuten las validaciones
-        dto.setCedula("1122334455"); // Diferente a "1234567890"
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByCedula(anyString())).thenReturn(Optional.empty());
-        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.of(cliente));
-
-
-        assertThrows(RuntimeException.class,() -> {
-            ClienteDTO result = clienteService.updateCliente(1L, dto);
-        });
-    }
-
-    @Test
-    void updateClienteNotFound() {
-        ClienteDTO dto = createDTO(1L);
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, dto));
-        verify(clienteRepository, times(1)).findById(anyLong());
-    }
-
-    @Test
-    void deleteCliente() {
-        Cliente cliente = createEntity(1L);
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente));
-        doNothing().when(clienteRepository).deleteById(anyLong());
-
-        clienteService.deleteCliente(1L);
-        verify(clienteRepository, times(1)).findById(anyLong());
-        verify(clienteRepository, times(1)).deleteById(anyLong());
-    }
-
-    @Test
-    void deleteClienteNotFound() {
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> clienteService.deleteCliente(1L));
-        verify(clienteRepository, times(1)).findById(anyLong());
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.actualizarEstado(1L, estadoDTO));
+        assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje(), exception.getMessage());
+        verify(clienteRepository, never()).save(any());
     }
 }

@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -70,7 +71,7 @@ public class SeguroService {
 
     public SeguroDTO updateSeguro(Integer id, SeguroDTO dto) {
         Seguro seguro = seguroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
 
         seguro.setTipo(dto.getTipo());
         seguro.setNombre(dto.getNombre());
@@ -87,7 +88,7 @@ public class SeguroService {
 
     public void deleteSeguro(Integer id) {
         seguroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
         seguroRepository.deleteById(id);
     }
 }
