@@ -394,4 +394,61 @@ public class ContratoService {
         c.setEstado(EstadoContrato.ELIMINADO);
         contratoRepo.save(c);
     }
+
+    @Transactional
+    public ContratoRespuestaDTO editarContrato(Integer id) {
+        Contrato contrato = contratoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+
+        // Actualizar el estado a ACTIVO
+        contrato.setEstado(EstadoContrato.ACTIVO);
+
+        // Establecer la fecha de inicio como la fecha actual
+        LocalDate fechaInicioLocal = LocalDate.now();
+        Date fechaInicio = Date.from(fechaInicioLocal.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        contrato.setFechaInicio(fechaInicio);
+
+        // Calcular la fecha de fin
+        LocalDate fechaFinLocal = fechaInicioLocal.plusMonths(12);
+        Date fechaFin = Date.from(fechaFinLocal.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        contrato.setFechaFin(fechaFin);
+
+        contrato = contratoRepo.save(contrato);
+
+        Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
+        AgenteDTO agenteDTO = AgenteDTO.builder()
+                .nombre(agente.getNombre())
+                .email(agente.getEmail())
+                .apellido(agente.getApellido())
+                .id(agente.getID_Usuario())
+                .build();
+
+        ContratoRespuestaDTO contratoResponse = ContratoRespuestaDTO.builder()
+                .cliente(
+                        ClienteRespuestaDTO.builder()
+                                .estaturaMetros(contrato.getCliente().getEstaturaMetros())
+                                .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
+                                .direccion(contrato.getCliente().getDireccion())
+                                .id_Cliente(contrato.getCliente().getId())
+                                .genero(contrato.getCliente().getGenero())
+                                .cedula(contrato.getCliente().getCedula())
+                                .pesoKg(contrato.getCliente().getPesoKg())
+                                .telefono(contrato.getCliente().getTelefono())
+                                .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
+                                .apellido(contrato.getCliente().getApellido())
+                                .email(contrato.getCliente().getEmail())
+                                .estado(contrato.getCliente().getEstado())
+                                .nombre(contrato.getCliente().getNombre())
+                                .build()
+                )
+                .estado(contrato.getEstado())
+                .fechaFin(contrato.getFechaFin())
+                .fechaInicio(contrato.getFechaInicio())
+                .seguro(contrato.getSeguro())
+                .id(contrato.getId())
+                .agente(agenteDTO)
+                .build();
+
+        return contratoResponse;
+    }
 }

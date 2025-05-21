@@ -76,5 +76,11 @@ public class ContratoController {
         contratoService.eliminarContrato(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/activar/{id}")
+    public ResponseEntity<ContratoRespuestaDTO> activarContrato(@PathVariable Integer id) {
+        ContratoRespuestaDTO response = contratoService.editarContrato(id);
+        return ResponseEntity.ok(response);
+    }
 }
 
