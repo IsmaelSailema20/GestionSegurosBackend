@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +57,7 @@ public class DocumentoService {
 
         String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + contrato.getCliente().getNombre()+" "+contrato.getCliente().getApellido();
         Path rutaCompleta = directorio.resolve(nombreArchivo);
-        Files.copy(archivo.getInputStream(), rutaCompleta);
+        Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
         Documento documento = new Documento();
         documento.setRutaArchivo(rutaCompleta.toString());
         documento.setContrato(convertirDTOAContrato(contrato));
@@ -141,4 +142,7 @@ public class DocumentoService {
         documentoRepository.delete(doc);
     }
 
+    public void setDirectorBase(String directorioBase) {
+        this.directorioBase = directorioBase;
+    }
 }
