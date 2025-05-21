@@ -291,4 +291,29 @@ public class ClienteServiceTest {
         assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje(), exception.getMessage());
         verify(clienteRepository, never()).save(any());
     }
+
+    @Test
+    void testGetCorreoCliente_Success() {
+        // Arrange
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+
+        // Act
+        String result = clienteService.getCorreoCliente(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("juan@example.com", result);
+        verify(clienteRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testGetCorreoCliente_NotFound() {
+        // Arrange
+        when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.getCorreoCliente(1L));
+        assertEquals(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje() + " ID: 1", exception.getMessage());
+        verify(clienteRepository, times(1)).findById(1L);
+    }
 }

@@ -174,10 +174,15 @@ public class ContratoService {
     }
 
     public Optional<ContratoRespuestaDTO> buscarPorId(Integer id) {
-        Contrato contrato=contratoRepo.findById(id).orElse(null);
+        Optional<Contrato> contratoOpt = contratoRepo.findById(id);
+        if (contratoOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Contrato contrato = contratoOpt.get();
+        Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
 
         ContratoRespuestaDTO contratoResponse=null;
-        Usuario agente=usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
         AgenteDTO agenteDTO=AgenteDTO.builder()
                 .nombre(agente.getNombre())
                 .email(agente.getEmail())
