@@ -431,7 +431,7 @@ public class ContratoService {
                 .id(agente.getID_Usuario())
                 .build();
 
-        ContratoRespuestaDTO contratoResponse = ContratoRespuestaDTO.builder()
+        return ContratoRespuestaDTO.builder()
                 .cliente(
                         ClienteRespuestaDTO.builder()
                                 .estaturaMetros(contrato.getCliente().getEstaturaMetros())
@@ -457,6 +457,5 @@ public class ContratoService {
                 .agente(agenteDTO)
                 .build();
 
-        return contratoResponse;
     }
 }

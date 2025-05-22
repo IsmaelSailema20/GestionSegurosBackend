@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
-import com.app.seguros.AplicacionSeguros.Dto.DocumentoDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
@@ -15,25 +14,18 @@ import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
 import com.app.seguros.AplicacionSeguros.Services.EmailService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -65,7 +57,6 @@ class DocumentoControllerIntegracionTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String token;
 
@@ -82,17 +73,6 @@ class DocumentoControllerIntegracionTest {
                 .build();
     }
 
-    private DocumentoDTO createDocumentoDTO(Long idDocumento) {
-        DocumentoDTO dto = new DocumentoDTO();
-        dto.setIdDocumento(idDocumento);
-        dto.setNombreArchivo("documento.pdf");
-        dto.setEstado(EstadoDocumento.Pendiente);
-        dto.setTipo(TipoDocumento.Identificacion);
-        dto.setFechaSubida(LocalDateTime.of(2025, 5, 21, 12, 0));
-        dto.setIdCliente(1L);
-        dto.setIdContrato(1L);
-        return dto;
-    }
 
     private DocumentoRegistroDTO createDocumentoRegistroDTO() {
         DocumentoRegistroDTO dto = new DocumentoRegistroDTO();

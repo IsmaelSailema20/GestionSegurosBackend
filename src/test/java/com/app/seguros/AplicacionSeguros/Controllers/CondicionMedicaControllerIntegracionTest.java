@@ -55,11 +55,6 @@ class CondicionMedicaControllerIntegracionTest {
                 .build();
     }
 
-    private CondicionMedica createInvalidCondicionMedica() {
-        return CondicionMedica.builder()
-                .diagnostico("") // Invalid: empty diagnostico
-                .build();
-    }
 
     private Usuario createUsuario() {
         return Usuario.builder()

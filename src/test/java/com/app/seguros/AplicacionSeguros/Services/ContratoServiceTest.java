@@ -541,7 +541,7 @@ public class ContratoServiceTest {
         when(benService.buscarPorId(2)).thenReturn(Optional.of(beneficiarioExistente));
         when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiarioExistente));
 
-        ContratoRespuestaDTO result = contratoService.registrarContrato(dto);
+        contratoService.registrarContrato(dto);
 
         verify(benService, never()).guardar(any());
         verify(benService, times(1)).buscarPorId(2);
