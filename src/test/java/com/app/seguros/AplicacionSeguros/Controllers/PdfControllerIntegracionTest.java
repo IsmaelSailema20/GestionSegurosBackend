@@ -26,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -92,7 +91,8 @@ class PdfControllerIntegracionTest {
                 .fecha_nacimiento(new Date(2000 - 1900, 5, 15))
                 .build();
 
-        ContratoRespuestaDTO dto = ContratoRespuestaDTO.builder()
+
+        return ContratoRespuestaDTO.builder()
                 .id(id)
                 .cliente(cliente)
                 .seguro(seguro)
@@ -102,8 +102,6 @@ class PdfControllerIntegracionTest {
                 .estado(EstadoContrato.ACTIVO)
                 .beneficiarios(List.of(beneficiario))
                 .build();
-
-        return dto;
     }
 
     private Usuario createUsuario() {
