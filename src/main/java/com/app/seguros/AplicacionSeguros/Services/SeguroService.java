@@ -130,4 +130,21 @@ public class SeguroService {
         s.setEstado(Estado.Inactivo);
         seguroRepository.save(s);
     }
+    @Transactional
+    public SeguroDTO activarSeguro(Integer id) {
+        Seguro s= seguroRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
+        s.setEstado(Estado.Activo);
+        seguroRepository.save(s);
+        SeguroDTO dto=new SeguroDTO(s.getTipo(),s.getEstado());
+        dto.setId(s.getIdSeguro());
+        dto.setTipo(s.getTipo());
+        dto.setNombre(s.getNombre());
+        dto.setDescripcion(s.getDescripcion());
+        dto.setCobertura(s.getCobertura());
+        dto.setPrecio(s.getPrecio());
+        dto.setEstado(s.getEstado());
+        dto.setBeneficios(beneficioService.listarPorSeguro(s.getIdSeguro()));
+        return dto;
+    }
 }

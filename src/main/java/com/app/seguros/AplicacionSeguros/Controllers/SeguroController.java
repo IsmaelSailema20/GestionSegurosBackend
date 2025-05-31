@@ -47,4 +47,8 @@ public class SeguroController {
         seguroService.deleteSeguro(id);
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/{id}")
+    public ResponseEntity<SeguroDTO> activarSeguro(@PathVariable Integer id) {
+        return ResponseEntity.ok(seguroService.activarSeguro(id));
+    }
 }
