@@ -4,10 +4,12 @@ import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
+import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +20,11 @@ public class SeguroService {
 
     @Autowired
     private SeguroRepository seguroRepository;
-
+    @Autowired
+    private BeneficioService beneficioService;
+    @Autowired
+    private ContratoRepository contratoRepository;
+    @Transactional
     public SeguroDTO saveSeguro(SeguroDTO dto) {
         Seguro seguro = Seguro.builder()
                 .tipo(dto.getTipo())
@@ -30,6 +36,23 @@ public class SeguroService {
                 .build();
 
         seguro = seguroRepository.save(seguro);
+        // Actualizar beneficios
+        beneficioService.eliminarPorSeguro(seguro.getIdSeguro());
+        if (dto.getBeneficios() != null) {
+            Seguro finalSeguro = seguro;
+            dto.getBeneficios().forEach(b -> {
+                if (b.getId() == null) {
+                    b = beneficioService.guardar(b); // nuevo beneficio
+                } else {
+                    b = beneficioService.buscarPorId(b.getId())
+                            .orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIO_NO_ENCONTRADO.getMensaje()));
+                }
+                beneficioService.guardarRelacion(b, finalSeguro);
+
+            });
+
+        }
+        dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
         dto.setId(seguro.getIdSeguro());
         return dto;
     }
@@ -45,6 +68,7 @@ public class SeguroService {
                     dto.setCobertura(seguro.getCobertura());
                     dto.setPrecio(seguro.getPrecio());
                     dto.setEstado(seguro.getEstado());
+                    dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
                     return dto;
                 });
     }
@@ -61,11 +85,12 @@ public class SeguroService {
                     dto.setCobertura(seguro.getCobertura());
                     dto.setPrecio(seguro.getPrecio());
                     dto.setEstado(seguro.getEstado());
+                    dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
-
+    @Transactional
     public SeguroDTO updateSeguro(Integer id, SeguroDTO dto) {
         Seguro seguro = seguroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
@@ -78,13 +103,31 @@ public class SeguroService {
         seguro.setEstado(dto.getEstado());
 
         seguro = seguroRepository.save(seguro);
+        beneficioService.eliminarPorSeguro(seguro.getIdSeguro());
+        if (dto.getBeneficios() != null) {
+            Seguro finalSeguro = seguro;
+            dto.getBeneficios().forEach(b -> {
+                if (b.getId() == null) {
+                    b = beneficioService.guardar(b); // nuevo beneficio
+                } else {
+                    b = beneficioService.buscarPorId(b.getId())
+                            .orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIO_NO_ENCONTRADO.getMensaje()));
+                }
+                beneficioService.guardarRelacion(b, finalSeguro);
+            });
+        }
         dto.setId(seguro.getIdSeguro());
+        dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
         return dto;
     }
-
+    @Transactional
     public void deleteSeguro(Integer id) {
-        seguroRepository.findById(id)
+        if(!contratoRepository.findContratosActivosOPendientes().isEmpty()){
+            throw  new RuntimeException(MensajeError.SEGURO_CON_CONTRATOS.getMensaje());
+        }
+        Seguro s= seguroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
-        seguroRepository.deleteById(id);
+        s.setEstado(Estado.Inactivo);
+        seguroRepository.save(s);
     }
 }
