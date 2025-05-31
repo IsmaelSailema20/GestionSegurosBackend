@@ -125,7 +125,7 @@ public class DocumentoController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{idDocumento}/rechazar")
+    @PutMapping("/{idContrato}/rechazar")
     public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idContrato) {
         try {
             List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
