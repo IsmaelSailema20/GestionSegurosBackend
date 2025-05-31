@@ -147,4 +147,7 @@ public class SeguroService {
         dto.setBeneficios(beneficioService.listarPorSeguro(s.getIdSeguro()));
         return dto;
     }
+    public boolean esEditable(int id){
+        return contratoRepository.findContratosActivosOPendientesSeguro(id).isEmpty();
+    }
 }
