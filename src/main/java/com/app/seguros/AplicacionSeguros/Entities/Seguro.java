@@ -30,9 +30,6 @@ public class Seguro {
     @Column(nullable = false, length = 250)
     private String cobertura;
 
-    @Column(nullable = false, length = 250)
-    private String beneficios;
-
     private Double precio;
 
     @Enumerated(EnumType.STRING)

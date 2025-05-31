@@ -35,7 +35,6 @@ class SeguroServiceTest {
                 .nombre("Seguro Vida")
                 .descripcion("desc")
                 .cobertura("cob")
-                .beneficios("ben")
                 .precio(100.0)
                 .estado(Estado.Activo)
                 .build();
@@ -45,7 +44,6 @@ class SeguroServiceTest {
         seguroDTO.setNombre("Seguro Vida");
         seguroDTO.setDescripcion("desc");
         seguroDTO.setCobertura("cob");
-        seguroDTO.setBeneficios("ben");
         seguroDTO.setPrecio(100.0);
         seguroDTO.setEstado(Estado.Activo);
     }
@@ -92,7 +90,6 @@ class SeguroServiceTest {
         nuevoDTO.setNombre("Seguro Salud");
         nuevoDTO.setDescripcion("new desc");
         nuevoDTO.setCobertura("new cob");
-        nuevoDTO.setBeneficios("new ben");
         nuevoDTO.setPrecio(150.0);
         nuevoDTO.setEstado(Estado.Inactivo);
 

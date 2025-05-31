@@ -25,7 +25,6 @@ public class SeguroService {
                 .nombre(dto.getNombre())
                 .descripcion(dto.getDescripcion())
                 .cobertura(dto.getCobertura())
-                .beneficios(dto.getBeneficios())
                 .precio(dto.getPrecio())
                 .estado(dto.getEstado())
                 .build();
@@ -44,7 +43,6 @@ public class SeguroService {
                     dto.setNombre(seguro.getNombre());
                     dto.setDescripcion(seguro.getDescripcion());
                     dto.setCobertura(seguro.getCobertura());
-                    dto.setBeneficios(seguro.getBeneficios());
                     dto.setPrecio(seguro.getPrecio());
                     dto.setEstado(seguro.getEstado());
                     return dto;
@@ -61,7 +59,6 @@ public class SeguroService {
                     dto.setNombre(seguro.getNombre());
                     dto.setDescripcion(seguro.getDescripcion());
                     dto.setCobertura(seguro.getCobertura());
-                    dto.setBeneficios(seguro.getBeneficios());
                     dto.setPrecio(seguro.getPrecio());
                     dto.setEstado(seguro.getEstado());
                     return dto;
@@ -77,7 +74,6 @@ public class SeguroService {
         seguro.setNombre(dto.getNombre());
         seguro.setDescripcion(dto.getDescripcion());
         seguro.setCobertura(dto.getCobertura());
-        seguro.setBeneficios(dto.getBeneficios());
         seguro.setPrecio(dto.getPrecio());
         seguro.setEstado(dto.getEstado());
 
