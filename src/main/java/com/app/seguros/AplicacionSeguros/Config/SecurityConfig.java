@@ -33,8 +33,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authRequest->
                         authRequest.requestMatchers("/login").permitAll()
-                                .requestMatchers("/Usuarios").hasAuthority(Rol.Administrador.name())
-                                .requestMatchers("/Usuarios/**").hasAuthority(Rol.Administrador.name())
+                                .requestMatchers("/Usuarios").hasAnyAuthority(Rol.Administrador.name(),Rol.Cliente.name())
+                                .requestMatchers("/Usuarios/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Cliente.name())
                                 .requestMatchers("/Clientes").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers("/Clientes/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers("/Seguros").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
