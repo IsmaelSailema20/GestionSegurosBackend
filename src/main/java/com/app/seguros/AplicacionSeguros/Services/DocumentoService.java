@@ -47,29 +47,6 @@ public class DocumentoService {
 
 
 
-    /*public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
-        ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-                String nombreCarpeta =  contrato.getCliente().getCedula()+"_"+
-                                        contrato.getCliente().getNombre().replace(" ", "_") +"_"+
-                                        contrato.getCliente().getApellido().replace(" ", "_");
-        Path directorio = Paths.get(directorioBase, nombreCarpeta);
-        Files.createDirectories(directorio);
-
-        String nombreArchivo = dto.getTipo()+ "_" + contrato.getCliente().getNombre()+" "+contrato.getCliente().getApellido();
-        Path rutaCompleta = directorio.resolve(nombreArchivo);
-        Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
-        Documento documento = new Documento();
-        documento.setRutaArchivo(rutaCompleta.toString());
-        documento.setContrato(convertirDTOAContrato(contrato));
-        documento.setCliente(convertirDTOACliente(contrato.getCliente()));
-        documento.setEstado(EstadoDocumento.Pendiente);
-        documento.setNombreArchivo(nombreArchivo);
-        documento.setTipo(dto.getTipo());
-        documento.setFechaSubida(LocalDateTime.now());
-        return documentoRepository.save(documento);
-    }*/
-
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
