@@ -44,6 +44,7 @@ public class ClienteService {
                 .estado(clienteDTO.getEstado())
                 .pesoKg(clienteDTO.getPesoKg())
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
+                .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
         cliente = clienteRepository.save(cliente);
 
@@ -83,6 +84,7 @@ public class ClienteService {
                 .email(clienteDTO.getEmail())
                 .estado(clienteDTO.getEstado())
                 .nombre(clienteDTO.getNombre())
+                .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
     }
 
@@ -104,6 +106,7 @@ public class ClienteService {
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
                             .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
                             .build();
                     return dto;
                 });
@@ -127,6 +130,7 @@ public class ClienteService {
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
                             .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
                             .build();
                     return dto;
                 })
@@ -162,6 +166,7 @@ public class ClienteService {
         cliente.setEstado(clienteDTO.getEstado());
         cliente.setPesoKg(clienteDTO.getPesoKg());
         cliente.setEstaturaMetros(clienteDTO.getEstaturaMetros());
+        cliente.setNumeroCuenta(clienteDTO.getNumeroCuenta());
         cliente = clienteRepository.save(cliente);
 
         condService.deleteByClienteId((int)cliente.getId());
@@ -188,6 +193,7 @@ public class ClienteService {
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
                 .nombre(cliente.getNombre())
+                .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
 
@@ -211,6 +217,7 @@ public class ClienteService {
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
                 .nombre(cliente.getNombre())
+                .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
 
