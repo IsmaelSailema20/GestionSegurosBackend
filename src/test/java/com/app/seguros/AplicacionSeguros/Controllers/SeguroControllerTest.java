@@ -48,7 +48,6 @@ class SeguroControllerUnitariasTest {
         dto.setNombre("Seguro Vida");
         dto.setDescripcion("Descripción básica");
         dto.setCobertura("Cobertura completa");
-        dto.setBeneficios("Beneficios extensos");
         dto.setPrecio(100.0);
         dto.setTipo(Tipo.Vida);
         dto.setEstado(Estado.Activo);

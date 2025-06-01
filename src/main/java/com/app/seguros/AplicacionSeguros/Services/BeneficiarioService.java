@@ -51,7 +51,7 @@ public class BeneficiarioService {
 
     @Transactional
     public Beneficiario actualizar(int id,Beneficiario beneficiario) {
-        Beneficiario b=beneficiarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Beneficiario no encontrado"));
+        Beneficiario b=beneficiarioRepository.findById(id).orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIARIO_NO_ENCONTRADO.getMensaje()));
         b.setCedula(beneficiario.getCedula());
         b.setDireccion(beneficiario.getDireccion());
         b.setNombre(beneficiario.getNombre());
@@ -74,4 +74,5 @@ public class BeneficiarioService {
     public Optional<Beneficiario> buscarPorId(Integer id) {
         return beneficiarioRepository.findById(id);
     }
+
 }
