@@ -35,7 +35,12 @@ public class BeneficiarioService {
     }
 
     @Transactional
-    public Beneficiario guardar(Beneficiario beneficiario) {
+    public Beneficiario guardar(Beneficiario beneficiario)
+    {
+        beneficiarioRepository.findByCedula(beneficiario.getCedula())
+                .ifPresent(beneficiario1 -> {
+                    throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
+                });
         return beneficiarioRepository.save(beneficiario);
     }
 
