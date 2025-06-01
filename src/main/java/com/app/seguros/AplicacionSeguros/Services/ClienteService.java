@@ -66,7 +66,7 @@ public class ClienteService {
                         .email(cliente.getEmail())
                         .nombre(cliente.getNombre())
                         .rol(Rol.Cliente)
-                        .password("123456")
+                        .password(cliente.getCedula())
                         .build()
         );
 
