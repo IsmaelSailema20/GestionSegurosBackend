@@ -126,9 +126,9 @@ public class DocumentoController {
     }
 
     @PutMapping("/{idDocumento}/rechazar")
-    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idContrato) {
+    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idDocumento) {
         try {
-            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
+            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idDocumento);
             documentos.forEach(documento -> {
                 documentoService.rechazarDocumento(documento.getIdDocumento());
                 // Enviar correo al rechazar el documento
