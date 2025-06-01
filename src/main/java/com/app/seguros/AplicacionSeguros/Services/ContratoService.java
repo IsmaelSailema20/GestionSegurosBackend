@@ -144,8 +144,12 @@ public class ContratoService {
     }
 
     public List<ContratoRespuestaDTO> buscarContratosPorAgente(Long idAgente) {
-        // Consulta JPQL personalizada
-        String jpql = "SELECT c FROM Contrato c WHERE c.agente.ID_Usuario = :idAgente";
+        // Consulta JPQL mejorada con JOIN FETCH para evitar problemas N+1
+        String jpql = "SELECT c FROM Contrato c "
+                + "JOIN FETCH c.cliente "
+                + "JOIN FETCH c.seguro "
+                + "JOIN FETCH c.agente "
+                + "WHERE c.agente.ID_Usuario = :idAgente";
 
         List<Contrato> contratos = entityManager.createQuery(jpql, Contrato.class)
                 .setParameter("idAgente", idAgente)
@@ -154,18 +158,36 @@ public class ContratoService {
         List<ContratoRespuestaDTO> respuesta = new ArrayList<>();
 
         for (Contrato contrato : contratos) {
-            // Mantener toda la lógica existente de mapeo a DTO
-            Usuario agente = contrato.getAgente(); // Ya viene cargado por la relación
 
-            AgenteDTO agenteDTO = AgenteDTO.builder()
-                    .nombre(agente.getNombre())
-                    .email(agente.getEmail())
-                    .apellido(agente.getApellido())
-                    .id(agente.getID_Usuario())
-                    .build();
-
+            // Construir DTO completo
             ContratoRespuestaDTO contratoResponse = ContratoRespuestaDTO.builder()
-                    .agente(agenteDTO)
+                    .id(contrato.getId())
+                    .fechaInicio(contrato.getFechaInicio())
+                    .fechaFin(contrato.getFechaFin())
+                    .estado(contrato.getEstado())
+                    .seguro(contrato.getSeguro())
+                    .agente(AgenteDTO.builder()
+                            .id(contrato.getAgente().getID_Usuario())
+                            .nombre(contrato.getAgente().getNombre())
+                            .apellido(contrato.getAgente().getApellido())
+                            .email(contrato.getAgente().getEmail())
+                            .build())
+                    .cliente(ClienteRespuestaDTO.builder()
+                            .id_Cliente(contrato.getCliente().getId())
+                            .nombre(contrato.getCliente().getNombre())
+                            .apellido(contrato.getCliente().getApellido())
+                            .cedula(contrato.getCliente().getCedula())
+                            .direccion(contrato.getCliente().getDireccion())
+                            .email(contrato.getCliente().getEmail())
+                            .telefono(contrato.getCliente().getTelefono())
+                            .genero(contrato.getCliente().getGenero())
+                            .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
+                            .estaturaMetros(contrato.getCliente().getEstaturaMetros())
+                            .pesoKg(contrato.getCliente().getPesoKg())
+                            .estado(contrato.getCliente().getEstado())
+                            .condicionesMedicas(condRepo.findByClienteId(Long.bitCount(contrato.getCliente().getId())))
+                            .build())
+                    .beneficiarios(benService.listarPorContrato(contrato.getId()))
                     .build();
 
             respuesta.add(contratoResponse);
