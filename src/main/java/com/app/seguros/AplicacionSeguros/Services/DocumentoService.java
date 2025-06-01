@@ -50,13 +50,29 @@ public class DocumentoService {
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-                String nombreCarpeta = contrato.getCliente().getCedula()+"_"+ contrato.getCliente().getNombre().replace(" ", "_") +"_"+ contrato.getCliente().getApellido().replace(" ", "_");
-        Path directorio = Paths.get(directorioBase, nombreCarpeta);
-        Files.createDirectories(directorio);
 
-        String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + contrato.getCliente().getNombre()+" "+contrato.getCliente().getApellido();
-        Path rutaCompleta = directorio.resolve(nombreArchivo);
+        String nombreCarpetaCliente = contrato.getCliente().getCedula() + "_" +
+                contrato.getCliente().getNombre().replace(" ", "_") + "_" +
+                contrato.getCliente().getApellido().replace(" ", "_");
+
+        // Nombre carpeta contrato: [Seguro]_[ID Contrato]
+        String nombreCarpetaContrato = contrato.getSeguro().getNombre().replace(" ", "_") + "_" +
+                contrato.getId();
+
+        // Crear ruta completa: directorioBase/cliente/contrato/
+        Path directorioCliente = Paths.get(directorioBase, nombreCarpetaCliente);
+        Path directorioContrato = directorioCliente.resolve(nombreCarpetaContrato);
+
+        Files.createDirectories(directorioContrato);
+
+        String nombreArchivo = dto.getTipo()+ "_" +
+                                contrato.getCliente().getNombre()+"_"
+                                +contrato.getCliente().getApellido()
+                                +".pdf";
+
+        Path rutaCompleta = directorioContrato.resolve(nombreArchivo);
         Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
+
         Documento documento = new Documento();
         documento.setRutaArchivo(rutaCompleta.toString());
         documento.setContrato(convertirDTOAContrato(contrato));
@@ -65,8 +81,10 @@ public class DocumentoService {
         documento.setNombreArchivo(nombreArchivo);
         documento.setTipo(dto.getTipo());
         documento.setFechaSubida(LocalDateTime.now());
+
         return documentoRepository.save(documento);
     }
+
 
     public Cliente convertirDTOACliente(ClienteRespuestaDTO dto) {
         return Cliente.builder()
