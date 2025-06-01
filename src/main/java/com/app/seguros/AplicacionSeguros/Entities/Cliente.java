@@ -49,4 +49,8 @@ public class Cliente {
 
     @Enumerated(EnumType.STRING)
     private Estado estado;
+
+    @Column(name = "fecha_creacion", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date fechaCreacion = new Date();
 }
