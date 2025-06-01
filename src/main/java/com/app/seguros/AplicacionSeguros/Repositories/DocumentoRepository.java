@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Repositories;
 
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +12,5 @@ public interface DocumentoRepository extends JpaRepository <Documento, Long> {
     List<Documento> findByContratoId(Long idCliente);
     Optional<Documento> findByRutaArchivo(String ruta);
     boolean existsByNombreArchivoAndClienteId(String nombre, Long idCliente);
+    boolean existsByIdClienteAndEstado(Long idCliente, EstadoDocumento estado);
 }
