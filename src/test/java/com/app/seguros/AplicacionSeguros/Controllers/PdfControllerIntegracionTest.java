@@ -70,7 +70,6 @@ class PdfControllerIntegracionTest {
                 .nombre("Seguro de Vida")
                 .descripcion("Cobertura completa de vida")
                 .cobertura("Vida y accidentes")
-                .beneficios("Indemnización por fallecimiento y hospitalización")
                 .precio(1000.0)
                 .estado(Estado.Activo)
                 .build();

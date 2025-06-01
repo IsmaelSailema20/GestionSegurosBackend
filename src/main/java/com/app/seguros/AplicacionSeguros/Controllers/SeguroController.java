@@ -47,4 +47,15 @@ public class SeguroController {
         seguroService.deleteSeguro(id);
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/{id}")
+    public ResponseEntity<SeguroDTO> activarSeguro(@PathVariable Integer id) {
+        return ResponseEntity.ok(seguroService.activarSeguro(id));
+    }
+    @PostMapping("/editable/{id}")
+    public ResponseEntity<?> seguroEsEditable(@PathVariable Integer id) {
+        if (seguroService.esEditable(id)){
+            return ResponseEntity.ok().body("Es Editable");
+        }
+        return ResponseEntity.internalServerError().body("No Es Editable");
+    }
 }

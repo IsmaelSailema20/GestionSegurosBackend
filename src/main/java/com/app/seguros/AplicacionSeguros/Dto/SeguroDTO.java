@@ -1,10 +1,14 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
+import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
+import com.app.seguros.AplicacionSeguros.Entities.Beneficio;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class SeguroDTO {
@@ -23,8 +27,6 @@ public class SeguroDTO {
     @NotBlank(message = "La cobertura del seguro es obligatoria")
     private String cobertura;
 
-    @NotBlank(message = "Los beneficios del seguro son obligatorios")
-    private String beneficios;
 
     @NotNull(message = "El precio es obligatorio")
     @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor a cero")
@@ -32,4 +34,6 @@ public class SeguroDTO {
 
     @Nonnull
     private Estado estado;
+
+    private List<Beneficio> beneficios;
 }

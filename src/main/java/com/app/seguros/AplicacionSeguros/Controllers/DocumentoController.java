@@ -106,41 +106,44 @@ public class DocumentoController {
         }
     }
 
-    @PutMapping("/{idContrato}/aprobar")
-    public ResponseEntity<Void> aprobarDocumento(@PathVariable Long idContrato) {
+
+    @PutMapping("/{idDocumento}/aprobar")
+    public ResponseEntity<Void> aprobarDocumento(@PathVariable Long idDocumento) {
         try {
-            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
-            documentos.forEach(documento -> {
-                documentoService.aprobarDocumento(documento.getIdDocumento());
-                // Enviar correo al aprobar el documento
-                String correoCliente = clienteService.getCorreoCliente(documento.getCliente().getId());
-                String asunto = "Documento Aprobado";
-                String cuerpo = "Estimado cliente,\n\nEl documento de tipo " + documento.getTipo() +
-                        " ha sido aprobado por el agente.\n\nSaludos,\nEquipo Walk Seguros";
-                emailService.enviarCorreo(correoCliente, asunto, cuerpo);
-            });
+            Documento documento = documentoService.obtenerDocumento(idDocumento);
+            documentoService.aprobarDocumento(idDocumento);
+
+            // Enviar correo al aprobar el documento
+            String correoCliente = clienteService.getCorreoCliente(documento.getCliente().getId());
+            String asunto = "Documento Aprobado";
+            String cuerpo = "Estimado cliente,\n\nEl documento de tipo " + documento.getTipo() +
+                    " ha sido aprobado por el agente.\n\nSaludos,\nEquipo Walk Seguros";
+
+            emailService.enviarCorreo(correoCliente, asunto, cuerpo);
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             throw new RuntimeException("Error al aprobar el documento: " + e.getMessage());
         }
-        return ResponseEntity.ok().build();
     }
-
+    
     @PutMapping("/{idDocumento}/rechazar")
-    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idContrato) {
+    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idDocumento) {
         try {
-            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
-            documentos.forEach(documento -> {
-                documentoService.rechazarDocumento(documento.getIdDocumento());
-                // Enviar correo al rechazar el documento
-                String correoCliente = clienteService.getCorreoCliente(documento.getCliente().getId());
-                String asunto = "Documento Rechazado";
-                String cuerpo = "Estimado cliente,\n\nEl documento de tipo " + documento.getTipo() +
-                        " ha sido rechazado por el agente.\n\nPor favor, revisa y vuelve a subir el documento.\n\nSaludos,\nEquipo Walk Seguros";
-                emailService.enviarCorreo(correoCliente, asunto, cuerpo);
-            });
+            Documento documento = documentoService.obtenerDocumento(idDocumento);
+            documentoService.rechazarDocumento(idDocumento);
+
+            // Enviar correo al rechazar el documento
+            String correoCliente = clienteService.getCorreoCliente(documento.getCliente().getId());
+            String asunto = "Documento Rechazado";
+            String cuerpo = "Estimado cliente,\n\nEl documento de tipo " + documento.getTipo() +
+                    " ha sido rechazado por el agente.\n\nPor favor, revisa y vuelve a subir el documento.\n\nSaludos,\nEquipo Walk Seguros";
+
+            emailService.enviarCorreo(correoCliente, asunto, cuerpo);
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             throw new RuntimeException("Error al rechazar el documento: " + e.getMessage());
         }
-        return ResponseEntity.ok().build();
     }
 }
