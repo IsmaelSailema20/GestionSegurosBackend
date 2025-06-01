@@ -1,9 +1,11 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,17 @@ public class UsuariosController {
     public ResponseEntity<?> putUsuario(@RequestBody UsuarioEditarRequest usuario){
         try {
             Usuario u=usuarioService.putUsuario(usuario);
+            return ResponseEntity.created(new URI("/Usuarios/"+u.getID_Usuario())).body(u);
+        } catch (URISyntaxException | RuntimeException  e) {
+            return ResponseEntity.internalServerError().body("Error: "+e.getMessage());
+        }
+    }
+
+    @PutMapping("/credencialesCliente")
+    public ResponseEntity<?> putCredencialesUsuarioCliente(@RequestBody @Valid UsuarioClienteCredencialesDTO usuario){
+            System.out.println("ID_Usuario recibido: " + usuario.getIdUsuario());
+        try {
+            Usuario u=usuarioService.actualizarCredencialesUsuarioCliente(usuario);
             return ResponseEntity.created(new URI("/Usuarios/"+u.getID_Usuario())).body(u);
         } catch (URISyntaxException | RuntimeException  e) {
             return ResponseEntity.internalServerError().body("Error: "+e.getMessage());
