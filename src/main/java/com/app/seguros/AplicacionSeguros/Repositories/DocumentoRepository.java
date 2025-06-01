@@ -12,5 +12,5 @@ public interface DocumentoRepository extends JpaRepository <Documento, Long> {
     List<Documento> findByContratoId(Long idCliente);
     Optional<Documento> findByRutaArchivo(String ruta);
     boolean existsByNombreArchivoAndClienteId(String nombre, Long idCliente);
-    boolean existsByIdClienteAndEstado(Long idCliente, EstadoDocumento estado);
+    boolean existsByClienteIdAndEstado(Long idCliente, EstadoDocumento estado);
 }
