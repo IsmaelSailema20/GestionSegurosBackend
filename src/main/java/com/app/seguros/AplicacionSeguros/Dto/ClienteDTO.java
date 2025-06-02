@@ -1,4 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Dto;
+import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
+
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import jakarta.annotation.Nonnull;
@@ -50,5 +52,9 @@ public class ClienteDTO {
 
     private double pesoKg;
     private List<CondicionMedica> condicionesMedicas;
+
+    @NotBlank(message = "El número de cuenta  es obligatorio")
+    @Size(max = 13,message = "El número de cuenta debe tener hasta 13 díjitos")
+    private String numeroCuenta;
 
 }

@@ -49,4 +49,7 @@ public class Cliente {
 
     @Enumerated(EnumType.STRING)
     private Estado estado;
+
+    @Column(nullable = false,length = 100)
+    private String numeroCuenta;
 }

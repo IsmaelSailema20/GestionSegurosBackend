@@ -46,6 +46,7 @@ public class ClienteService {
                 .estado(clienteDTO.getEstado())
                 .pesoKg(clienteDTO.getPesoKg())
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
+                .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
         cliente = clienteRepository.save(cliente);
 
@@ -97,6 +98,7 @@ public class ClienteService {
                 .email(clienteDTO.getEmail())
                 .estado(clienteDTO.getEstado())
                 .nombre(clienteDTO.getNombre())
+                .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
     }
 
@@ -117,29 +119,33 @@ public class ClienteService {
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
                             .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
                             .build()
-
                 );
     }
 
     public List<ClienteRespuestaDTO> getAllClientes() {
         return clienteRepository.findAll()
                 .stream()
-                .map(cliente -> ClienteRespuestaDTO.builder()
-                        .estaturaMetros(cliente.getEstaturaMetros())
-                        .fecha_nacimiento(cliente.getFecha_nacimiento())
-                        .direccion(cliente.getDireccion())
-                        .id_Cliente(cliente.getId())
-                        .genero(cliente.getGenero())
-                        .cedula(cliente.getCedula())
-                        .pesoKg(cliente.getPesoKg())
-                        .telefono(cliente.getTelefono())
-                        .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                        .apellido(cliente.getApellido())
-                        .email(cliente.getEmail())
-                        .estado(cliente.getEstado())
-                        .nombre(cliente.getNombre())
-                        .build())
+                .map(cliente -> {
+                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                            .estaturaMetros(cliente.getEstaturaMetros())
+                            .fecha_nacimiento(cliente.getFecha_nacimiento())
+                            .direccion(cliente.getDireccion())
+                            .id_Cliente(cliente.getId())
+                            .genero(cliente.getGenero())
+                            .cedula(cliente.getCedula())
+                            .pesoKg(cliente.getPesoKg())
+                            .telefono(cliente.getTelefono())
+                            .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                            .apellido(cliente.getApellido())
+                            .email(cliente.getEmail())
+                            .estado(cliente.getEstado())
+                            .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
+                            .build();
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -172,6 +178,7 @@ public class ClienteService {
         cliente.setEstado(clienteDTO.getEstado());
         cliente.setPesoKg(clienteDTO.getPesoKg());
         cliente.setEstaturaMetros(clienteDTO.getEstaturaMetros());
+        cliente.setNumeroCuenta(clienteDTO.getNumeroCuenta());
         cliente = clienteRepository.save(cliente);
 
         condService.deleteByClienteId((int)cliente.getId());
@@ -198,6 +205,7 @@ public class ClienteService {
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
                 .nombre(cliente.getNombre())
+                .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
 
@@ -221,6 +229,7 @@ public class ClienteService {
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
                 .nombre(cliente.getNombre())
+                .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
     public String getCorreoCliente(Long idCliente) {
