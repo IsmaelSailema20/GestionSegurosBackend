@@ -2,7 +2,6 @@ package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.AgenteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import org.springframework.beans.factory.annotation.Autowired;

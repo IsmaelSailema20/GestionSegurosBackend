@@ -4,8 +4,8 @@ import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+
 
 @Service
 public class DocumentoService {
@@ -50,13 +50,29 @@ public class DocumentoService {
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-                String nombreCarpeta = contrato.getCliente().getCedula()+"_"+ contrato.getCliente().getNombre().replace(" ", "_") +"_"+ contrato.getCliente().getApellido().replace(" ", "_");
-        Path directorio = Paths.get(directorioBase, nombreCarpeta);
-        Files.createDirectories(directorio);
 
-        String nombreArchivo = /*UUID.randomUUID()*/dto.getTipo()+ "_" + contrato.getCliente().getNombre()+" "+contrato.getCliente().getApellido();
-        Path rutaCompleta = directorio.resolve(nombreArchivo);
-        Files.copy(archivo.getInputStream(), rutaCompleta);
+        String nombreCarpetaCliente = contrato.getCliente().getCedula() + "_" +
+                contrato.getCliente().getNombre().replace(" ", "_") + "_" +
+                contrato.getCliente().getApellido().replace(" ", "_");
+
+        // Nombre carpeta contrato: [Seguro]_[ID Contrato]
+        String nombreCarpetaContrato = contrato.getSeguro().getNombre().replace(" ", "_") + "_" +
+                contrato.getId();
+
+        // Crear ruta completa: directorioBase/cliente/contrato/
+        Path directorioCliente = Paths.get(directorioBase, nombreCarpetaCliente);
+        Path directorioContrato = directorioCliente.resolve(nombreCarpetaContrato);
+
+        Files.createDirectories(directorioContrato);
+
+        String nombreArchivo = dto.getTipo()+ "_" +
+                                contrato.getCliente().getNombre()+"_"
+                                +contrato.getCliente().getApellido()
+                                +".pdf";
+
+        Path rutaCompleta = directorioContrato.resolve(nombreArchivo);
+        Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
+
         Documento documento = new Documento();
         documento.setRutaArchivo(rutaCompleta.toString());
         documento.setContrato(convertirDTOAContrato(contrato));
@@ -65,8 +81,10 @@ public class DocumentoService {
         documento.setNombreArchivo(nombreArchivo);
         documento.setTipo(dto.getTipo());
         documento.setFechaSubida(LocalDateTime.now());
+
         return documentoRepository.save(documento);
     }
+
 
     public Cliente convertirDTOACliente(ClienteRespuestaDTO dto) {
         return Cliente.builder()
@@ -88,13 +106,13 @@ public class DocumentoService {
     public Contrato convertirDTOAContrato(ContratoRespuestaDTO dto) {
 
         Cliente cliente = clienteRepository.findById(dto.getCliente().getId_Cliente())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
         Seguro seguro = seguroRepository.findById(dto.getSeguro().getIdSeguro())
-                .orElseThrow(() -> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
 
         Usuario agente = usuarioRepository.findById(dto.getAgente().getId())
-                .orElseThrow(() -> new RuntimeException("Agente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.AGENTE_NO_ENCONTRADO.getMensaje()));
 
         return Contrato.builder()
                 .id(dto.getId())
@@ -113,13 +131,13 @@ public class DocumentoService {
 
     public Documento obtenerDocumento(Long idDocumento) {
         return documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
     }
 
     @Transactional
     public void aprobarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
         doc.setEstado(EstadoDocumento.Aprobado);
         documentoRepository.save(doc);
     }
@@ -127,18 +145,21 @@ public class DocumentoService {
     @Transactional
     public void rechazarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
 
         // 1. Eliminar archivo físico
         try {
             Path path = Paths.get(doc.getRutaArchivo());
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new RuntimeException("Error al eliminar el archivo: " + e.getMessage());
+            throw new RuntimeException(MensajeError.ERROR_ELIMINAR_ARCHIVO.getMensaje()+": " + e.getMessage());
         }
 
         // 2. Eliminar registro de la base de datos
         documentoRepository.delete(doc);
     }
 
+    public void setDirectorBase(String directorioBase) {
+        this.directorioBase = directorioBase;
+    }
 }

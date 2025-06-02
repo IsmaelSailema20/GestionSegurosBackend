@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,16 +19,17 @@ public class ClienteService {
     ClienteRepository clienteRepository;
     @Autowired private CondicionMedicaService condService;
     @Autowired private UsuarioService usuarioService;
+    @Autowired private EmailService emailService;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
         clienteRepository.findByCedula(clienteDTO.getCedula())
                 .ifPresent(cliente -> {
-                    throw new RuntimeException("La cédula ya está registrada");
+                    throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
                 });
         clienteRepository.findByEmail(clienteDTO.getEmail())
                 .ifPresent(cliente -> {
-                    throw new RuntimeException("El email ya está registrado");
+                    throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                 });
 
 
@@ -66,9 +68,21 @@ public class ClienteService {
                         .email(cliente.getEmail())
                         .nombre(cliente.getNombre())
                         .rol(Rol.Cliente)
-                        .password("123456")
+                        .password(cliente.getCedula())
                         .build()
         );
+
+        // Enviar correo al cliente con sus credenciales y enlace
+        String destinatario = cliente.getEmail();
+        String asunto = "Bienvenido a Walk Seguros - Tus Credenciales";
+        String cuerpo = "Estimado " + cliente.getNombre() + " " + cliente.getApellido() + ",\n\n" +
+                "Gracias por registrarte en Walk Seguros. A continuación, tus credenciales:\n\n" +
+                "Usuario: " + cliente.getEmail() + "\n" +
+                "Contraseña: " + cliente.getCedula() + "\n\n" +
+                "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
+                "http://localhost:5173\n\n" +
+                "Saludos,\nEquipo Walk Seguros";
+        emailService.enviarCorreo(destinatario, asunto, cuerpo);
 
         return ClienteRespuestaDTO.builder()
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
@@ -91,8 +105,7 @@ public class ClienteService {
 
     public Optional<ClienteRespuestaDTO> getCliente(Long id) {
         return clienteRepository.findById(id)
-                .map(cliente -> {
-                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                .map(cliente -> ClienteRespuestaDTO.builder()
                             .estaturaMetros(cliente.getEstaturaMetros())
                             .fecha_nacimiento(cliente.getFecha_nacimiento())
                             .direccion(cliente.getDireccion())
@@ -107,9 +120,8 @@ public class ClienteService {
                             .estado(cliente.getEstado())
                             .nombre(cliente.getNombre())
                             .numeroCuenta(cliente.getNumeroCuenta())
-                            .build();
-                    return dto;
-                });
+                            .build()
+                );
     }
 
     public List<ClienteRespuestaDTO> getAllClientes() {
@@ -139,19 +151,19 @@ public class ClienteService {
 
     public ClienteRespuestaDTO updateCliente(Long id, ClienteDTO clienteDTO) {
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
         // Validar unicidad de cédula y email si cambiaron
         if (!cliente.getCedula().equals(clienteDTO.getCedula())) {
             clienteRepository.findByCedula(clienteDTO.getCedula())
                     .ifPresent(c -> {
-                        throw new RuntimeException("La cédula ya está registrada");
+                        throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
                     });
         }
         if (!cliente.getEmail().equals(clienteDTO.getEmail())) {
             clienteRepository.findByEmail(clienteDTO.getEmail())
                     .ifPresent(c -> {
-                        throw new RuntimeException("El email ya está registrado");
+                        throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                     });
         }
 
@@ -200,7 +212,7 @@ public class ClienteService {
 
     public ClienteRespuestaDTO actualizarEstado(Long id,EstadoDTO estado){
         Cliente cliente=clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
         cliente.setEstado(estado.getEstado());
         clienteRepository.save(cliente);
         return ClienteRespuestaDTO.builder()
@@ -220,6 +232,10 @@ public class ClienteService {
                 .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
-
+    public String getCorreoCliente(Long idCliente) {
+        Optional<Cliente> cliente = clienteRepository.findById(idCliente);
+        return cliente.map(Cliente::getEmail)
+                .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()+" ID: " + idCliente));
+    }
 
 }

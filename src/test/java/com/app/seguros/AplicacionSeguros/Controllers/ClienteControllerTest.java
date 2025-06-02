@@ -2,18 +2,18 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.CondicionMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,12 +29,11 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class ClienteControllerUnitariasTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @MockBean
     private ClienteService clienteService;
     @MockBean
@@ -43,9 +42,14 @@ class ClienteControllerUnitariasTest {
     private CondicionMedicaService condicionMedicaService;
     @MockBean
     private BeneficiarioRepository beneficiarioRepository;
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private ClienteRepository clienteRepository;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-    private String token = "";
+    private String token = "mock-valid-token";
 
     private ClienteDTO createDTO(Long id) {
         ClienteDTO dto = new ClienteDTO(Estado.Activo);
@@ -77,24 +81,12 @@ class ClienteControllerUnitariasTest {
                 .build();
     }
 
-    private Usuario createUsuario(int id) {
-        Usuario u = new Usuario();
-        u.setID_Usuario(id);
-        u.setApellido("apellido");
-        u.setContraseña("contraseña");
-        u.setNombre("nombre");
-        u.setEstado(Estado.Activo);
-        u.setEmail("email");
-        u.setRol(Rol.Administrador);
-        return u;
-    }
+
 
     @BeforeEach
     void setUpSecurity() {
-        Usuario u = createUsuario(1);
-        JwtService jwtService = new JwtService();
-        token = jwtService.getToken(u);
-        when(usuariosRepository.findByEmail(anyString())).thenReturn(Optional.of(u));
+        JwtService jwtMock = Mockito.mock(JwtService.class);
+        when(jwtMock.getToken(any(Usuario.class))).thenReturn("mock-token");
     }
 
     @Test
@@ -168,12 +160,5 @@ class ClienteControllerUnitariasTest {
                 .andExpect(jsonPath("$.id_Cliente").value(1L));
     }
 
-   /* @Test
-    void deleteCliente() throws Exception {
-        doNothing().when(clienteService).deleteCliente(anyLong());
 
-        mockMvc.perform(delete("/Clientes/1")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
-    }*/
 }

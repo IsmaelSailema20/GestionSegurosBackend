@@ -3,6 +3,7 @@ package com.app.seguros.AplicacionSeguros.Services;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiarios_Contratos;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,12 @@ public class BeneficiarioService {
     }
 
     @Transactional
-    public Beneficiario guardar(Beneficiario beneficiario) {
+    public Beneficiario guardar(Beneficiario beneficiario)
+    {
+        beneficiarioRepository.findByCedula(beneficiario.getCedula())
+                .ifPresent(beneficiario1 -> {
+                    throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
+                });
         return beneficiarioRepository.save(beneficiario);
     }
 
@@ -45,7 +51,7 @@ public class BeneficiarioService {
 
     @Transactional
     public Beneficiario actualizar(int id,Beneficiario beneficiario) {
-        Beneficiario b=beneficiarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Beneficiario no encontrado"));
+        Beneficiario b=beneficiarioRepository.findById(id).orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIARIO_NO_ENCONTRADO.getMensaje()));
         b.setCedula(beneficiario.getCedula());
         b.setDireccion(beneficiario.getDireccion());
         b.setNombre(beneficiario.getNombre());
@@ -58,7 +64,7 @@ public class BeneficiarioService {
     public void eliminarPorContrato(Integer idContrato) {
         beneficiarioContratoRepository.deleteByContratoId(idContrato);
     }
-@Transactional
+    @Transactional
     public void eliminarPorId(Integer idBeneficiario) {
         beneficiarioContratoRepository.deleteByBeneficiarioId(idBeneficiario);
         beneficiarioRepository.deleteById(idBeneficiario);
@@ -68,4 +74,5 @@ public class BeneficiarioService {
     public Optional<Beneficiario> buscarPorId(Integer id) {
         return beneficiarioRepository.findById(id);
     }
+
 }

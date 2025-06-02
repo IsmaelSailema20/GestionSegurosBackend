@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
