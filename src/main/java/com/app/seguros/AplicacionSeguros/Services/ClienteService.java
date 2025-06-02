@@ -19,6 +19,7 @@ public class ClienteService {
     ClienteRepository clienteRepository;
     @Autowired private CondicionMedicaService condService;
     @Autowired private UsuarioService usuarioService;
+    @Autowired private EmailService emailService;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
@@ -45,6 +46,7 @@ public class ClienteService {
                 .estado(clienteDTO.getEstado())
                 .pesoKg(clienteDTO.getPesoKg())
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
+                .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
         cliente = clienteRepository.save(cliente);
 
@@ -66,9 +68,21 @@ public class ClienteService {
                         .email(cliente.getEmail())
                         .nombre(cliente.getNombre())
                         .rol(Rol.Cliente)
-                        .password("123456")
+                        .password(cliente.getCedula())
                         .build()
         );
+
+        // Enviar correo al cliente con sus credenciales y enlace
+        String destinatario = cliente.getEmail();
+        String asunto = "Bienvenido a Walk Seguros - Tus Credenciales";
+        String cuerpo = "Estimado " + cliente.getNombre() + " " + cliente.getApellido() + ",\n\n" +
+                "Gracias por registrarte en Walk Seguros. A continuación, tus credenciales:\n\n" +
+                "Usuario: " + cliente.getEmail() + "\n" +
+                "Contraseña: " + cliente.getCedula() + "\n\n" +
+                "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
+                "http://localhost:5173\n\n" +
+                "Saludos,\nEquipo Walk Seguros";
+        emailService.enviarCorreo(destinatario, asunto, cuerpo);
 
         return ClienteRespuestaDTO.builder()
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
@@ -84,6 +98,7 @@ public class ClienteService {
                 .email(clienteDTO.getEmail())
                 .estado(clienteDTO.getEstado())
                 .nombre(clienteDTO.getNombre())
+                .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
     }
 
@@ -104,29 +119,33 @@ public class ClienteService {
                             .email(cliente.getEmail())
                             .estado(cliente.getEstado())
                             .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
                             .build()
-
                 );
     }
 
     public List<ClienteRespuestaDTO> getAllClientes() {
         return clienteRepository.findAll()
                 .stream()
-                .map(cliente -> ClienteRespuestaDTO.builder()
-                        .estaturaMetros(cliente.getEstaturaMetros())
-                        .fecha_nacimiento(cliente.getFecha_nacimiento())
-                        .direccion(cliente.getDireccion())
-                        .id_Cliente(cliente.getId())
-                        .genero(cliente.getGenero())
-                        .cedula(cliente.getCedula())
-                        .pesoKg(cliente.getPesoKg())
-                        .telefono(cliente.getTelefono())
-                        .condicionesMedicas(condService.getAll((int) cliente.getId()))
-                        .apellido(cliente.getApellido())
-                        .email(cliente.getEmail())
-                        .estado(cliente.getEstado())
-                        .nombre(cliente.getNombre())
-                        .build())
+                .map(cliente -> {
+                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                            .estaturaMetros(cliente.getEstaturaMetros())
+                            .fecha_nacimiento(cliente.getFecha_nacimiento())
+                            .direccion(cliente.getDireccion())
+                            .id_Cliente(cliente.getId())
+                            .genero(cliente.getGenero())
+                            .cedula(cliente.getCedula())
+                            .pesoKg(cliente.getPesoKg())
+                            .telefono(cliente.getTelefono())
+                            .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                            .apellido(cliente.getApellido())
+                            .email(cliente.getEmail())
+                            .estado(cliente.getEstado())
+                            .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
+                            .build();
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -159,6 +178,7 @@ public class ClienteService {
         cliente.setEstado(clienteDTO.getEstado());
         cliente.setPesoKg(clienteDTO.getPesoKg());
         cliente.setEstaturaMetros(clienteDTO.getEstaturaMetros());
+        cliente.setNumeroCuenta(clienteDTO.getNumeroCuenta());
         cliente = clienteRepository.save(cliente);
 
         condService.deleteByClienteId((int)cliente.getId());
@@ -185,6 +205,7 @@ public class ClienteService {
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
                 .nombre(cliente.getNombre())
+                .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
 
@@ -208,6 +229,7 @@ public class ClienteService {
                 .email(cliente.getEmail())
                 .estado(cliente.getEstado())
                 .nombre(cliente.getNombre())
+                .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
     public String getCorreoCliente(Long idCliente) {

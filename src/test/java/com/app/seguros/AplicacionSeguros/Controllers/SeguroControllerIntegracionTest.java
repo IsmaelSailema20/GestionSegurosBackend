@@ -48,7 +48,6 @@ class SeguroControllerIntegracionTest {
 
     private SeguroDTO createDTO(Integer id) {
         SeguroDTO dto = new SeguroDTO(Tipo.Vida, Estado.Activo);
-        dto.setBeneficios("Beneficios extensos");
         dto.setCobertura("Cobertura completa");
         dto.setDescripcion("Descripción básica");
         dto.setEstado(Estado.Activo);
@@ -65,7 +64,6 @@ class SeguroControllerIntegracionTest {
                 .nombre(nombre)
                 .descripcion("Descripción básica")
                 .cobertura("Cobertura completa")
-                .beneficios("Beneficios extensos")
                 .precio(100.0)
                 .estado(Estado.Activo)
                 .build();

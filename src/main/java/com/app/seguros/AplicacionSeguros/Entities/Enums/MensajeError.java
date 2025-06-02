@@ -13,7 +13,9 @@ public enum MensajeError {
     DOCUMENTO_NO_ENCONTRADO("Documento no encontrado"),
     ERROR_ELIMINAR_ARCHIVO("Error al eliminar el archivo"),
     EERROR_ENVIAR_CORREO("Error al enviar correo"),
-    USUARIO_NO_ENCONTRADO("Usuario no encontrado")
+    USUARIO_NO_ENCONTRADO("Usuario no encontrado"),
+    BENEFICIO_NO_ENCONTRADO("Beneficio no encontrado"),
+    SEGURO_CON_CONTRATOS("El Seguro tiene contratos Activos")
     ;
 
     private final String mensaje;

@@ -53,4 +53,8 @@ public class Cliente {
     @Column(name = "fecha_creacion", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion = new Date();
+  
+    @Column(nullable = false,length = 100)
+    private String numeroCuenta;
+
 }

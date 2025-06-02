@@ -4,10 +4,12 @@ import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
+import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,19 +20,39 @@ public class SeguroService {
 
     @Autowired
     private SeguroRepository seguroRepository;
-
+    @Autowired
+    private BeneficioService beneficioService;
+    @Autowired
+    private ContratoRepository contratoRepository;
+    @Transactional
     public SeguroDTO saveSeguro(SeguroDTO dto) {
         Seguro seguro = Seguro.builder()
                 .tipo(dto.getTipo())
                 .nombre(dto.getNombre())
                 .descripcion(dto.getDescripcion())
                 .cobertura(dto.getCobertura())
-                .beneficios(dto.getBeneficios())
                 .precio(dto.getPrecio())
                 .estado(dto.getEstado())
                 .build();
 
         seguro = seguroRepository.save(seguro);
+        // Actualizar beneficios
+        beneficioService.eliminarPorSeguro(seguro.getIdSeguro());
+        if (dto.getBeneficios() != null) {
+            Seguro finalSeguro = seguro;
+            dto.getBeneficios().forEach(b -> {
+                if (b.getId() == null) {
+                    b = beneficioService.guardar(b); // nuevo beneficio
+                } else {
+                    b = beneficioService.buscarPorId(b.getId())
+                            .orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIO_NO_ENCONTRADO.getMensaje()));
+                }
+                beneficioService.guardarRelacion(b, finalSeguro);
+
+            });
+
+        }
+        dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
         dto.setId(seguro.getIdSeguro());
         return dto;
     }
@@ -44,9 +66,9 @@ public class SeguroService {
                     dto.setNombre(seguro.getNombre());
                     dto.setDescripcion(seguro.getDescripcion());
                     dto.setCobertura(seguro.getCobertura());
-                    dto.setBeneficios(seguro.getBeneficios());
                     dto.setPrecio(seguro.getPrecio());
                     dto.setEstado(seguro.getEstado());
+                    dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
                     return dto;
                 });
     }
@@ -61,14 +83,14 @@ public class SeguroService {
                     dto.setNombre(seguro.getNombre());
                     dto.setDescripcion(seguro.getDescripcion());
                     dto.setCobertura(seguro.getCobertura());
-                    dto.setBeneficios(seguro.getBeneficios());
                     dto.setPrecio(seguro.getPrecio());
                     dto.setEstado(seguro.getEstado());
+                    dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
-
+    @Transactional
     public SeguroDTO updateSeguro(Integer id, SeguroDTO dto) {
         Seguro seguro = seguroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
@@ -77,18 +99,55 @@ public class SeguroService {
         seguro.setNombre(dto.getNombre());
         seguro.setDescripcion(dto.getDescripcion());
         seguro.setCobertura(dto.getCobertura());
-        seguro.setBeneficios(dto.getBeneficios());
         seguro.setPrecio(dto.getPrecio());
         seguro.setEstado(dto.getEstado());
 
         seguro = seguroRepository.save(seguro);
+        beneficioService.eliminarPorSeguro(seguro.getIdSeguro());
+        if (dto.getBeneficios() != null) {
+            Seguro finalSeguro = seguro;
+            dto.getBeneficios().forEach(b -> {
+                if (b.getId() == null) {
+                    b = beneficioService.guardar(b); // nuevo beneficio
+                } else {
+                    b = beneficioService.buscarPorId(b.getId())
+                            .orElseThrow(() -> new RuntimeException(MensajeError.BENEFICIO_NO_ENCONTRADO.getMensaje()));
+                }
+                beneficioService.guardarRelacion(b, finalSeguro);
+            });
+        }
         dto.setId(seguro.getIdSeguro());
+        dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
         return dto;
     }
-
+    @Transactional
     public void deleteSeguro(Integer id) {
-        seguroRepository.findById(id)
+        if(!contratoRepository.findContratosActivosOPendientesSeguro(id).isEmpty()){
+            throw  new RuntimeException(MensajeError.SEGURO_CON_CONTRATOS.getMensaje());
+        }
+        Seguro s= seguroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
-        seguroRepository.deleteById(id);
+        s.setEstado(Estado.Inactivo);
+        seguroRepository.save(s);
+    }
+    @Transactional
+    public SeguroDTO activarSeguro(Integer id) {
+        Seguro s= seguroRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
+        s.setEstado(Estado.Activo);
+        seguroRepository.save(s);
+        SeguroDTO dto=new SeguroDTO(s.getTipo(),s.getEstado());
+        dto.setId(s.getIdSeguro());
+        dto.setTipo(s.getTipo());
+        dto.setNombre(s.getNombre());
+        dto.setDescripcion(s.getDescripcion());
+        dto.setCobertura(s.getCobertura());
+        dto.setPrecio(s.getPrecio());
+        dto.setEstado(s.getEstado());
+        dto.setBeneficios(beneficioService.listarPorSeguro(s.getIdSeguro()));
+        return dto;
+    }
+    public boolean esEditable(int id){
+        return contratoRepository.findContratosActivosOPendientesSeguro(id).isEmpty();
     }
 }
