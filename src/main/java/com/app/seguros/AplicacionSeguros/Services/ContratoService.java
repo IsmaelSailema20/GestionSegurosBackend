@@ -7,16 +7,21 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Repositories.*;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ContratoService {
@@ -30,6 +35,12 @@ public class ContratoService {
     @Autowired private CondicionMedicaClienteRepository condRepo;
     @Autowired
     private EntityManager entityManager;
+    @Value("${documentos.directorio}")
+    private String directorioBase;
+    @Autowired
+    private ContratoPdfService pdfService;
+    @Autowired
+    private BeneficiarioContratoRepository beneficiarioContratoRepo;
     @Transactional
     public ContratoRespuestaDTO registrarContrato(ContratoRegistrarDTO dto) {
         Cliente cliente = clienteRepo.findById(Long.valueOf(dto.getIdCliente()))
@@ -203,7 +214,11 @@ public class ContratoService {
 
         Contrato contrato = contratoOpt.get();
         Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
-
+// Obtener los beneficiarios a través de Beneficiarios_contratos
+        List<Beneficiarios_Contratos> beneficiariosContratos = beneficiarioContratoRepo.findByContratoId(id);
+        List<Beneficiario> beneficiarios = beneficiariosContratos.stream()
+                .map(Beneficiarios_Contratos::getBeneficiario)
+                .collect(Collectors.toList());
         ContratoRespuestaDTO contratoResponse=null;
         AgenteDTO agenteDTO=AgenteDTO.builder()
                 .nombre(agente.getNombre())
@@ -237,6 +252,7 @@ public class ContratoService {
                     .id(contrato.getId())
                     .beneficiarios(benService.listarPorContrato(contrato.getId()))
                     .agente(agenteDTO)
+                    .beneficiarios(beneficiarios)
                     .build()
                     ;
         }
@@ -444,7 +460,67 @@ public class ContratoService {
         contrato.setFechaFin(fechaFin);
 
         contrato = contratoRepo.save(contrato);
+        // Construir ClienteRespuestaDTO para usar en generarContratoPdf
+        ClienteRespuestaDTO clienteDTO = ClienteRespuestaDTO.builder()
+                .id_Cliente(contrato.getCliente().getId())
+                .nombre(contrato.getCliente().getNombre())
+                .apellido(contrato.getCliente().getApellido())
+                .direccion(contrato.getCliente().getDireccion())
+                .email(contrato.getCliente().getEmail())
+                .telefono(contrato.getCliente().getTelefono())
+                .genero(contrato.getCliente().getGenero())
+                .cedula(contrato.getCliente().getCedula())
+                .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
+                .estado(contrato.getCliente().getEstado())
+                .estaturaMetros(contrato.getCliente().getEstaturaMetros())
+                .pesoKg(contrato.getCliente().getPesoKg())
+                .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
+                .build();
+        // Obtener los beneficiarios
+        // Obtener los beneficiarios a través de Beneficiarios_contratos
+        List<Beneficiarios_Contratos> beneficiariosContratos = beneficiarioContratoRepo.findByContratoId(id);
+        List<Beneficiario> beneficiarios = beneficiariosContratos.stream()
+                .map(Beneficiarios_Contratos::getBeneficiario)
+                .collect(Collectors.toList());
+// Generar y guardar el PDF si no existe
+        // Generar y guardar el PDF si no existe
+        try {
+            // Construir la ruta de la carpeta del cliente y contrato (ya creada)
+            String cedula = contrato.getCliente().getCedula();
+            String nombreCompleto = contrato.getCliente().getNombre().replace(" ", "_") + "_" + contrato.getCliente().getApellido().replace(" ", "_");
+            String nombreCarpetaCliente = cedula + "_" + nombreCompleto;
+            String nombreCarpetaContrato = contrato.getSeguro().getNombre().replace(" ", "_") + "_" + contrato.getId();
+            Path directorioContrato = Paths.get(directorioBase, nombreCarpetaCliente, nombreCarpetaContrato);
+            String nombreArchivo = "contrato-" + id + ".pdf";
+            Path rutaCompleta = directorioContrato.resolve(nombreArchivo);
 
+            // Verificar si el PDF ya existe
+            if (!Files.exists(rutaCompleta)) {
+                // Generar el PDF
+                byte[] pdf = pdfService.generarContratoPdf(
+                        clienteDTO,
+                        contrato.getEstado(),
+                        contrato.getSeguro(),
+                        usuarioRepo.findById(contrato.getAgente().getID_Usuario())
+                                .map(agente -> AgenteDTO.builder()
+                                        .id(agente.getID_Usuario())
+                                        .nombre(agente.getNombre())
+                                        .apellido(agente.getApellido())
+                                        .email(agente.getEmail())
+                                        .build())
+                                .orElse(null),
+                        contrato.getFechaInicio(),
+                        contrato.getFechaFin(),
+                        beneficiarios, // Ahora pasamos los beneficiarios
+                        condRepo.findByClienteId((int) contrato.getCliente().getId())
+                );
+
+                // Guardar el PDF en el archivo
+                Files.write(rutaCompleta, pdf);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error al generar o guardar el PDF: " + e.getMessage());
+        }
         Usuario agente = usuarioRepo.findById(contrato.getAgente().getID_Usuario()).orElse(null);
         AgenteDTO agenteDTO = AgenteDTO.builder()
                 .nombre(agente.getNombre())
@@ -454,29 +530,14 @@ public class ContratoService {
                 .build();
 
         return ContratoRespuestaDTO.builder()
-                .cliente(
-                        ClienteRespuestaDTO.builder()
-                                .estaturaMetros(contrato.getCliente().getEstaturaMetros())
-                                .fecha_nacimiento(contrato.getCliente().getFecha_nacimiento())
-                                .direccion(contrato.getCliente().getDireccion())
-                                .id_Cliente(contrato.getCliente().getId())
-                                .genero(contrato.getCliente().getGenero())
-                                .cedula(contrato.getCliente().getCedula())
-                                .pesoKg(contrato.getCliente().getPesoKg())
-                                .telefono(contrato.getCliente().getTelefono())
-                                .condicionesMedicas(condRepo.findByClienteId((int) contrato.getCliente().getId()))
-                                .apellido(contrato.getCliente().getApellido())
-                                .email(contrato.getCliente().getEmail())
-                                .estado(contrato.getCliente().getEstado())
-                                .nombre(contrato.getCliente().getNombre())
-                                .build()
-                )
+                .cliente(clienteDTO)
                 .estado(contrato.getEstado())
                 .fechaFin(contrato.getFechaFin())
                 .fechaInicio(contrato.getFechaInicio())
                 .seguro(contrato.getSeguro())
                 .id(contrato.getId())
                 .agente(agenteDTO)
+                .beneficiarios(beneficiarios)
                 .build();
 
     }
