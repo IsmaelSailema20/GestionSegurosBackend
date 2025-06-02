@@ -19,6 +19,7 @@ public class ClienteService {
     ClienteRepository clienteRepository;
     @Autowired private CondicionMedicaService condService;
     @Autowired private UsuarioService usuarioService;
+    @Autowired private EmailService emailService;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
@@ -66,9 +67,21 @@ public class ClienteService {
                         .email(cliente.getEmail())
                         .nombre(cliente.getNombre())
                         .rol(Rol.Cliente)
-                        .password("123456")
+                        .password(cliente.getCedula())
                         .build()
         );
+
+        // Enviar correo al cliente con sus credenciales y enlace
+        String destinatario = cliente.getEmail();
+        String asunto = "Bienvenido a Walk Seguros - Tus Credenciales";
+        String cuerpo = "Estimado " + cliente.getNombre() + " " + cliente.getApellido() + ",\n\n" +
+                "Gracias por registrarte en Walk Seguros. A continuación, tus credenciales:\n\n" +
+                "Usuario: " + cliente.getEmail() + "\n" +
+                "Contraseña: " + cliente.getCedula() + "\n\n" +
+                "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
+                "http://localhost:5173\n\n" +
+                "Saludos,\nEquipo Walk Seguros";
+        emailService.enviarCorreo(destinatario, asunto, cuerpo);
 
         return ClienteRespuestaDTO.builder()
                 .estaturaMetros(clienteDTO.getEstaturaMetros())

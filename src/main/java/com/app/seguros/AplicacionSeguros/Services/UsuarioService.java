@@ -1,5 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -57,6 +59,16 @@ public class UsuarioService {
         usuario.setEstado(request.getEstado());
         return usuariosRepository.save(usuario);
     }
+    public Usuario actualizarCredencialesUsuarioCliente(UsuarioClienteCredencialesDTO request){
+        Usuario usuario = usuariosRepository.findById(request.getIdUsuario())
+                .orElseThrow(() -> new RuntimeException(MensajeError.USUARIO_NO_ENCONTRADO.getMensaje()));
+
+        usuario.setEmail(request.getEmail());
+        usuario.setContraseña(passwordEncoder.encode(request.getPassword()));
+
+        return usuariosRepository.save(usuario);
+    }
+
     public void deleteUsuario(int id){
         usuariosRepository.deleteById(id);
     }

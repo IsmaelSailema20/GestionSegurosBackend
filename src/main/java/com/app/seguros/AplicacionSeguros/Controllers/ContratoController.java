@@ -38,7 +38,7 @@ public class ContratoController {
     public ResponseEntity<List<ContratoRespuestaDTO>> obtenerContratosPorCedula(@PathVariable String cedula) {
         List<ContratoRespuestaDTO> contratos = contratoService.buscarContratosPorCedula(cedula);
         if (contratos.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(contratos);
     }
