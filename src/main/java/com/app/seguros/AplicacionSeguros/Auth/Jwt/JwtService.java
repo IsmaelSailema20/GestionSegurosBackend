@@ -30,9 +30,9 @@ public class JwtService {
 
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("rol", rol);
-        claims.put("idUsuario",user.getID_Usuario());
-        claims.put("nombre", user.getNombre());
         claims.put("apellido", user.getApellido());
+        claims.put("nombre", user.getNombre());
+        claims.put("idUsuario", user.getID_Usuario());
         claims.put("estado", user.getEstado().toString());
         if (rol.equals("Cliente")) {
             clienteRepository.findByEmail(user.getEmail()).ifPresent(cliente -> {

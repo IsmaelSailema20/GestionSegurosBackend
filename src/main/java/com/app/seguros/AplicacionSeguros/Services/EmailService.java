@@ -54,4 +54,14 @@ public class EmailService {
             throw new RuntimeException(MensajeError.EERROR_ENVIAR_CORREO.getMensaje() +": " + e.getMessage());
         }
     }
+
+    public void enviarCorreoDesactivacion(String destinatario) {
+        String asunto = "Cuenta Desactivada por Inactividad";
+        String cuerpo = "Estimado cliente,\n\n"
+                + "Su cuenta ha sido desactivada debido a que han pasado más de 2 días desde su registro "
+                + "y no se ha firmado el contrato ni se han subido los documentos requeridos.\n\n"
+                + "Si desea reactivar su cuenta o necesita asistencia, por favor comuníquese con nuestro soporte.\n\n"
+                + "Atentamente,\nEquipo de Seguros";
+        enviarCorreo(destinatario, asunto, cuerpo);
+    }
 }
