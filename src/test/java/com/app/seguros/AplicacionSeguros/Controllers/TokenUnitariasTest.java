@@ -1,9 +1,11 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
+import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +23,6 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -34,6 +35,10 @@ class TokenUnitariasTest {
     private UsuarioService usuarioService;
     @MockBean
     private UsuariosRepository usuariosRepository;
+    @MockBean
+    private ClienteRepository clienteRepository;
+    @Autowired
+    private JwtService jwtService;
 
     private ObjectMapper objectMapper=new ObjectMapper();
 
@@ -52,14 +57,18 @@ class TokenUnitariasTest {
     private static String token="";
 
     @BeforeAll
-    static void generarToken(){
-        JwtService jwtService=new JwtService();
+    static void generarToken(@Autowired JwtService jwtService){
         token= jwtService.getToken(create(1));
     }
 
     @BeforeEach
     void setup(){
+
         when(usuariosRepository.findByEmail(anyString())).thenReturn(Optional.of(create(1)));
+        Cliente cliente = new Cliente(); // Adjust based on your Cliente class
+        cliente.setEmail("email");
+        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.of(cliente));
+        token = jwtService.getToken(create(1));
     }
 
     @Test
@@ -93,10 +102,10 @@ class TokenUnitariasTest {
         Usuario us=new Usuario();
         us.setRol(Rol.Cliente);
         us.setEstado(Estado.Activo);
+        when(clienteRepository.findByEmail(null)).thenReturn(Optional.empty());
         when(usuarioService.getUsuarios()).thenReturn(u);
-        JwtService jwtService=new JwtService();
         mockMvc.perform(get("/Usuarios")
-                        .header("Authorization","Bearer "+jwtService.getToken(us)))
+                        .header("Authorization", "Bearer " + jwtService.getToken(us)))
                 .andExpect(status().isForbidden());
     }
 

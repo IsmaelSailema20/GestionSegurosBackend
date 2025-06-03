@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.EstadoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
@@ -181,15 +182,28 @@ class ClienteControllerIntegracionTest {
 
     @Test
     void deleteCliente() throws Exception {
-        mockMvc.perform(delete("/Clientes/" + idGenerado)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNoContent());
+        EstadoDTO estadoDTO = new EstadoDTO();
+        estadoDTO.setEstado(Estado.Inactivo);
+
+        mockMvc.perform(put("/Clientes/estado/" + idGenerado)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(estadoDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("Inactivo"));
     }
+
 
     @Test
     void deleteClienteNotFound() throws Exception {
-        mockMvc.perform(delete("/Clientes/99999")
-                        .header("Authorization", "Bearer " + token))
+        EstadoDTO estadoDTO = new EstadoDTO();
+        estadoDTO.setEstado(Estado.Inactivo);
+
+        mockMvc.perform(put("/Clientes/estado/99999")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(estadoDTO)))
                 .andExpect(status().isInternalServerError());
     }
+
 }

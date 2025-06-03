@@ -1,7 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Auth.Jwt;
 
-import com.app.seguros.AplicacionSeguros.Auth.AuthResponse;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import io.jsonwebtoken.Claims;
@@ -11,20 +9,14 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import static java.time.temporal.ChronoUnit.YEARS;
 
 @Service
 public class JwtService {
@@ -38,13 +30,17 @@ public class JwtService {
 
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("rol", rol);
-        claims.put("nombre", user.getNombre());
         claims.put("apellido", user.getApellido());
+        claims.put("nombre", user.getNombre());
+        claims.put("idUsuario", user.getID_Usuario());
         claims.put("estado", user.getEstado().toString());
         if (rol.equals("Cliente")) {
-            clienteRepository.findByEmail(user.getEmail()).ifPresent(cliente ->
-                    claims.put("cedula", cliente.getCedula())
+            clienteRepository.findByEmail(user.getEmail()).ifPresent(cliente -> {
+                        claims.put("cedula", cliente.getCedula());
+                        claims.put("idCliente", cliente.getId());
+                    }
             );
+
         }
         return getToken(claims, user);
     }

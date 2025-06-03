@@ -3,8 +3,9 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
+import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
+import com.app.seguros.AplicacionSeguros.Services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +28,11 @@ import org.springframework.core.io.Resource;
 public class DocumentoController {
     @Autowired
     private DocumentoService documentoService;
+    @Autowired
+    private EmailService emailService; // Inyección del servicio de correo
 
+    @Autowired
+    private ClienteService clienteService;
     @PostMapping("/subir")
     public ResponseEntity<DocumentoDTO> subirDocumento(
             @RequestParam("archivo") MultipartFile archivo,
@@ -101,31 +106,44 @@ public class DocumentoController {
         }
     }
 
-    @PutMapping("/{idContrato}/aprobar")
-    public ResponseEntity<Void> aprobarDocumento(@PathVariable Long idContrato) {
-        try {
-            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
-            documentos.forEach(
-                    documento -> {
-                        documentoService.aprobarDocumento(documento.getIdDocumento());
-                    }
-            );
-        }catch (Exception e){
-           throw new RuntimeException("Error al aprobar el documento: " + e.getMessage());
-        }
-        return ResponseEntity.ok().build();
-    }
 
-    @PutMapping("/{idContrato}/rechazar")
-    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idContrato) {
-        try{
-            List<Documento> documentos = documentoService.obtenerDocumentosPorContrato(idContrato);
-            documentos.forEach(documento -> {
-                documentoService.rechazarDocumento(documento.getIdDocumento());
-            });
-        }catch (Exception e){
+    @PutMapping("/{idDocumento}/aprobar")
+    public ResponseEntity<Void> aprobarDocumento(@PathVariable Long idDocumento) {
+        try {
+            Documento documento = documentoService.obtenerDocumento(idDocumento);
+            documentoService.aprobarDocumento(idDocumento);
+
+            // Enviar correo al aprobar el documento
+            String correoCliente = clienteService.getCorreoCliente(documento.getCliente().getId());
+            String asunto = "Documento Aprobado";
+            String cuerpo = "Estimado cliente,\n\nEl documento de tipo " + documento.getTipo() +
+                    " ha sido aprobado por el agente.\n\nSaludos,\nEquipo Walk Seguros";
+
+            emailService.enviarCorreo(correoCliente, asunto, cuerpo);
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            throw new RuntimeException("Error al aprobar el documento: " + e.getMessage());
+        }
+    }
+    
+    @PutMapping("/{idDocumento}/rechazar")
+    public ResponseEntity<Void> rechazarDocumento(@PathVariable Long idDocumento) {
+        try {
+            Documento documento = documentoService.obtenerDocumento(idDocumento);
+            documentoService.rechazarDocumento(idDocumento);
+
+            // Enviar correo al rechazar el documento
+            String correoCliente = clienteService.getCorreoCliente(documento.getCliente().getId());
+            String asunto = "Documento Rechazado";
+            String cuerpo = "Estimado cliente,\n\nEl documento de tipo " + documento.getTipo() +
+                    " ha sido rechazado por el agente.\n\nPor favor, revisa y vuelve a subir el documento.\n\nSaludos,\nEquipo Walk Seguros";
+
+            emailService.enviarCorreo(correoCliente, asunto, cuerpo);
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
             throw new RuntimeException("Error al rechazar el documento: " + e.getMessage());
         }
-        return ResponseEntity.ok().build();
     }
 }

@@ -5,6 +5,7 @@ import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.EstadoContratoDTO;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class ContratoController {
     public ResponseEntity<List<ContratoRespuestaDTO>> obtenerContratosPorCedula(@PathVariable String cedula) {
         List<ContratoRespuestaDTO> contratos = contratoService.buscarContratosPorCedula(cedula);
         if (contratos.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(contratos);
     }
@@ -54,15 +55,23 @@ public class ContratoController {
         return ResponseEntity.ok(contratos);
     }
     @PostMapping
-    public ResponseEntity<ContratoRespuestaDTO> crearContrato(@RequestBody ContratoRegistrarDTO dto) {
-        ContratoRespuestaDTO nuevo = contratoService.registrarContrato(dto);
-        return ResponseEntity.ok(nuevo);
+    public ResponseEntity<?> crearContrato( @Valid @RequestBody ContratoRegistrarDTO dto) {
+        try {
+            ContratoRespuestaDTO nuevo = contratoService.registrarContrato(dto);
+            return ResponseEntity.ok(nuevo);
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ContratoRespuestaDTO> editarContrato(@PathVariable Integer id,@RequestBody ContratoRegistrarDTO dto) {
-        ContratoRespuestaDTO response = contratoService.editarContrato(id,dto);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> editarContrato(@PathVariable Integer id,@Valid @RequestBody ContratoRegistrarDTO dto) {
+        try {
+            ContratoRespuestaDTO response = contratoService.editarContrato(id, dto);
+            return ResponseEntity.ok(response);
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
 
     @PutMapping("/estado/{id}")
@@ -75,6 +84,12 @@ public class ContratoController {
     public ResponseEntity<Void> eliminarContrato(@PathVariable Integer id) {
         contratoService.eliminarContrato(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/activar/{id}")
+    public ResponseEntity<ContratoRespuestaDTO> activarContrato(@PathVariable Integer id) {
+        ContratoRespuestaDTO response = contratoService.editarContrato(id);
+        return ResponseEntity.ok(response);
     }
 }
 

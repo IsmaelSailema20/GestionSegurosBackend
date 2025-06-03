@@ -1,14 +1,16 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
-import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
+import com.app.seguros.AplicacionSeguros.Entities.Beneficio;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
+import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
@@ -19,6 +21,10 @@ class SeguroServiceTest {
 
     @Mock
     private SeguroRepository seguroRepository;
+    @Mock
+    private BeneficioService beneficioService;
+    @Mock
+    private ContratoRepository contratoRepository;
 
     @InjectMocks
     private SeguroService seguroService;
@@ -36,7 +42,6 @@ class SeguroServiceTest {
                 .nombre("Seguro Vida")
                 .descripcion("desc")
                 .cobertura("cob")
-                .beneficios("ben")
                 .precio(100.0)
                 .estado(Estado.Activo)
                 .build();
@@ -46,7 +51,6 @@ class SeguroServiceTest {
         seguroDTO.setNombre("Seguro Vida");
         seguroDTO.setDescripcion("desc");
         seguroDTO.setCobertura("cob");
-        seguroDTO.setBeneficios("ben");
         seguroDTO.setPrecio(100.0);
         seguroDTO.setEstado(Estado.Activo);
     }
@@ -54,6 +58,7 @@ class SeguroServiceTest {
     @Test
     void testObtenerTodos() {
         when(seguroRepository.findAll()).thenReturn(List.of(seguro));
+        when(beneficioService.listarPorSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
         List<SeguroDTO> resultado = seguroService.getAllSeguros();
         assertEquals(1, resultado.size());
         assertEquals("Seguro Vida", resultado.get(0).getNombre());
@@ -62,6 +67,7 @@ class SeguroServiceTest {
     @Test
     void testObtenerPorId() {
         when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
+        when(beneficioService.listarPorSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
         Optional<SeguroDTO> resultado = seguroService.getSeguro(1);
         assertTrue(resultado.isPresent());
         assertEquals("Seguro Vida", resultado.get().getNombre());
@@ -82,10 +88,29 @@ class SeguroServiceTest {
         SeguroDTO creado = seguroService.saveSeguro(seguroDTO);
         assertEquals("Seguro Vida", creado.getNombre());
     }
+    @Test
+    void testCrearBeneficios() {
+        Beneficio b=Beneficio.builder().beneficio("beneficio").build();
+        when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
+        when(beneficioService.guardar(any(Beneficio.class))).thenReturn(b);
+        //when(beneficioService.buscarPorId(anyInt())).thenReturn(Optional.of(b));
+        when(beneficioService.guardarRelacion(any(Beneficio.class),any(Seguro.class))).thenReturn(null);
+        SeguroDTO s = new SeguroDTO(Tipo.Vida, Estado.Activo);
+        s.setTipo(Tipo.Vida);
+        s.setNombre("Seguro Vida");
+        s.setDescripcion("desc");
+        s.setCobertura("cob");
+        s.setPrecio(100.0);
+        s.setEstado(Estado.Activo);
+        s.setBeneficios(List.of(b));
+        SeguroDTO creado = seguroService.saveSeguro(s);
+        assertEquals("Seguro Vida", creado.getNombre());
+    }
 
     @Test
     void testActualizar() {
         when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
+        when(beneficioService.listarPorSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
         when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
 
         SeguroDTO nuevoDTO = new SeguroDTO(Tipo.Vida, Estado.Activo);
@@ -93,7 +118,6 @@ class SeguroServiceTest {
         nuevoDTO.setNombre("Seguro Salud");
         nuevoDTO.setDescripcion("new desc");
         nuevoDTO.setCobertura("new cob");
-        nuevoDTO.setBeneficios("new ben");
         nuevoDTO.setPrecio(150.0);
         nuevoDTO.setEstado(Estado.Inactivo);
 
@@ -101,11 +125,42 @@ class SeguroServiceTest {
         assertEquals("Seguro Salud", actualizado.getNombre());
         assertEquals(Tipo.Salud, actualizado.getTipo());
     }
+    @Test
+    void testActualizarBeneficio() {
+        Beneficio b=Beneficio.builder().beneficio("beneficio").build();
+        when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
+        when(beneficioService.listarPorSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
+        when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
+        when(beneficioService.guardar(any(Beneficio.class))).thenReturn(b);
+        //when(beneficioService.buscarPorId(anyInt())).thenReturn(Optional.of(b));
+        when(beneficioService.guardarRelacion(any(Beneficio.class),any(Seguro.class))).thenReturn(null);
+        SeguroDTO s = new SeguroDTO(Tipo.Vida, Estado.Activo);
+        s.setTipo(Tipo.Salud);
+        s.setNombre("Seguro Salud");
+        s.setDescripcion("desc");
+        s.setCobertura("cob");
+        s.setPrecio(100.0);
+        s.setEstado(Estado.Activo);
+        s.setBeneficios(List.of(b));
 
+
+        SeguroDTO actualizado = seguroService.updateSeguro(1, s);
+        assertEquals("Seguro Salud", actualizado.getNombre());
+        assertEquals(Tipo.Salud, actualizado.getTipo());
+    }
     @Test
     void testEliminar() {
+        when(contratoRepository.findContratosActivosOPendientesSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
         when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
+        when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
         seguroService.deleteSeguro(1);
-        verify(seguroRepository, times(1)).deleteById(1);
+        verify(seguroRepository, times(1)).save(seguro);
+    }
+    @Test
+    void testActivar() {
+        when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
+        when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
+        seguroService.activarSeguro(1);
+        verify(seguroRepository, times(1)).save(seguro);
     }
 }
