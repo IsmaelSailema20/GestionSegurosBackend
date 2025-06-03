@@ -4,6 +4,7 @@ public enum MensajeError {
     AGENTE_NO_ENCONTRADO("Agente no encontrado"),
     CEDULA_REGISTRADA("La cédula ya está registrada"),
     EMAIL_REGISTRADO("El email ya está registrado"),
+    MENOR_EDAD("El cliente debe ser mayor de edad"),
     CLIENTE_NO_ENCONTRADO("Cliente no encontrado"),
     CONDICION_MEDICA_NO_ENCONTRADA("Condición médica no encontrada"),
     SEGURO_NO_ENCONTRADO("Seguro no encontrado"),
