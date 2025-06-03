@@ -19,6 +19,7 @@ public interface ContratoRepository extends JpaRepository<Contrato,Integer> {
 
     @Query("SELECT c FROM Contrato c WHERE  (c.estado = 'ACTIVO' OR c.estado = 'PENDIENTE') AND c.seguro.idSeguro= :idSeguro")
     List<Contrato> findContratosActivosOPendientesSeguro(@Param("idSeguro") Integer idSeguro);
+    List<Contrato> findBySeguroIdSeguro(int idSeguro);
     // List<Contrato> findByAgente_ID_Usuario(Long idAgente);
 
 }

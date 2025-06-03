@@ -122,13 +122,10 @@ public class SeguroService {
     }
     @Transactional
     public void deleteSeguro(Integer id) {
-        if(!contratoRepository.findContratosActivosOPendientesSeguro(id).isEmpty()){
+        if(!contratoRepository.findBySeguroIdSeguro(id).isEmpty()){
             throw  new RuntimeException(MensajeError.SEGURO_CON_CONTRATOS.getMensaje());
         }
-        Seguro s= seguroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
-        s.setEstado(Estado.Inactivo);
-        seguroRepository.save(s);
+        seguroRepository.deleteById(id);
     }
     @Transactional
     public SeguroDTO activarSeguro(Integer id) {

@@ -52,7 +52,7 @@ public class VerificacionClienteService {
             Optional<Contrato> contrato = contratoRepository.findByClienteId(cliente.getId());
             if (contrato.isEmpty() || contrato.get().getEstado() != EstadoContrato.PENDIENTE) continue;
 
-            boolean tieneDocumentos = documentoRepository.existsByIdClienteAndEstado(cliente.getId(), EstadoDocumento.Pendiente);
+            boolean tieneDocumentos = documentoRepository.existsByClienteIdAndEstado(cliente.getId(), EstadoDocumento.Pendiente);
             if (tieneDocumentos) continue;
 
             // Si no cumple con las condiciones, desactivar

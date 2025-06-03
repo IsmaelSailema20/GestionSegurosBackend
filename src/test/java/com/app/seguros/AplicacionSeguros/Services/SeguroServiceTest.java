@@ -150,7 +150,7 @@ class SeguroServiceTest {
     }
     @Test
     void testEliminar() {
-        when(contratoRepository.findContratosActivosOPendientesSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
+        when(contratoRepository.findBySeguroIdSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
         when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
         when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
         seguroService.deleteSeguro(1);
