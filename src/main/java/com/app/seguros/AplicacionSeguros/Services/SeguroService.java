@@ -125,6 +125,7 @@ public class SeguroService {
         if(!contratoRepository.findBySeguroIdSeguro(id).isEmpty()){
             throw  new RuntimeException(MensajeError.SEGURO_CON_CONTRATOS.getMensaje());
         }
+        beneficioService.eliminarPorSeguro(id);
         seguroRepository.deleteById(id);
     }
     @Transactional
