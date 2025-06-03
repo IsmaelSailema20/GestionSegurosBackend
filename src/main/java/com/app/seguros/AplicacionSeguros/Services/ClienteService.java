@@ -3,12 +3,17 @@ package com.app.seguros.AplicacionSeguros.Services;
 import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
+
+import java.time.*;
+
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,6 +37,9 @@ public class ClienteService {
                     throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                 });
 
+        if(calcularEdad(clienteDTO.getFecha_nacimiento()) < 18){
+            throw new RuntimeException(MensajeError.MENOR_EDAD.getMensaje());
+        }
 
 
         Cliente cliente = Cliente.builder()
@@ -43,6 +51,7 @@ public class ClienteService {
                 .email(clienteDTO.getEmail())
                 .genero(clienteDTO.getGenero())
                 .fecha_nacimiento(clienteDTO.getFecha_nacimiento())
+                .fechaCreacion(convertToDate(LocalDate.now()))
                 .estado(clienteDTO.getEstado())
                 .pesoKg(clienteDTO.getPesoKg())
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
@@ -81,6 +90,8 @@ public class ClienteService {
                 "Contraseña: " + cliente.getCedula() + "\n\n" +
                 "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
                 "http://localhost:5173\n\n" +
+                "TOMAR EN CUENTA: \n Si no se realiza ninguna acción en la cuenta a patir de\n"+
+                "la activación de la cuenta desactivará en 2 días\n\n"+
                 "Saludos,\nEquipo Walk Seguros";
         emailService.enviarCorreo(destinatario, asunto, cuerpo);
 
@@ -100,6 +111,26 @@ public class ClienteService {
                 .nombre(clienteDTO.getNombre())
                 .numeroCuenta(clienteDTO.getNumeroCuenta())
                 .build();
+    }
+
+    private Date convertToDate(LocalDate localDate) {
+        LocalDateTime localDateTime = localDate.atStartOfDay();
+        ZoneId zoneId = ZoneId.systemDefault();
+        Instant instant = localDateTime.atZone(zoneId).toInstant();
+        return Date.from(instant);
+    }
+
+    public static int calcularEdad(Date fechaNacimiento) {
+        LocalDate nacimiento = fechaNacimiento.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        LocalDate hoy = LocalDate.now();
+        Period periodo = Period.between(nacimiento, hoy);
+        int edad = periodo.getYears();
+        boolean yaCumplio = hoy.getMonthValue() > nacimiento.getMonthValue() ||
+                (hoy.getMonthValue() == nacimiento.getMonthValue() &&
+                        hoy.getDayOfMonth() >= nacimiento.getDayOfMonth());
+        return yaCumplio ? edad : edad - 1;
     }
 
 
