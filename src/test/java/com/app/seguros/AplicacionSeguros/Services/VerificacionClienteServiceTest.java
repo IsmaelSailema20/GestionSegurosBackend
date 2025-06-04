@@ -116,5 +116,21 @@ class VerificacionClienteServiceTest {
         verify(emailService, never()).enviarCorreoDesactivacion(anyString());
     }
 
+    @Test
+    void testClienteNoDesactivado_SinContrato() {
+        // Arrange: Cliente sin contrato
+        List<Cliente> clientes = Arrays.asList(cliente);
+        when(clienteRepository.findAll()).thenReturn(clientes);
+        when(contratoRepository.findByClienteId(cliente.getId())).thenReturn(Optional.empty());
+
+        // Act
+        verificacionClienteService.verificarClientesInactivos();
+
+        // Assert
+        verify(documentoRepository, never()).existsByClienteIdAndEstado(anyLong(), any());
+        verify(clienteRepository, never()).save(any(Cliente.class));
+        verify(emailService, never()).enviarCorreoDesactivacion(anyString());
+    }
+
 
 }
