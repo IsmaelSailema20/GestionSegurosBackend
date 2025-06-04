@@ -167,4 +167,18 @@ class ContratoControllerTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void obtenerContratosPorCedula_found() throws Exception {
+        String cedula = "123456789";
+        ContratoRespuestaDTO contrato = ContratoRespuestaDTO.builder().id(1).build();
+        when(contratoService.buscarContratosPorCedula(cedula)).thenReturn(List.of(contrato));
+
+        mockMvc.perform(get("/contratos/cliente/" + cedula)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+
 }
