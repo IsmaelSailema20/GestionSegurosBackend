@@ -190,5 +190,16 @@ class ContratoControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    @Test
+    void obtenerContratosPorAgente_found() throws Exception {
+        Long idAgente = 1L;
+        ContratoRespuestaDTO contrato = ContratoRespuestaDTO.builder().id(1).build();
+        when(contratoService.buscarContratosPorAgente(idAgente)).thenReturn(List.of(contrato));
+
+        mockMvc.perform(get("/contratos/agente/" + idAgente)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
 
 }
