@@ -180,5 +180,15 @@ class ContratoControllerTest {
                 .andExpect(jsonPath("$[0].id").value(1));
     }
 
+    @Test
+    void obtenerContratosPorCedula_noContent() throws Exception {
+        String cedula = "123456789";
+        when(contratoService.buscarContratosPorCedula(cedula)).thenReturn(List.of());
+
+        mockMvc.perform(get("/contratos/cliente/" + cedula)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
 
 }
