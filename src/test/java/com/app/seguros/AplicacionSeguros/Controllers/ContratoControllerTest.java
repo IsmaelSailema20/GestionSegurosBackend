@@ -252,5 +252,16 @@ class ContratoControllerTest {
                 .andExpect(content().string("Error al editar contrato"));
     }
 
+    @Test
+    void activarContrato_success() throws Exception {
+        ContratoRespuestaDTO response = ContratoRespuestaDTO.builder().id(40).build();
+        when(contratoService.editarContrato(40)).thenReturn(response);
+
+        mockMvc.perform(put("/contratos/activar/40")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(40));
+    }
+
 
 }
