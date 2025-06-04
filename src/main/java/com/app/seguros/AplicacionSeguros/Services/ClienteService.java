@@ -7,7 +7,9 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import java.time.*;
 
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class ClienteService {
     @Autowired private CondicionMedicaService condService;
     @Autowired private UsuarioService usuarioService;
     @Autowired private EmailService emailService;
+    @Autowired private UsuariosRepository usuariosRepository;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
@@ -198,12 +201,35 @@ public class ClienteService {
                     });
         }
 
+        //Actualizar Usuario
+        if (!cliente.getEmail().equals(clienteDTO.getEmail())) {
+            clienteRepository.findByEmail(clienteDTO.getEmail())
+                    .ifPresent(c -> {
+                        throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
+                    });
+            Usuario usuario = usuariosRepository.findByEmail(cliente.getEmail())
+                    .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
+
+            usuario.setEmail(clienteDTO.getEmail());
+            cliente.setEmail(clienteDTO.getEmail());
+            usuariosRepository.save(usuario);
+
+            // Enviar correo al cliente con sus credenciales y enlace
+            String destinatario = clienteDTO.getEmail();
+            String asunto = "Actualización de correo en Walk Seguros ";
+            String cuerpo = "Estimado " + cliente.getNombre() + " " + cliente.getApellido() + ",\n\n" +
+                    "Su correo ha sido actualizado en Walk Seguros. A continuación, tus credenciales:\n\n" +
+                    "Usuario: " + clienteDTO.getEmail() + "\n" +
+                    "Contraseña: " + "Su contraseña es la misma con la que ingresa normalmente al sistema" + "\n\n" +
+                    "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
+                    "http://localhost:5173\n\n";
+            emailService.enviarCorreo(destinatario, asunto, cuerpo);
+        }
         cliente.setNombre(clienteDTO.getNombre());
         cliente.setApellido(clienteDTO.getApellido());
         cliente.setCedula(clienteDTO.getCedula());
         cliente.setDireccion(clienteDTO.getDireccion());
         cliente.setTelefono(clienteDTO.getTelefono());
-        cliente.setEmail(clienteDTO.getEmail());
         cliente.setGenero(clienteDTO.getGenero());
         cliente.setFecha_nacimiento(clienteDTO.getFecha_nacimiento());
         cliente.setEstado(clienteDTO.getEstado());
