@@ -149,5 +149,22 @@ class VerificacionClienteServiceTest {
         verify(emailService, never()).enviarCorreoDesactivacion(anyString());
     }
 
+    @Test
+    void testClienteNoDesactivado_ConDocumentosPendientes() {
+        // Arrange: Cliente con documentos pendientes
+        List<Cliente> clientes = Arrays.asList(cliente);
+        when(clienteRepository.findAll()).thenReturn(clientes);
+        when(contratoRepository.findByClienteId(cliente.getId())).thenReturn(Optional.of(contrato));
+        when(documentoRepository.existsByClienteIdAndEstado(cliente.getId(), EstadoDocumento.Pendiente)).thenReturn(true);
+
+        // Act
+        verificacionClienteService.verificarClientesInactivos();
+
+        // Assert
+        verify(clienteRepository, never()).save(any(Cliente.class));
+        verify(emailService, never()).enviarCorreoDesactivacion(anyString());
+    }
+
+
 
 }
