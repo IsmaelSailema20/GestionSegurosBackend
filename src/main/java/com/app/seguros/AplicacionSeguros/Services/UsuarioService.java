@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UsuarioService {
@@ -51,21 +52,27 @@ public class UsuarioService {
         return usuariosRepository.save(u);
     }
     public Usuario putUsuario(UsuarioEditarRequest request) {
+
         Usuario usuario = usuariosRepository.findById(request.getID_Usuario())
                 .orElseThrow(() -> new RuntimeException(MensajeError.USUARIO_NO_ENCONTRADO.getMensaje()));
+
+        Optional<Usuario> usuarioConMismoEmail = usuariosRepository.findByEmail(request.getEmail());
+        if (usuarioConMismoEmail.isPresent() &&
+                !usuarioConMismoEmail.get().getID_Usuario().equals(request.getID_Usuario())) {
+            throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
+        }
+
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
+
         if (request.getContraseña() != null && !request.getContraseña().trim().isEmpty()) {
             usuario.setContraseña(passwordEncoder.encode(request.getContraseña()));
         }
+
         usuario.setRol(request.getRol());
         usuario.setEstado(request.getEstado());
-        //ACTUALIZAR EMAIL EN CLIENTE
+
         if (!usuario.getEmail().equals(request.getEmail())) {
-            usuariosRepository.findByEmail(request.getEmail())
-                    .ifPresent(c -> {
-                        throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
-                    });
             Cliente cliente = clienteRepository.findByEmail(usuario.getEmail())
                     .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
@@ -73,9 +80,9 @@ public class UsuarioService {
             cliente.setEmail(request.getEmail());
             clienteRepository.save(cliente);
 
-            // Enviar correo al cliente con sus credenciales y enlace
+            // Enviar notificación por correo
             String destinatario = request.getEmail();
-            String asunto = "Actualización de correo en Walk Seguros ";
+            String asunto = "Actualización de correo en Walk Seguros";
             String cuerpo = "Estimado " + usuario.getNombre() + " " + usuario.getApellido() + ",\n\n" +
                     "Su correo ha sido actualizado en Walk Seguros. A continuación, tus credenciales:\n\n" +
                     "Usuario: " + request.getEmail() + "\n" +
@@ -87,6 +94,7 @@ public class UsuarioService {
 
         return usuariosRepository.save(usuario);
     }
+
     public Usuario actualizarCredencialesUsuarioCliente(UsuarioClienteCredencialesDTO request) {
         // Buscar usuario por ID
         Usuario usuario = usuariosRepository.findById(request.getIdUsuario())
