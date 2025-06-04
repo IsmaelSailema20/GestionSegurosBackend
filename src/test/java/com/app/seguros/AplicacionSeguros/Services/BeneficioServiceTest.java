@@ -170,5 +170,19 @@ class BeneficioServiceTest {
         verify(beneficioRepository, never()).save(any(Beneficio.class));
     }
 
+    @Test
+    void testEliminarPorSeguro() {
+        // Arrange
+        Integer idSeguro = 1;
+        doNothing().when(beneficioSeguroRepository).deleteBySeguroIdSeguro(idSeguro);
+
+        // Act
+        beneficioService.eliminarPorSeguro(idSeguro);
+
+        // Assert
+        verify(beneficioSeguroRepository).deleteBySeguroIdSeguro(idSeguro);
+    }
+
+
 
 }
