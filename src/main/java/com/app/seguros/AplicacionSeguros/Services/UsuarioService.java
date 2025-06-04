@@ -26,6 +26,8 @@ public class UsuarioService {
     private UsuariosRepository usuariosRepository;
 
     @Autowired
+    private EmailService emailService;
+    @Autowired
     private ClienteRepository clienteRepository;
     public List<Usuario> getUsuarios(){
         return usuariosRepository.findAll();
@@ -53,12 +55,36 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException(MensajeError.USUARIO_NO_ENCONTRADO.getMensaje()));
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
-        usuario.setEmail(request.getEmail());
         if (request.getContraseña() != null && !request.getContraseña().trim().isEmpty()) {
             usuario.setContraseña(passwordEncoder.encode(request.getContraseña()));
         }
         usuario.setRol(request.getRol());
         usuario.setEstado(request.getEstado());
+        //ACTUALIZAR EMAIL EN CLIENTE
+        if (!usuario.getEmail().equals(request.getEmail())) {
+            usuariosRepository.findByEmail(request.getEmail())
+                    .ifPresent(c -> {
+                        throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
+                    });
+            Cliente cliente = clienteRepository.findByEmail(usuario.getEmail())
+                    .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
+
+            usuario.setEmail(request.getEmail());
+            cliente.setEmail(request.getEmail());
+            clienteRepository.save(cliente);
+
+            // Enviar correo al cliente con sus credenciales y enlace
+            String destinatario = request.getEmail();
+            String asunto = "Actualización de correo en Walk Seguros ";
+            String cuerpo = "Estimado " + usuario.getNombre() + " " + usuario.getApellido() + ",\n\n" +
+                    "Su correo ha sido actualizado en Walk Seguros. A continuación, tus credenciales:\n\n" +
+                    "Usuario: " + request.getEmail() + "\n" +
+                    "Contraseña: " + "Su contraseña es la misma con la que ingresa normalmente al sistema" + "\n\n" +
+                    "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
+                    "http://localhost:5173\n\n";
+            emailService.enviarCorreo(destinatario, asunto, cuerpo);
+        }
+
         return usuariosRepository.save(usuario);
     }
     public Usuario actualizarCredencialesUsuarioCliente(UsuarioClienteCredencialesDTO request) {
