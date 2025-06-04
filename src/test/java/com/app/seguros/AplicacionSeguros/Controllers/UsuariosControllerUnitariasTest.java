@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
@@ -188,5 +189,24 @@ class UsuariosControllerUnitariasTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void putCredencialesUsuarioCliente_success() throws Exception {
+        UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .email("newemail@example.com")
+                .password("newpassword")
+                .build();
+        Usuario u = create(1);
+        u.setEmail("newemail@example.com");
+        u.setContraseña("newpassword");
+        when(usuarioService.actualizarCredencialesUsuarioCliente(any(UsuarioClienteCredencialesDTO.class))).thenReturn(u);
 
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("newemail@example.com"))
+                .andExpect(jsonPath("$.password").value("newpassword"));
+    }
 }
