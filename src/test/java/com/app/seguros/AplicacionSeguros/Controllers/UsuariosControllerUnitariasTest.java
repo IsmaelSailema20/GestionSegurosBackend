@@ -209,4 +209,13 @@ class UsuariosControllerUnitariasTest {
                 .andExpect(jsonPath("$.email").value("newemail@example.com"))
                 .andExpect(jsonPath("$.password").value("newpassword"));
     }
+
+    @Test
+    void putCredencialesUsuarioCliente_nullBody() throws Exception {
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isInternalServerError());
+    }
 }
