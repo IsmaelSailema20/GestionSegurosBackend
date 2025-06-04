@@ -234,4 +234,23 @@ class UsuariosControllerUnitariasTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void putCredencialesUsuarioCliente_runtimeException() throws Exception {
+        UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .email("newemail@example.com")
+                .password("newpassword")
+                .build();
+        doThrow(new RuntimeException("Error al actualizar credenciales")).when(usuarioService)
+                .actualizarCredencialesUsuarioCliente(any(UsuarioClienteCredencialesDTO.class));
+
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error: Error al actualizar credenciales"));
+    }
+
 }
