@@ -263,5 +263,13 @@ class ContratoControllerTest {
                 .andExpect(jsonPath("$.id").value(40));
     }
 
+    @Test
+    void activarContrato_error() throws Exception {
+        when(contratoService.editarContrato(40)).thenThrow(new RuntimeException("Error al activar contrato"));
 
+        mockMvc.perform(put("/contratos/activar/40")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al activar contrato"));
+    }
 }
