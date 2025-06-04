@@ -73,5 +73,20 @@ class BeneficioServiceTest {
         verify(beneficioSeguroRepository).findBySeguroIdSeguro(idSeguro);
     }
 
+    @Test
+    void testListarPorSeguro_SinResultados() {
+        // Arrange
+        Integer idSeguro = 1;
+        when(beneficioSeguroRepository.findBySeguroIdSeguro(idSeguro)).thenReturn(Arrays.asList());
+
+        // Act
+        List<Beneficio> result = beneficioService.listarPorSeguro(idSeguro);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(beneficioSeguroRepository).findBySeguroIdSeguro(idSeguro);
+    }
+
 
 }
