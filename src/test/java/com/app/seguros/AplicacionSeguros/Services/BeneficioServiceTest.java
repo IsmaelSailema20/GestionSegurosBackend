@@ -213,6 +213,18 @@ class BeneficioServiceTest {
         verify(beneficioRepository).findById(id);
     }
 
+    @Test
+    void testBuscarPorId_NoEncontrado() {
+        // Arrange
+        Integer id = 1;
+        when(beneficioRepository.findById(id)).thenReturn(Optional.empty());
 
+        // Act
+        Optional<Beneficio> result = beneficioService.buscarPorId(id);
+
+        // Assert
+        assertFalse(result.isPresent());
+        verify(beneficioRepository).findById(id);
+    }
 
 }
