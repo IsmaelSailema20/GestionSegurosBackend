@@ -152,5 +152,23 @@ class BeneficioServiceTest {
         verify(beneficioRepository).save(beneficio);
     }
 
+    @Test
+    void testActualizar_BeneficioNoEncontrado() {
+        // Arrange
+        Beneficio beneficioActualizado = Beneficio.builder()
+                .id(1)
+                .beneficio("Cobertura dental")
+                .build();
+        when(beneficioRepository.findById(1)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            beneficioService.actualizar(1, beneficioActualizado);
+        });
+        assertEquals(MensajeError.BENEFICIO_NO_ENCONTRADO.getMensaje(), exception.getMessage());
+        verify(beneficioRepository).findById(1);
+        verify(beneficioRepository, never()).save(any(Beneficio.class));
+    }
+
 
 }
