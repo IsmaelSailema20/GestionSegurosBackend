@@ -118,5 +118,19 @@ class BeneficioServiceTest {
         verify(beneficioRepository).save(beneficio);
     }
 
+    @Test
+    void testGuardarRelacion() {
+        // Arrange
+        when(beneficioSeguroRepository.save(any(Beneficios_Seguros.class))).thenReturn(beneficiosSeguros);
+
+        // Act
+        Beneficios_Seguros result = beneficioService.guardarRelacion(beneficio, seguro);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(beneficiosSeguros, result);
+        verify(beneficioSeguroRepository).save(any(Beneficios_Seguros.class));
+    }
+
 
 }
