@@ -99,6 +99,22 @@ class VerificacionClienteServiceTest {
         assert cliente.getEstado() == Estado.Activo;
     }
 
+    @Test
+    void testClienteNoDesactivado_YaInactivo() {
+        // Arrange: Cliente ya inactivo
+        cliente.setEstado(Estado.Inactivo);
+        List<Cliente> clientes = Arrays.asList(cliente);
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act
+        verificacionClienteService.verificarClientesInactivos();
+
+        // Assert
+        verify(contratoRepository, never()).findByClienteId(anyLong());
+        verify(documentoRepository, never()).existsByClienteIdAndEstado(anyLong(), any());
+        verify(clienteRepository, never()).save(any(Cliente.class));
+        verify(emailService, never()).enviarCorreoDesactivacion(anyString());
+    }
 
 
 }
