@@ -183,6 +183,21 @@ class BeneficioServiceTest {
         verify(beneficioSeguroRepository).deleteBySeguroIdSeguro(idSeguro);
     }
 
+    @Test
+    void testEliminarPorId() {
+        // Arrange
+        Integer idBeneficio = 1;
+        doNothing().when(beneficioSeguroRepository).deleteByBeneficioId(idBeneficio);
+        doNothing().when(beneficioRepository).deleteById(idBeneficio);
+
+        // Act
+        beneficioService.eliminarPorId(idBeneficio);
+
+        // Assert
+        verify(beneficioSeguroRepository).deleteByBeneficioId(idBeneficio);
+        verify(beneficioRepository).deleteById(idBeneficio);
+    }
+
 
 
 }
