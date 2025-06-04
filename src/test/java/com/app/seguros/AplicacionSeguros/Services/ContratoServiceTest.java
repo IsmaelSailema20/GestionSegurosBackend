@@ -53,6 +53,9 @@ public class ContratoServiceTest {
     @Mock
     private TypedQuery<Contrato> typedQuery;
 
+    @Mock
+    private BeneficiarioContratoRepository beneficiarioContratoRepo;
+
     private Cliente cliente;
     private Seguro seguro;
     private Usuario agente;
@@ -209,8 +212,11 @@ public class ContratoServiceTest {
 
     @Test
     void testBuscarPorId_Success() {
+        Beneficiarios_Contratos rel = new Beneficiarios_Contratos();
+        rel.setBeneficiario(beneficiario);
         when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
         when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(beneficiarioContratoRepo.findByContratoId(1)).thenReturn(List.of(rel));
         when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
         when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
 
@@ -222,6 +228,11 @@ public class ContratoServiceTest {
         assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
         assertEquals(agente.getNombre(), dto.getAgente().getNombre());
         assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals(seguro.getNombre(), dto.getSeguro().getNombre());
+        assertEquals(fechaInicio, dto.getFechaInicio());
+        assertEquals(fechaFin, dto.getFechaFin());
+        assertEquals(EstadoContrato.PENDIENTE, dto.getEstado());
+        assertEquals("Maria", dto.getBeneficiarios().get(0).getNombre());
     }
 
     @Test
