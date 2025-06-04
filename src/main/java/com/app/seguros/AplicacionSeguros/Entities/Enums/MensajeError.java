@@ -16,7 +16,8 @@ public enum MensajeError {
     EERROR_ENVIAR_CORREO("Error al enviar correo"),
     USUARIO_NO_ENCONTRADO("Usuario no encontrado"),
     BENEFICIO_NO_ENCONTRADO("Beneficio no encontrado"),
-    SEGURO_CON_CONTRATOS("El Seguro tiene contratos asociados")
+    SEGURO_CON_CONTRATOS("El Seguro tiene contratos asociados"),
+    NUMERO_DE_CUENTA_DUPLICADO("El número de cuenta ya pertenece a otro usuario. Verifique e intente nuevamente")
     ;
 
     private final String mensaje;
