@@ -132,5 +132,25 @@ class BeneficioServiceTest {
         verify(beneficioSeguroRepository).save(any(Beneficios_Seguros.class));
     }
 
+    @Test
+    void testActualizar() {
+        // Arrange
+        Beneficio beneficioActualizado = Beneficio.builder()
+                .id(1)
+                .beneficio("Cobertura dental")
+                .build();
+        when(beneficioRepository.findById(1)).thenReturn(Optional.of(beneficio));
+        when(beneficioRepository.save(any(Beneficio.class))).thenReturn(beneficio);
+
+        // Act
+        Beneficio result = beneficioService.actualizar(1, beneficioActualizado);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Cobertura dental", beneficio.getBeneficio());
+        verify(beneficioRepository).findById(1);
+        verify(beneficioRepository).save(beneficio);
+    }
+
 
 }
