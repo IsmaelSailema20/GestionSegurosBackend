@@ -88,5 +88,21 @@ class BeneficioServiceTest {
         verify(beneficioSeguroRepository).findBySeguroIdSeguro(idSeguro);
     }
 
+    @Test
+    void testListar() {
+        // Arrange
+        List<Beneficio> beneficios = Arrays.asList(beneficio);
+        when(beneficioRepository.findAll()).thenReturn(beneficios);
+
+        // Act
+        List<Beneficio> result = beneficioService.listar();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(beneficio, result.get(0));
+        verify(beneficioRepository).findAll();
+    }
+
 
 }
