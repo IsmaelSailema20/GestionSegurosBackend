@@ -213,4 +213,27 @@ class ContratoControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+
+    @Test
+    void crearContrato_error() throws Exception {
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idCliente(1)
+                .idSeguro(2)
+                .idAgente(3)
+                .fechaInicio(new Date())
+                .fechaFin(new Date())
+                .beneficiarios(List.of())
+                .build();
+
+        when(contratoService.registrarContrato(any())).thenThrow(new RuntimeException("Error al crear contrato"));
+
+        mockMvc.perform(post("/contratos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al crear contrato"));
+    }
+
+
 }
