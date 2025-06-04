@@ -4,6 +4,7 @@ public enum MensajeError {
     AGENTE_NO_ENCONTRADO("Agente no encontrado"),
     CEDULA_REGISTRADA("La cédula ya está registrada"),
     EMAIL_REGISTRADO("El email ya está registrado"),
+    MENOR_EDAD("El cliente debe ser mayor de edad"),
     CLIENTE_NO_ENCONTRADO("Cliente no encontrado"),
     CONDICION_MEDICA_NO_ENCONTRADA("Condición médica no encontrada"),
     SEGURO_NO_ENCONTRADO("Seguro no encontrado"),
@@ -15,7 +16,7 @@ public enum MensajeError {
     EERROR_ENVIAR_CORREO("Error al enviar correo"),
     USUARIO_NO_ENCONTRADO("Usuario no encontrado"),
     BENEFICIO_NO_ENCONTRADO("Beneficio no encontrado"),
-    SEGURO_CON_CONTRATOS("El Seguro tiene contratos Activos")
+    SEGURO_CON_CONTRATOS("El Seguro tiene contratos asociados")
     ;
 
     private final String mensaje;
