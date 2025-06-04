@@ -218,4 +218,20 @@ class UsuariosControllerUnitariasTest {
                         .content(""))
                 .andExpect(status().isInternalServerError());
     }
+
+    @Test
+    void putCredencialesUsuarioCliente_invalidDTO() throws Exception {
+        // DTO con password en blanco (violando @NotBlank)
+        UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .email("newemail@example.com")
+                .password("")
+                .build();
+
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
+    }
 }
