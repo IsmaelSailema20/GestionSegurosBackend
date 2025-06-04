@@ -104,5 +104,19 @@ class BeneficioServiceTest {
         verify(beneficioRepository).findAll();
     }
 
+    @Test
+    void testGuardar() {
+        // Arrange
+        when(beneficioRepository.save(beneficio)).thenReturn(beneficio);
+
+        // Act
+        Beneficio result = beneficioService.guardar(beneficio);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(beneficio, result);
+        verify(beneficioRepository).save(beneficio);
+    }
+
 
 }
