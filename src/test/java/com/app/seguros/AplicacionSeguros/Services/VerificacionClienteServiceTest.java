@@ -81,5 +81,24 @@ class VerificacionClienteServiceTest {
         assert cliente.getEstado() == Estado.Inactivo;
     }
 
+    @Test
+    void testClienteNoDesactivado_MenosDeDosDias() {
+        // Arrange: Cliente con menos de 2 días de creación
+        cliente.setFechaCreacion(Date.from(LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        List<Cliente> clientes = Arrays.asList(cliente);
+        when(clienteRepository.findAll()).thenReturn(clientes);
+        lenient().when(contratoRepository.findByClienteId(cliente.getId())).thenReturn(Optional.of(contrato));
+        lenient().when(documentoRepository.existsByClienteIdAndEstado(cliente.getId(), EstadoDocumento.Pendiente)).thenReturn(false);
+
+        // Act
+        verificacionClienteService.verificarClientesInactivos();
+
+        // Assert
+        verify(clienteRepository, never()).save(any(Cliente.class));
+        verify(emailService, never()).enviarCorreoDesactivacion(anyString());
+        assert cliente.getEstado() == Estado.Activo;
+    }
+
+
 
 }
