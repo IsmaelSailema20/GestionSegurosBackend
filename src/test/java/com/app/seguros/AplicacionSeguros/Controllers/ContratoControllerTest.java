@@ -202,4 +202,15 @@ class ContratoControllerTest {
                 .andExpect(jsonPath("$[0].id").value(1));
     }
 
+
+    @Test
+    void obtenerContratosPorAgente_noContent() throws Exception {
+        Long idAgente = 1L;
+        when(contratoService.buscarContratosPorAgente(idAgente)).thenReturn(List.of());
+
+        mockMvc.perform(get("/contratos/agente/" + idAgente)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
 }
