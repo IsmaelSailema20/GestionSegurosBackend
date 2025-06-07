@@ -16,8 +16,12 @@ public class UsuarioClienteCredencialesDTO {
     @NotNull(message = "El id es obligatorio")
     private Integer idUsuario;
 
+    @NotNull(message = "El id cliente es obligatorio")
+    private Long idCliente;
+
     String email;
 
-    @NotBlank(message = "La contraseña es obligatoria")
     String password;
+
+
 }
