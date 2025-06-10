@@ -10,6 +10,7 @@ import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +40,27 @@ class UsuarioServiceUnitariasTest {
 
     @InjectMocks
     private UsuarioService usuarioService;
+
+    @Mock
+    private EmailService emailService;
+
+    private Usuario usuario;
+    private Cliente cliente;
+    private UsuarioEditarRequest request;
+
+    @BeforeEach
+    void setUp() {
+        usuario = create(1);
+        cliente = createCliente(1L);
+        request = new UsuarioEditarRequest();
+        request.setID_Usuario(1);
+        request.setEmail("newemail@example.com");
+        request.setNombre("NewNombre");
+        request.setApellido("NewApellido");
+        request.setRol(Rol.Cliente);
+        request.setEstado(Estado.Inactivo);
+        request.setContraseña("newPassword");
+    }
 
     private Usuario create(int id){
         Usuario u=new Usuario();
@@ -121,13 +143,27 @@ class UsuarioServiceUnitariasTest {
     }
 
     @Test
-    void putUsuario() {
-        Usuario u=create(1);
-        when(usuariosRepository.save(any(Usuario.class))).thenReturn(u);
-        when(usuariosRepository.findById(anyInt())).thenReturn(Optional.of(u));
-        UsuarioEditarRequest uGuardar=new UsuarioEditarRequest(1,"contraseña","nombre","email1","1234",Rol.Administrador,Estado.Activo);
-        assertEquals(usuarioService.putUsuario(uGuardar).getAuthorities().iterator().next().getAuthority(),Rol.Administrador.toString());
-        verify(usuariosRepository,times(1)).save(any(Usuario.class));
+    void putUsuario_SuccessfulUpdateWithAllChanges() {
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.findByEmail("newemail@example.com")).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail("email")).thenReturn(Optional.of(cliente));
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
+        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuario);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+
+        Usuario result = usuarioService.putUsuario(request);
+
+        assertNotNull(result);
+        assertEquals("newemail@example.com", usuario.getEmail());
+        assertEquals("NewNombre", usuario.getNombre());
+        assertEquals("NewApellido", usuario.getApellido());
+        assertEquals(Rol.Cliente, usuario.getRol());
+        assertEquals(Estado.Inactivo, usuario.getEstado());
+        assertEquals("encodedNewPassword", usuario.getContraseña());
+
+        verify(emailService, times(1)).enviarCorreo(eq("newemail@example.com"), anyString(), anyString());
+        verify(clienteRepository, times(1)).save(cliente);
+        verify(usuariosRepository, times(1)).save(usuario);
     }
 
     @Test
