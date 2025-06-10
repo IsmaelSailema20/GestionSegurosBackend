@@ -212,4 +212,27 @@ class UsuarioServiceUnitariasTest {
         verify(usuariosRepository, never()).save(any());
         verify(clienteRepository, never()).save(any());
     }
+
+    @Test
+    void actualizarCredencialesUsuarioCliente_EmailAlreadyRegistered() {
+        // Arrange
+        Usuario usuario = create(1);
+        Usuario anotherUser = create(2);
+        UsuarioClienteCredencialesDTO request = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L)
+                .email("newemail@example.com")
+                .password("newPassword")
+                .build();
+
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.findByEmail("newemail@example.com")).thenReturn(Optional.of(anotherUser));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                usuarioService.actualizarCredencialesUsuarioCliente(request));
+        assertEquals(MensajeError.EMAIL_REGISTRADO.getMensaje(), exception.getMessage());
+        verify(usuariosRepository, never()).save(any());
+        verify(clienteRepository, never()).save(any());
+    }
 }
