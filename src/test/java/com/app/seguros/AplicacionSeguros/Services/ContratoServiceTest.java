@@ -633,7 +633,7 @@ public class ContratoServiceTest {
         when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
         when(contratoRepo.save(any(Contrato.class))).thenReturn(contrato);
         when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
-        // Eliminar o hacer lenient si no se usa:
+
         lenient().when(beneficiarioContratoRepo.findByContratoId(1)).thenReturn(Collections.emptyList());
         lenient().when(benService.listarPorContrato(1)).thenReturn(Collections.emptyList());
         when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
