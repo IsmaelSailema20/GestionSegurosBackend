@@ -207,30 +207,67 @@ public class ClienteServiceTest {
     }
 
     @Test
-    void testUpdateCliente_ok() {
+    void testUpdateCliente_Success() {
+        // Arrange
+        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
+        updatedDTO.setNombre("Carlos");
+        updatedDTO.setApellido("Gomez");
+        updatedDTO.setCedula("0987654321");
+        updatedDTO.setEmail("carlos@example.com");
+        updatedDTO.setDireccion("Avenida 456");
+        updatedDTO.setTelefono("987654321");
+        updatedDTO.setGenero("Masculino");
+        updatedDTO.setFecha_nacimiento(fechaNacimiento);
+        updatedDTO.setEstado(Estado.Activo);
+        updatedDTO.setPesoKg(80.0);
+        updatedDTO.setEstaturaMetros(1.80);
+        updatedDTO.setNumeroCuenta("6543219876543210");
+        updatedDTO.setCondicionesMedicas(List.of(condicionMedica));
+
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
-        lenient().when(clienteRepository.findByCedula(clienteDTO.getCedula())).thenReturn(Optional.empty());
-        when(clienteRepository.findByEmail(clienteDTO.getEmail())).thenReturn(Optional.empty());
-        lenient().when(clienteRepository.findByNumeroCuenta(clienteDTO.getNumeroCuenta())).thenReturn(Optional.empty());
-        when(usuariosRepository.findByEmail(cliente.getEmail())).thenReturn(Optional.of(usuario));
-        when(clienteRepository.save(any(Cliente.class))).thenAnswer(i -> i.getArgument(0));
-        when(condService.getAll(1)).thenReturn(Collections.emptyList());
+        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.empty());
+        when(clienteRepository.findByNumeroCuenta("6543219876543210")).thenReturn(Optional.empty());
+        when(usuariosRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(usuario));
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuario);
+        lenient().when(condService.post(any(CondicionMedica.class))).thenReturn(condicionMedica);
+        when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
+        doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
+        doNothing().when(condService).deleteByClienteId(1);
 
-        ClienteRespuestaDTO result = clienteService.updateCliente(1L, clienteDTO);
 
+        // Act
+        ClienteRespuestaDTO result = clienteService.updateCliente(1L, updatedDTO);
+
+        // Assert
         assertNotNull(result);
-        assertEquals(clienteDTO.getNombre(), result.getNombre());
-        assertEquals(clienteDTO.getApellido(), result.getApellido());
-        assertEquals(clienteDTO.getEmail(), result.getEmail());
-        assertEquals(clienteDTO.getNumeroCuenta(), result.getNumeroCuenta());
+        assertEquals(1L, result.getId_Cliente());
+        assertEquals("Carlos", result.getNombre());
+        assertEquals("Gomez", result.getApellido());
+        assertEquals("0987654321", result.getCedula());
+        assertEquals("carlos@example.com", result.getEmail());
+        assertEquals("Avenida 456", result.getDireccion());
+        assertEquals("987654321", result.getTelefono());
+        assertEquals("Masculino", result.getGenero());
+        assertEquals(fechaNacimiento, result.getFecha_nacimiento());
+        assertEquals(Estado.Activo, result.getEstado());
+        assertEquals(80.0, result.getPesoKg());
+        assertEquals(1.80, result.getEstaturaMetros());
+        assertEquals("6543219876543210", result.getNumeroCuenta());
+        assertEquals(1, result.getCondicionesMedicas().size());
+        assertEquals("Hipertension", result.getCondicionesMedicas().get(0).getDiagnostico());
 
-        verify(emailService).enviarCorreo(
-                eq(clienteDTO.getEmail()),
-                contains("Actualización de correo"),
-                contains("Usuario: " + clienteDTO.getEmail())
-        );
-        verify(usuariosRepository).save(any(Usuario.class));
-        verify(condService).deleteByClienteId(1);
+        verify(clienteRepository, times(1)).findById(1L);
+        verify(clienteRepository, times(1)).findByCedula("0987654321");
+        verify(clienteRepository, times(1)).findByEmail("carlos@example.com");
+        verify(clienteRepository, times(1)).findByNumeroCuenta("6543219876543210");
+        verify(usuariosRepository, times(1)).findByEmail("juan@example.com");
+        verify(usuariosRepository, times(1)).save(any(Usuario.class));
+        verify(clienteRepository, times(1)).save(any(Cliente.class));
+        verify(condService, times(1)).deleteByClienteId(1);
+        verify(condService, times(1)).postRelacion(any(CondicionMedica.class), any(Cliente.class));
+        verify(emailService, times(1)).enviarCorreo(anyString(), anyString(), anyString());
     }
 
     @Test
