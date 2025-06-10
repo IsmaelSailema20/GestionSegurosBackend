@@ -189,4 +189,27 @@ class UsuarioServiceUnitariasTest {
         verify(usuariosRepository, never()).save(any());
         verify(clienteRepository, never()).save(any());
     }
+
+    @Test
+    void actualizarCredencialesUsuarioCliente_ClienteNotFound() {
+        // Arrange
+        Usuario usuario = create(1);
+        UsuarioClienteCredencialesDTO request = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L)
+                .email("newemail@example.com")
+                .password("newPassword")
+                .build();
+
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.findByEmail("newemail@example.com")).thenReturn(Optional.empty());
+        when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                usuarioService.actualizarCredencialesUsuarioCliente(request));
+        assertEquals("Cliente no encontrado", exception.getMessage());
+        verify(usuariosRepository, never()).save(any());
+        verify(clienteRepository, never()).save(any());
+    }
 }
