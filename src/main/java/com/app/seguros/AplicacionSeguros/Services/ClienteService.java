@@ -7,7 +7,9 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import java.time.*;
 
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class ClienteService {
     @Autowired private CondicionMedicaService condService;
     @Autowired private UsuarioService usuarioService;
     @Autowired private EmailService emailService;
+    @Autowired private UsuariosRepository usuariosRepository;
     @Transactional
     public ClienteRespuestaDTO saveCliente(ClienteDTO clienteDTO) {
         // Validar unicidad de cédula y email
@@ -188,13 +191,15 @@ public class ClienteService {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
-        // Validar unicidad de cédula y email si cambiaron
+        // Validar unicidad de cédula si cambió
         if (!cliente.getCedula().equals(clienteDTO.getCedula())) {
             clienteRepository.findByCedula(clienteDTO.getCedula())
                     .ifPresent(c -> {
                         throw new RuntimeException(MensajeError.CEDULA_REGISTRADA.getMensaje());
                     });
         }
+
+        // Validar unicidad de email si cambió
         if (!cliente.getEmail().equals(clienteDTO.getEmail())) {
             clienteRepository.findByEmail(clienteDTO.getEmail())
                     .ifPresent(c -> {
@@ -209,12 +214,46 @@ public class ClienteService {
         }
 
 
-        cliente.setNombre(clienteDTO.getNombre());
-        cliente.setApellido(clienteDTO.getApellido());
+        // Buscar Usuario asociado (usando el email actual del cliente)
+        Usuario usuario = usuariosRepository.findByEmail(cliente.getEmail())
+                .orElseThrow(() -> new RuntimeException(MensajeError.USUARIO_NO_ENCONTRADO.getMensaje()));
+
+        // Sincronizar nombre y apellido si cambiaron
+        boolean nombreApellidoCambiado = !cliente.getNombre().equals(clienteDTO.getNombre()) ||
+                !cliente.getApellido().equals(clienteDTO.getApellido());
+
+        if (nombreApellidoCambiado) {
+            cliente.setNombre(clienteDTO.getNombre());
+            cliente.setApellido(clienteDTO.getApellido());
+            usuario.setNombre(clienteDTO.getNombre());
+            usuario.setApellido(clienteDTO.getApellido());
+        }
+
+        // Si cambia el email, actualizar en ambos y enviar correo
+        if (!cliente.getEmail().equals(clienteDTO.getEmail())) {
+            usuario.setEmail(clienteDTO.getEmail());
+            cliente.setEmail(clienteDTO.getEmail());
+
+            // Enviar notificación por correo
+            String destinatario = clienteDTO.getEmail();
+            String asunto = "Actualización de correo en Walk Seguros";
+            String cuerpo = "Estimado " + clienteDTO.getNombre() + " " + clienteDTO.getApellido() + ",\n\n" +
+                    "Su correo ha sido actualizado en Walk Seguros. A continuación, tus credenciales:\n\n" +
+                    "Usuario: " + clienteDTO.getEmail() + "\n" +
+                    "Contraseña: Su contraseña es la misma con la que ingresa normalmente al sistema\n\n" +
+                    "Por favor, inicia sesión en nuestra aplicación en el siguiente enlace:\n" +
+                    "http://localhost:5173\n\n";
+
+            emailService.enviarCorreo(destinatario, asunto, cuerpo);
+        }
+
+        // Guardar ambos
+        usuariosRepository.save(usuario);
+
+        // Actualizar otros datos del cliente
         cliente.setCedula(clienteDTO.getCedula());
         cliente.setDireccion(clienteDTO.getDireccion());
         cliente.setTelefono(clienteDTO.getTelefono());
-        cliente.setEmail(clienteDTO.getEmail());
         cliente.setGenero(clienteDTO.getGenero());
         cliente.setFecha_nacimiento(clienteDTO.getFecha_nacimiento());
         cliente.setEstado(clienteDTO.getEstado());
@@ -223,16 +262,18 @@ public class ClienteService {
         cliente.setNumeroCuenta(clienteDTO.getNumeroCuenta());
         cliente = clienteRepository.save(cliente);
 
-        condService.deleteByClienteId((int)cliente.getId());
+        // Actualizar condiciones médicas
+        condService.deleteByClienteId((int) cliente.getId());
         if (clienteDTO.getCondicionesMedicas() != null) {
             Cliente finalCliente = cliente;
             clienteDTO.getCondicionesMedicas().forEach(cm -> {
                 if (cm.getId_condicion() == null) {
                     cm = condService.post(cm);
                 }
-                condService.postRelacion(cm,finalCliente);
+                condService.postRelacion(cm, finalCliente);
             });
         }
+
         return ClienteRespuestaDTO.builder()
                 .estaturaMetros(cliente.getEstaturaMetros())
                 .fecha_nacimiento(cliente.getFecha_nacimiento())
@@ -250,6 +291,7 @@ public class ClienteService {
                 .numeroCuenta(cliente.getNumeroCuenta())
                 .build();
     }
+
 
 
     public ClienteRespuestaDTO actualizarEstado(Long id,EstadoDTO estado){
