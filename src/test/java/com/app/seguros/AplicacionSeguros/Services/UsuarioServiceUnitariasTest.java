@@ -1,10 +1,13 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
+import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
+import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +31,9 @@ class UsuarioServiceUnitariasTest {
     private UsuariosRepository usuariosRepository;
 
     @Mock
+    private ClienteRepository clienteRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
@@ -48,6 +54,15 @@ class UsuarioServiceUnitariasTest {
         u.isCredentialsNonExpired();
         u.getAuthorities();
         return u;
+    }
+
+    private Cliente createCliente(Long id) {
+        Cliente c = new Cliente();
+        c.setId(id);
+        c.setEmail("email");
+        c.setNombre("nombre");
+        c.setApellido("apellido");
+        return c;
     }
 
     @Test
@@ -120,5 +135,37 @@ class UsuarioServiceUnitariasTest {
         usuarioService.deleteUsuario(1);
         verify(usuariosRepository,times(1)).deleteById(any(Integer.class));
 
+    }
+
+    @Test
+    void actualizarCredencialesUsuarioCliente_SuccessfulUpdate() {
+        // Arrange
+        Usuario usuario = create(1);
+        Cliente cliente = createCliente(1L);
+        UsuarioClienteCredencialesDTO request = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L)
+                .email("newemail@example.com")
+                .password("newPassword")
+                .build();
+
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.findByEmail("newemail@example.com")).thenReturn(Optional.empty());
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
+        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuario);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+
+        // Act
+        Usuario result = usuarioService.actualizarCredencialesUsuarioCliente(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("newemail@example.com", result.getEmail());
+        assertEquals("encodedNewPassword", result.getContraseña());
+        assertEquals("newemail@example.com", cliente.getEmail());
+        verify(usuariosRepository, times(1)).save(any(Usuario.class));
+        verify(clienteRepository, times(1)).save(any(Cliente.class));
+        verify(passwordEncoder, times(1)).encode("newPassword");
     }
 }
