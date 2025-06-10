@@ -235,4 +235,34 @@ class UsuarioServiceUnitariasTest {
         verify(usuariosRepository, never()).save(any());
         verify(clienteRepository, never()).save(any());
     }
+
+    @Test
+    void actualizarCredencialesUsuarioCliente_SameEmailNoPasswordChange() {
+        // Arrange
+        Usuario usuario = create(1);
+        Cliente cliente = createCliente(1L);
+        UsuarioClienteCredencialesDTO request = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L)
+                .email("email")
+                .password("")
+                .build();
+
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.findByEmail("email")).thenReturn(Optional.of(usuario));
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuario);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+
+        // Act
+        Usuario result = usuarioService.actualizarCredencialesUsuarioCliente(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("email", result.getEmail());
+        assertEquals("contraseña", result.getContraseña());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(usuariosRepository, times(1)).save(any(Usuario.class));
+        verify(clienteRepository, times(1)).save(any(Cliente.class));
+    }
 }
