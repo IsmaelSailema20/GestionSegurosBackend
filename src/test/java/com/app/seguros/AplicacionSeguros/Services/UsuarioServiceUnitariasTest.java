@@ -3,6 +3,7 @@ package com.app.seguros.AplicacionSeguros.Services;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
@@ -167,5 +168,25 @@ class UsuarioServiceUnitariasTest {
         verify(usuariosRepository, times(1)).save(any(Usuario.class));
         verify(clienteRepository, times(1)).save(any(Cliente.class));
         verify(passwordEncoder, times(1)).encode("newPassword");
+    }
+
+    @Test
+    void actualizarCredencialesUsuarioCliente_UserNotFound() {
+        // Arrange
+        UsuarioClienteCredencialesDTO request = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L)
+                .email("newemail@example.com")
+                .password("newPassword")
+                .build();
+
+        when(usuariosRepository.findById(1)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                usuarioService.actualizarCredencialesUsuarioCliente(request));
+        assertEquals(MensajeError.USUARIO_NO_ENCONTRADO.getMensaje(), exception.getMessage());
+        verify(usuariosRepository, never()).save(any());
+        verify(clienteRepository, never()).save(any());
     }
 }
