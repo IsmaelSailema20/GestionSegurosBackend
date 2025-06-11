@@ -191,23 +191,29 @@ class UsuariosControllerUnitariasTest {
 
     @Test
     void putCredencialesUsuarioCliente_success() throws Exception {
+        // Arrange
         UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
                 .idUsuario(1)
+                .idCliente(1L) // Added to pass validation
                 .email("newemail@example.com")
                 .password("newpassword")
                 .build();
         Usuario u = create(1);
         u.setEmail("newemail@example.com");
         u.setContraseña("newpassword");
-        when(usuarioService.actualizarCredencialesUsuarioCliente(any(UsuarioClienteCredencialesDTO.class))).thenReturn(u);
+        when(usuarioService.actualizarCredencialesUsuarioCliente(eq(dto))).thenReturn(u);
 
+        // Act & Assert
         mockMvc.perform(put("/Usuarios/credencialesCliente")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("newemail@example.com"))
-                .andExpect(jsonPath("$.password").value("newpassword"));
+                .andExpect(jsonPath("$.password").value("newpassword")); // Fixed field name
+
+        // Verify
+        verify(usuarioService, times(1)).actualizarCredencialesUsuarioCliente(eq(dto));
     }
 
     @Test
@@ -237,20 +243,26 @@ class UsuariosControllerUnitariasTest {
 
     @Test
     void putCredencialesUsuarioCliente_runtimeException() throws Exception {
+        // Arrange
         UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
                 .idUsuario(1)
+                .idCliente(1L)
                 .email("newemail@example.com")
                 .password("newpassword")
                 .build();
         doThrow(new RuntimeException("Error al actualizar credenciales")).when(usuarioService)
-                .actualizarCredencialesUsuarioCliente(any(UsuarioClienteCredencialesDTO.class));
+                .actualizarCredencialesUsuarioCliente(eq(dto));
 
+        // Act & Assert
         mockMvc.perform(put("/Usuarios/credencialesCliente")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Error: Error al actualizar credenciales"));
+
+        // Verify
+        verify(usuarioService, times(1)).actualizarCredencialesUsuarioCliente(eq(dto));
     }
 
 }
