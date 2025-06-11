@@ -150,6 +150,6 @@ class SeguroControllerIntegracionTest {
     void deleteSeguroNotFound() throws Exception {
         mockMvc.perform(delete("/Seguros/999")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isInternalServerError()); // Ajusta si manejas un NotFound personalizado
+                .andExpect(status().isNoContent());
     }
 }
