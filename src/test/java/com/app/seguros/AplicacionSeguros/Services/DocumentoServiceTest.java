@@ -59,6 +59,7 @@ class DocumentoServiceTest {
 
         Seguro seguro = new Seguro();
         seguro.setIdSeguro(99);
+        seguro.setNombre("Seguro de Vida"); // Set nombre to avoid NullPointerException
 
         ClienteRespuestaDTO clienteDto = ClienteRespuestaDTO.builder()
                 .id_Cliente(10L)
@@ -78,7 +79,7 @@ class DocumentoServiceTest {
         ContratoRespuestaDTO contratoDto = ContratoRespuestaDTO.builder()
                 .id(1)
                 .cliente(clienteDto)
-                .seguro(seguro) // mock seguro
+                .seguro(seguro)
                 .agente(new AgenteDTO(1, "Pedro", "Agente", "pedro@mail.com"))
                 .estado(EstadoContrato.ACTIVO)
                 .build();
