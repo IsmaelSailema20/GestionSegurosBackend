@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class PagoRegistroDTO {
+    private Long clienteId;
     private Long contratoId;
     private BigDecimal monto;
     private LocalDate fechaPago;
