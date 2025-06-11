@@ -1,5 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Entities;
 
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoTarjeta;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,10 +21,10 @@ public class Tarjeta {
     private Long id;
 
     private String numero;
-    private String nombreTitular;
     private LocalDate vencimiento;
     private String cvv;
     private String tipo;
+    private EstadoTarjeta estado;
 
     @ManyToOne
     @JoinColumn(name = "id_cliente")
