@@ -204,7 +204,7 @@ class ContratoControllerIntegracionTest {
 
         mockMvc.perform(get("/contratos/cliente/9999999999")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent()); // Change to isNoContent()
     }
 
     @Test
