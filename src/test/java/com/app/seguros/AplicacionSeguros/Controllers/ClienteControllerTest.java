@@ -63,6 +63,7 @@ class ClienteControllerUnitariasTest {
         dto.setGenero("Masculino");
         dto.setFecha_nacimiento(new Date(1990 - 1900, 4, 15)); // Mes 0-indexed
         dto.setEstado(Estado.Activo);
+        dto.setNumeroCuenta("1234567892224");
         return dto;
     }
 
@@ -78,6 +79,7 @@ class ClienteControllerUnitariasTest {
                 .genero("Masculino")
                 .fecha_nacimiento(new Date(1990 - 1900, 4, 15))
                 .estado(Estado.Activo)
+                .numeroCuenta("1234567892224")
                 .build();
     }
 
