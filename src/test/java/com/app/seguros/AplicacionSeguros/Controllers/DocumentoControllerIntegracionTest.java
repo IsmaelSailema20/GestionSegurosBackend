@@ -217,8 +217,8 @@ class DocumentoControllerIntegracionTest {
 
     @Test
     void aprobarDocumento() throws Exception {
-        List<Documento> documentos = List.of(createDocumento(1L));
-        when(documentoService.obtenerDocumentosPorContrato(1L)).thenReturn(documentos);
+        Documento documento = createDocumento(1L);
+        when(documentoService.obtenerDocumento(1L)).thenReturn(documento); // Mock obtenerDocumento
         when(clienteService.getCorreoCliente(1L)).thenReturn("juan@example.com");
         doNothing().when(documentoService).aprobarDocumento(1L);
         doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
@@ -242,8 +242,8 @@ class DocumentoControllerIntegracionTest {
 
     @Test
     void rechazarDocumento() throws Exception {
-        List<Documento> documentos = List.of(createDocumento(1L));
-        when(documentoService.obtenerDocumentosPorContrato(1L)).thenReturn(documentos);
+        Documento documento = createDocumento(1L);
+        when(documentoService.obtenerDocumento(1L)).thenReturn(documento); // Mock obtenerDocumento
         when(clienteService.getCorreoCliente(1L)).thenReturn("juan@example.com");
         doNothing().when(documentoService).rechazarDocumento(1L);
         doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
