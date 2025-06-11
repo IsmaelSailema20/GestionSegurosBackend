@@ -1,5 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Entities;
 
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MetodoPago;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,10 +15,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "pagos")
-public class Pago {
-    @Id
+    @Entity
+    @Table(name = "pagos")
+    public class Pago {
+        @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -35,5 +36,5 @@ public class Pago {
     private MetodoPago metodo;
 
     @Column(nullable = false)
-    private Boolean confirmado;
+    private EstadoDocumento confirmado;
 }
