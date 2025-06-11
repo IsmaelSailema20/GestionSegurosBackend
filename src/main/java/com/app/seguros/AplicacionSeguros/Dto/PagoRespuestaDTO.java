@@ -1,5 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MetodoPago;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,5 +21,5 @@ public class PagoRespuestaDTO {
     private BigDecimal monto;
     private LocalDate fechaPago;
     private MetodoPago metodo;
-    private Boolean confirmado;
+    private EstadoDocumento confirmado;
 }
