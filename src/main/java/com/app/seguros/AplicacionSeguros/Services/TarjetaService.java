@@ -40,6 +40,7 @@ public class TarjetaService {
                 .vencimiento(dto.getVencimiento())
                 .cvv(aesUtil.encrypt(dto.getCvv()))
                 .tipo(dto.getTipo())
+                .marca(dto.getMarca())
                 .estado(estado)
                 .cliente(cliente)
                 .build();
@@ -59,6 +60,7 @@ public class TarjetaService {
         tarjeta.setVencimiento(dto.getVencimiento());
         tarjeta.setCvv(aesUtil.encrypt(dto.getCvv()));
         tarjeta.setTipo(dto.getTipo());
+        tarjeta.setMarca(dto.getMarca());
         tarjeta.setCliente(cliente);
 
         tarjeta = tarjetaRepository.save(tarjeta);
@@ -97,6 +99,30 @@ public class TarjetaService {
         tarjetaRepository.save(tarjeta);
     }
 
+    @Transactional
+    public void cambiarEstadoTarjetaAPrincipal(Long id) {
+        Tarjeta nuevaTarjetaPrincipal = tarjetaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada con id: " + id));
+
+        if (nuevaTarjetaPrincipal.getEstado() == EstadoTarjeta.Principal) {
+            // Ya es principal, no se hace nada
+            return;
+        }
+
+        Tarjeta tarjetaActualPrincipal = tarjetaRepository.findByEstado(EstadoTarjeta.Principal);
+
+        if (tarjetaActualPrincipal == null) {
+            throw new RuntimeException("No se encontró una tarjeta con estado 'Principal'.");
+        }
+
+        // Actualizamos estados
+        tarjetaActualPrincipal.setEstado(EstadoTarjeta.Secundaria);
+        nuevaTarjetaPrincipal.setEstado(EstadoTarjeta.Principal);
+
+        // Guardamos cambios
+        tarjetaRepository.save(tarjetaActualPrincipal);
+        tarjetaRepository.save(nuevaTarjetaPrincipal);
+    }
     public TarjetaRespuestaDTO mapToDTO(Tarjeta tarjeta) {
         return TarjetaRespuestaDTO.builder()
                 .id(tarjeta.getId())
@@ -105,6 +131,7 @@ public class TarjetaService {
                 .tipo(tarjeta.getTipo())
                 .idCliente(tarjeta.getCliente().getId())
                 .estado(tarjeta.getEstado())
+                .marca(tarjeta.getMarca())
                 .build();
     }
     private String enmascararNumeroTarjeta(String numeroTarjeta) {

@@ -27,6 +27,9 @@ public class TarjetaResgistroDTO {
     @NotBlank
     private String tipo;
 
+    @NotBlank
+    private String marca;
+
     @NotNull
     private Long idCliente;
 }
