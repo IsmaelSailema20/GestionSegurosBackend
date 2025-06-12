@@ -5,8 +5,6 @@ import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Tarjeta;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
-import org.checkerframework.checker.units.qual.C;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
