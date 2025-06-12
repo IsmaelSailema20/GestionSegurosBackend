@@ -33,7 +33,7 @@ public class TarjetaService {
                 .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
         EstadoTarjeta estado = tarjetaRepository.findByClienteId(cliente.getId()).stream()
-                .anyMatch(t -> t.getEstado() == EstadoTarjeta.Principal) ? EstadoTarjeta.Secuandaria : EstadoTarjeta.Principal;
+                .anyMatch(t -> t.getEstado() == EstadoTarjeta.Principal) ? EstadoTarjeta.Secundaria : EstadoTarjeta.Principal;
 
         Tarjeta tarjeta = Tarjeta.builder()
                 .numero(aesUtil.encrypt(dto.getNumero()))
