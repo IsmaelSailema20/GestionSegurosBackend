@@ -1,4 +1,4 @@
-package com.app.seguros.AplicacionSeguros.Services;
+package com.app.seguros.AplicacionSeguros.Services.Daemons;
 
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
@@ -8,6 +8,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
+import com.app.seguros.AplicacionSeguros.Services.EmailService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
