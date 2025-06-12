@@ -1,11 +1,13 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
+import com.app.seguros.AplicacionSeguros.Config.AESUtil;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoDocumento;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -22,7 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -45,11 +50,15 @@ public class DocumentoService {
     @Autowired
     private UsuariosRepository usuarioRepository;
 
-
+    private AESUtil aesUtil = new AESUtil();
 
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+        String contentType = archivo.getContentType();
+        if (!Arrays.asList("application/pdf", "image/jpeg", "image/png").contains(contentType)) {
+            throw new IllegalArgumentException("Tipo de archivo no permitido");
+        }
 
         String nombreCarpetaCliente = contrato.getCliente().getCedula() + "_" +
                 contrato.getCliente().getNombre().replace(" ", "_") + "_" +
@@ -63,26 +72,42 @@ public class DocumentoService {
         Path directorioCliente = Paths.get(directorioBase, nombreCarpetaCliente);
         Path directorioContrato = directorioCliente.resolve(nombreCarpetaContrato);
 
+        // Crear subcarpeta para pagos si es un comprobante de pago
+        if (dto.getTipo().toString().equals("Comprobante_pago")) {
+            directorioContrato = directorioContrato.resolve("pagos");
+        }
+
         Files.createDirectories(directorioContrato);
 
-        String nombreArchivo = dto.getTipo()+ "_" +
-                                contrato.getCliente().getNombre()+"_"
-                                +contrato.getCliente().getApellido()
-                                +".pdf";
+        // Usar timestamp para evitar colisiones de nombres
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        String nombreArchivo = dto.getTipo() + "_" +
+                contrato.getCliente().getNombre() + "_" +
+                contrato.getCliente().getApellido() + "_" +
+                timestamp +
+                obtenerExtension(archivo.getOriginalFilename());
 
         Path rutaCompleta = directorioContrato.resolve(nombreArchivo);
         Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
 
         Documento documento = new Documento();
-        documento.setRutaArchivo(rutaCompleta.toString());
+        documento.setRutaArchivo(aesUtil.encrypt(rutaCompleta.toString()));
         documento.setContrato(convertirDTOAContrato(contrato));
         documento.setCliente(convertirDTOACliente(contrato.getCliente()));
         documento.setEstado(EstadoDocumento.Pendiente);
-        documento.setNombreArchivo(nombreArchivo);
+        documento.setNombreArchivo(aesUtil.encrypt(nombreArchivo));
         documento.setTipo(dto.getTipo());
         documento.setFechaSubida(LocalDateTime.now());
 
         return documentoRepository.save(documento);
+    }
+    //Método auxiliar para obtener extensión del archivo
+    private String obtenerExtension(String nombreArchivo) {
+        if (nombreArchivo == null || !nombreArchivo.contains(".")) {
+            return ".pdf"; // Extensión por defecto
+        }
+        return nombreArchivo.substring(nombreArchivo.lastIndexOf("."));
     }
 
 
@@ -126,18 +151,29 @@ public class DocumentoService {
     }
 
     public List<Documento> obtenerDocumentosPorContrato(Long idContrato) {
-        return documentoRepository.findByContratoId(idContrato);
+        return documentoRepository.findByContratoId(idContrato).stream()
+                .map(this::desencriptarCampos)
+                .collect(Collectors.toList());
     }
 
     public Documento obtenerDocumento(Long idDocumento) {
-        return documentoRepository.findById(idDocumento)
+        Documento documento = documentoRepository.findById(idDocumento)
                 .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
+        return desencriptarCampos(documento);
+    }
+
+    public Documento desencriptarCampos(Documento documento) {
+        documento.setNombreArchivo(aesUtil.decrypt(documento.getNombreArchivo()));
+        documento.setRutaArchivo(aesUtil.decrypt(documento.getRutaArchivo()));
+        return documento;
     }
 
     @Transactional
     public void aprobarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
                 .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
+        doc.setNombreArchivo(aesUtil.encrypt(doc.getNombreArchivo()));
+        doc.setRutaArchivo(aesUtil.encrypt(doc.getRutaArchivo()));
         doc.setEstado(EstadoDocumento.Aprobado);
         documentoRepository.save(doc);
     }
@@ -146,7 +182,6 @@ public class DocumentoService {
     public void rechazarDocumento(Long idDocumento) {
         Documento doc = documentoRepository.findById(idDocumento)
                 .orElseThrow(() -> new RuntimeException(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje()));
-
         // 1. Eliminar archivo físico
         try {
             Path path = Paths.get(doc.getRutaArchivo());
