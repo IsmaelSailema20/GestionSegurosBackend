@@ -11,7 +11,5 @@ import java.util.Optional;
 public interface PagoRepository extends JpaRepository<Pago,Long> {
     List<Pago> findByContratoId (Long contratoId);
     List<Pago> findByContratoIdAndConfirmadoTrue(Long contratoId);
-
     Optional<Pago> findFirstByContratoIdOrderByFechaPagoAsc(Long contratoId);
-
 }
