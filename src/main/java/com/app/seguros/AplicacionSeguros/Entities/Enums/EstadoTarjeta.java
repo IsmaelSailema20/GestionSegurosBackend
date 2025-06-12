@@ -1,0 +1,8 @@
+package com.app.seguros.AplicacionSeguros.Entities.Enums;
+
+public enum EstadoTarjeta {
+    Principal,
+    Secundaria,
+    Inactivo
+
+}
