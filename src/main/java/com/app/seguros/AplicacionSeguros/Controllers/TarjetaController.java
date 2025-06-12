@@ -2,31 +2,56 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.TarjetaResgistroDTO;
 import com.app.seguros.AplicacionSeguros.Dto.TarjetaRespuestaDTO;
-import com.app.seguros.AplicacionSeguros.Entities.Tarjeta;
 import com.app.seguros.AplicacionSeguros.Services.TarjetaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/tarjetas")
+import java.util.List;
+
 @RestController
+@RequestMapping("/Tarjetas")
 public class TarjetaController {
+
     @Autowired
     private TarjetaService tarjetaService;
 
     @PostMapping
     public ResponseEntity<TarjetaRespuestaDTO> crearTarjeta(@Valid @RequestBody TarjetaResgistroDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(tarjetaService.crearTarjeta(dto));
+        return ResponseEntity.ok(tarjetaService.crearTarjeta(dto));
     }
 
-    // Método para transformar desde controller si necesitas usarlo de forma explícita
-    @PostMapping("/transformar")
-    public ResponseEntity<TarjetaRespuestaDTO> transformar(@RequestBody Tarjeta tarjeta) {
-        return ResponseEntity.ok(tarjetaService.mapToDTO(tarjeta));
+    @PutMapping("/{id}")
+    public ResponseEntity<TarjetaRespuestaDTO> editarTarjeta(@PathVariable Long id,@Valid @RequestBody TarjetaResgistroDTO dto) {
+        return ResponseEntity.ok(tarjetaService.editarTarjeta(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarTarjeta(@PathVariable Long id) {
+        tarjetaService.eliminarTarjeta(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TarjetaRespuestaDTO> obtenerTarjeta(@PathVariable Long id) {
+        return ResponseEntity.ok(tarjetaService.obtenerTarjetaPorId(id));
+    }
+
+    @GetMapping("/cliente/{idCliente}")
+    public ResponseEntity<List<TarjetaRespuestaDTO>> obtenerTarjetasPorCliente(@PathVariable Long idCliente) {
+        return ResponseEntity.ok(tarjetaService.obtenerTarjetasPorCliente(idCliente));
+    }
+
+    @PutMapping("/{id}/inactivar")
+    public ResponseEntity<Void> inactivarTarjeta(@PathVariable Long id) {
+        tarjetaService.inactivarTarjeta(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/cliente/{idCliente}/principal")
+    public ResponseEntity<TarjetaRespuestaDTO> obtenerPrincipal(@PathVariable Long idCliente) {
+        return ResponseEntity.ok(tarjetaService.obtenerTarjetaPrincipal(idCliente));
     }
 }
+
