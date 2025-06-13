@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "reeembolsos")
+@Table(name = "reembolsos")
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,18 +18,18 @@ import java.time.LocalDate;
 public class Reembolso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id_reembolo;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", nullable = false)
     private String descripcion;
 
-    @Column(name = "monto_solicitado")
+    @Column(name = "monto_solicitado", nullable = false)
     private double montoSolicitado;
 
-    @Column(name = "estado")
+    @Column(name = "estado", nullable = false)
     private EstadoDocumento estado;
 
-    @Column(name = "fecha_solicitud")
+    @Column(name = "fecha_solicitud", nullable = false)
     private LocalDate fechaSolicitud;
 
     @Column(name = "fecha_resolucion")
