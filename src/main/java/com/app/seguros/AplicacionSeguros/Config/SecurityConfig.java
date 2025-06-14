@@ -43,8 +43,8 @@ public class SecurityConfig {
                                 .requestMatchers("/Tarjetas").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers( "/Tarjetas/**").hasAuthority(Rol.Cliente.name())
                                 //.requestMatchers("/Pagos/**").hasAnyAuthority(Rol.Administrador.name(), Rol.Agente.name(),Rol.Cliente.name())
-                                .requestMatchers("/Pagos/**").permitAll()
-
+                                .requestMatchers("/Pagos").hasAnyAuthority(Rol.Cliente.name())
+                                .requestMatchers("/Pagos/**").hasAnyAuthority((Rol.Cliente.name()))
                                 .anyRequest().authenticated()
                         )
                 .sessionManagement( sessionManager->
