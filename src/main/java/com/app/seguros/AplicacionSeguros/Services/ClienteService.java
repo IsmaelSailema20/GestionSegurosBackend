@@ -39,6 +39,10 @@ public class ClienteService {
                 .ifPresent(cliente -> {
                     throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                 });
+        clienteRepository.findByNumeroCuenta(clienteDTO.getNumeroCuenta())
+                .ifPresent(cliente -> {
+                    throw new RuntimeException(MensajeError.NUMERO_DE_CUENTA_DUPLICADO.getMensaje());
+                });
 
         if(calcularEdad(clienteDTO.getFecha_nacimiento()) < 18){
             throw new RuntimeException(MensajeError.MENOR_EDAD.getMensaje());
@@ -202,6 +206,13 @@ public class ClienteService {
                         throw new RuntimeException(MensajeError.EMAIL_REGISTRADO.getMensaje());
                     });
         }
+        if (!cliente.getNumeroCuenta().equals(clienteDTO.getNumeroCuenta())) {
+            clienteRepository.findByNumeroCuenta(clienteDTO.getNumeroCuenta())
+                    .ifPresent(c -> {
+                        throw new RuntimeException(MensajeError.NUMERO_DE_CUENTA_DUPLICADO.getMensaje());
+                    });
+        }
+
 
         // Buscar Usuario asociado (usando el email actual del cliente)
         Usuario usuario = usuariosRepository.findByEmail(cliente.getEmail())

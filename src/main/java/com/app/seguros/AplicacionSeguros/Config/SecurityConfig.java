@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,6 +40,11 @@ public class SecurityConfig {
                                 .requestMatchers("/Clientes/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers("/Seguros").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
                                 .requestMatchers("/Seguros/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
+                                .requestMatchers("/Tarjetas").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
+                                .requestMatchers( "/Tarjetas/**").hasAuthority(Rol.Cliente.name())
+                                //.requestMatchers("/Pagos/**").hasAnyAuthority(Rol.Administrador.name(), Rol.Agente.name(),Rol.Cliente.name())
+                                .requestMatchers("/Pagos").hasAnyAuthority(Rol.Cliente.name())
+                                .requestMatchers("/Pagos/**").hasAnyAuthority((Rol.Cliente.name()))
                                 .anyRequest().authenticated()
                         )
                 .sessionManagement( sessionManager->
