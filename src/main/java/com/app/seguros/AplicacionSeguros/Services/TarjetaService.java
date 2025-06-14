@@ -66,9 +66,15 @@ public class TarjetaService {
         tarjeta = tarjetaRepository.save(tarjeta);
         return mapToDTO(tarjeta);
     }
-
     public void eliminarTarjeta(Long id) {
-        tarjetaRepository.deleteById(id);
+        Tarjeta tarjeta = tarjetaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada"));
+
+        if (tarjeta.getEstado() == EstadoTarjeta.Principal) {
+            throw new RuntimeException("No se puede eliminar una tarjeta Principal");
+        }
+
+        tarjetaRepository.delete(tarjeta);
     }
 
     public TarjetaRespuestaDTO obtenerTarjetaPorId(Long id) {
