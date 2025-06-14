@@ -38,9 +38,14 @@ public class PagoController {
     @Autowired
     private PagoDocumentoRepository pagoDocumentoRepository;
 
+    @PostMapping("/registrar")
+    public ResponseEntity<PagoRespuestaDTO> registrarPago(@RequestBody PagoRegistroDTO dto) {
+        PagoRespuestaDTO respuesta = pagoService.registrarPago(dto);
+        return ResponseEntity.ok(respuesta);
+    }
 
     @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<PagoRespuestaDTO> registrarPago(
+    public ResponseEntity<PagoRespuestaDTO> registrarPagoConComprobante(
             @RequestParam("pago") String pago,
             @RequestPart("comprobante") MultipartFile archivoComprobante) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -87,6 +92,11 @@ public class PagoController {
     @GetMapping("contrato/{contratoId}/pedientes")
     public ResponseEntity<?> listarPagosPendientesPorContratos(@PathVariable Long contratoId){
         return ResponseEntity.ok(pagoService.listarPagosPendientesPorContrato(contratoId));
+    }
+    @GetMapping("/estado/{contratoId}")
+    public ResponseEntity<EstadoDocumento> obtenerEstadoPagoPorContrato(@PathVariable Long contratoId) {
+        EstadoDocumento estado = pagoService.obtenerEstadoUltimoPagoPorContrato(contratoId);
+        return ResponseEntity.ok(estado);
     }
 
     private PagoRespuestaDTO transformarDTO(@Valid @RequestBody PagoRegistroDTO dto) {
