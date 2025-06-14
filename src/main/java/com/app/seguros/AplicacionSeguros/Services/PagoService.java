@@ -38,11 +38,12 @@ public class PagoService {
     public PagoRespuestaDTO registrarPago(PagoRegistroDTO dto) {
         Contrato contrato = contratoRepository.findById(dto.getContratoId().intValue())
                 .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-
+        SeguroDTO seguro = seguroService.getSeguro(contrato.getSeguro().getIdSeguro().intValue())
+                .orElseThrow(()-> new RuntimeException("Seguro no encontrado"));
         Pago pago = new Pago();
         pago.setContrato(contrato);
-        pago.setMonto(dto.getMonto());
-        pago.setFechaPago(dto.getFechaPago());
+        pago.setMonto(BigDecimal.valueOf(seguro.getPrecio()));
+        pago.setFechaPago(LocalDate.now());
         pago.setMetodo(dto.getMetodo());
         pago.setConfirmado(EstadoDocumento.Pendiente);
 
@@ -97,8 +98,13 @@ public class PagoService {
         });
         return pagosPendientes;
     }
-
-
+    public EstadoDocumento obtenerEstadoUltimoPagoPorContrato(Long contratoId) {
+        EstadoDocumento estado = pagoRepository.findFirstByContratoIdOrderByFechaPagoDesc(contratoId);
+        if (estado == null) {
+            return null;
+        }
+        return estado;
+    }
 
     public void confirmarPago(Long id) {
         Pago pago = pagoRepository.findById(id)
