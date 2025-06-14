@@ -12,8 +12,6 @@ import java.util.Optional;
 @Repository
 public interface PagoRepository extends JpaRepository<Pago,Long> {
     List<Pago> findByContratoId (Long contratoId);
-    List<Pago> findByContratoIdAndConfirmadoTrue(Long contratoId);
-    Optional<Pago> findFirstByContratoIdOrderByFechaPagoAsc(Long contratoId);
     @Query("SELECT p.confirmado FROM Pago p WHERE p.contrato.id = :contratoId ORDER BY p.fechaPago DESC")
     EstadoDocumento findFirstByContratoIdOrderByFechaPagoDesc(Long contratoId);
 
