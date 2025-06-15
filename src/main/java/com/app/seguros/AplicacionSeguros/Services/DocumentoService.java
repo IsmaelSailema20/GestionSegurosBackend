@@ -9,6 +9,7 @@ import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoDocumento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoReembolso;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -24,10 +25,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -86,6 +89,7 @@ public class DocumentoService {
         }
     }
 
+
     private Path construirRutaArchivo(ContratoRespuestaDTO contrato, TipoDocumento tipo) {
         String nombreCliente = contrato.getCliente().getCedula() + "_" +
                 contrato.getCliente().getNombre().replace(" ", "_") + "_" +
@@ -97,11 +101,24 @@ public class DocumentoService {
         Path directorioBaseCliente = Paths.get(directorioBase, nombreCliente);
         Path directorioContrato = directorioBaseCliente.resolve(nombreContrato);
 
-        if (tipo.toString().equals("Comprobante_pago")) {
+        if (tipo == TipoDocumento.Comprobante_pago) {
             directorioContrato = directorioContrato.resolve("pagos");
+        } else if (esTipoReembolso(tipo) && tipo != null) {
+            String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String carpetaReembolso = tipo.name() + "_" + fecha;
+            directorioContrato = directorioContrato.resolve(carpetaReembolso);
         }
 
         return directorioContrato;
+    }
+
+    private boolean esTipoReembolso(TipoDocumento tipo) {
+        return switch (tipo) {
+            case Factura_consulta, Informe_medico,
+                 Orden_medica, Resultado_laboratorio, Factura_laboratorio,
+                 Factura_hospital, Informe_alta, autorizacion_seguro -> true;
+            default -> false;
+        };
     }
 
     private String generarNombreArchivo(String nombreOriginal, TipoDocumento tipo, ClienteDTO cliente) {
