@@ -17,8 +17,8 @@ public enum MensajeError {
     USUARIO_NO_ENCONTRADO("Usuario no encontrado"),
     BENEFICIO_NO_ENCONTRADO("Beneficio no encontrado"),
     SEGURO_CON_CONTRATOS("El Seguro tiene contratos asociados"),
-    NUMERO_DE_CUENTA_DUPLICADO("El número de cuenta ya pertenece a otro usuario. Verifique e intente nuevamente")
-    ;
+    NUMERO_DE_CUENTA_DUPLICADO("El número de cuenta ya pertenece a otro usuario. Verifique e intente nuevamente"),
+    TIPO_ARCHIVO_NO_PERMITIDO("El archivo que desea subir no está permitido solo: pdf, jpg, png");
 
     private final String mensaje;
 
