@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Entities;
 
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoReembolso;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,7 @@ public class Reembolso {
     @Column(name = "fecha_resolucion")
     private LocalDate fechaResolucion;
 
-
+    @Column(name = "tipo_reembolso")
+    private TipoReembolso tipoReembolso;
 
 }
