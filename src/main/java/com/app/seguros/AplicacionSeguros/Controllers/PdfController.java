@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
+import com.app.seguros.AplicacionSeguros.Services.ReportesPdfService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
@@ -22,6 +23,8 @@ public class PdfController {
 
     @Autowired
     private ContratoPdfService pdfService;
+    @Autowired
+    private ReportesPdfService reportesPdfService;
     @Autowired
     private ContratoService contratoService;
     @Value("${documentos.directorio}")
@@ -83,5 +86,19 @@ public class PdfController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al procesar el PDF: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/Reportes")
+    public ResponseEntity<?> ReportesPdf() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.inline().filename("Reportes").build());
+
+        byte[] pdf = reportesPdfService.generarContratoPdf(
+                        contratoService.listarImpagos(),
+                        contratoService.listarTodos(),
+                        contratoService.listarVencidos()
+                );
+                return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 }
