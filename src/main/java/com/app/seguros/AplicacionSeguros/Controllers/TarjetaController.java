@@ -53,5 +53,11 @@ public class TarjetaController {
     public ResponseEntity<TarjetaRespuestaDTO> obtenerPrincipal(@PathVariable Long idCliente) {
         return ResponseEntity.ok(tarjetaService.obtenerTarjetaPrincipal(idCliente));
     }
+
+    @PutMapping("/cambiarAPrincipal/{id}")
+    public ResponseEntity<Void> cambiarEstadoTarjetaAPrincipal(@PathVariable Long id) {
+        tarjetaService.cambiarEstadoTarjetaAPrincipal(id);
+        return ResponseEntity.noContent().build();
+    }
 }
 
