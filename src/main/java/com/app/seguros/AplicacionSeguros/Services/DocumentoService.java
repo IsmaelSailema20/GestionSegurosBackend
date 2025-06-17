@@ -203,4 +203,9 @@ public class DocumentoService {
                 .map(this::desencriptarCampos)
                 .collect(Collectors.toList());
     }
+    public List<Documento> obtenerDocumentosPendientes(int idAgente) {
+        return documentoRepository.findDocumentosPendiente(idAgente).stream()
+                .map(this::desencriptarCampos)
+                .collect(Collectors.toList());
+    }
 }

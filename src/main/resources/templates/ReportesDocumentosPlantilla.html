@@ -68,7 +68,7 @@
 </head>
 <body>
 <h2 >Documentos Pendientes</h2>
-<div th:each="entry : ${documentosPorTipo}">
+<div th:if="${!documentosPorTipo.isEmpty()}" th:each="entry : ${documentosPorTipo}">
     <h3 th:text="${entry.key}">Tipo de Documento</h3>
     <table>
         <thead>
@@ -95,6 +95,8 @@
         </tbody>
     </table>
 </div>
-
+<div th:unless="${!documentosPorTipo.isEmpty()}">
+    <h3>No hay documentos pendientes.</h3>
+</div>
 </body>
 </html>

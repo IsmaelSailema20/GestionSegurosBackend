@@ -132,4 +132,15 @@ public class PdfController {
         );
         return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
+    @GetMapping("/Reportes/documentos/{idAgente}")
+    public ResponseEntity<?> ReportesDocumentosPdf(@PathVariable Integer idAgente) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.inline().filename("Reportes-documentos").build());
+
+        byte[] pdf = reportesPdfService.generarReporteDocumentosPdf(
+                documentoService.obtenerDocumentosPendientes(idAgente)
+        );
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
 }
