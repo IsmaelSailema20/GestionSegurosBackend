@@ -18,5 +18,5 @@ public enum TipoDocumento {
     //PARA REEMBOLSO DE internacion
     Factura_hospital,
     Informe_alta,
-    autorizacion_seguro,
+    Autorizacion_seguro,
 }
