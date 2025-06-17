@@ -159,7 +159,6 @@ public class ReembolsoController {
         }
     }
 
-
     @PutMapping("/aceptar/{id}")
     public ResponseEntity<ReembolsoRespuestaDTO> aceptar(@PathVariable Long id) {
         try {
@@ -180,9 +179,19 @@ public class ReembolsoController {
         }
     }
 
+    @PutMapping("/rechazarDocumento/{idDocumento}")
+    public ResponseEntity<Void> rechazarDocumentoReembolso(@PathVariable Long idDocumento) {
+        try {
+            reembolsoService.rechazarDocumentoReembolso(idDocumento);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @PutMapping("/{id}")
     public ReembolsoRespuestaDTO actualizarReembolso(@PathVariable Long id, @Valid @RequestBody ReembolsoDTO dto) {
         return reembolsoService.actualizarReembolso(id, dto);
     }
-
 }
