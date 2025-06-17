@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 .requestMatchers( "/Tarjetas/**").hasAuthority(Rol.Cliente.name())
                                 //.requestMatchers("/Pagos/**").hasAnyAuthority(Rol.Administrador.name(), Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers("/Pagos/**").permitAll()
+                                .requestMatchers("/pdf/Reportes/**").permitAll()
                                 //.requestMatchers("/Reembolsos").hasAnyAuthority(Rol.Administrador.name(),Rol.Cliente.name(),Rol.Agente.name())
                                 .requestMatchers("/Reembolsos").permitAll()
                                 //.requestMatchers("/Reembolsos/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Cliente.name(),Rol.Agente.name())

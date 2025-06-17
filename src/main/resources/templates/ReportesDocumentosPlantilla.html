@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Documentos Pendientes</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          color: #333333;
+          background-color: #ffffff;
+        }
+
+        h2 {
+          text-align: center;
+          margin-top: 30px;
+          font-size: 20px;
+          color: #08645c;
+          border-bottom: 1px solid #08645c;
+          padding-bottom: 6px;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+        }
+
+        th, td {
+          border: 1px solid #999999;
+          padding: 8px;
+          text-align: center;
+          font-size: 12px;
+        }
+
+        th {
+          background-color: #08645c;
+          color: #ffffff;
+        }
+
+        .card-container {
+          margin-top: 20px;
+        }
+
+        .card {
+          border: 1px solid #08645c;
+          border-radius: 4px;
+          padding: 10px;
+          margin-bottom: 15px;
+          font-size: 12px;
+          page-break-inside: avoid;
+        }
+
+        .card h3 {
+          margin: 0 0 10px 0;
+          font-size: 14px;
+          color: #08645c;
+        }
+
+        .card p {
+          margin: 4px 0;
+        }
+
+        strong {
+          color: #08645c;
+        }
+    </style>
+</head>
+<body>
+<h2 >Documentos Pendientes</h2>
+<div th:if="${!documentosPorTipo.isEmpty()}" th:each="entry : ${documentosPorTipo}">
+    <h3 th:text="${entry.key}">Tipo de Documento</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>ID Contrato</th>
+            <th>Fecha Contrato</th>
+            <th>Seguro</th>
+            <th>Nombre</th>
+            <th>Fecha Subida</th>
+            <th>Cliente</th>
+            <th>Agente</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="doc : ${entry.value}">
+            <td th:text="${doc.contrato.id}"></td>
+            <td th:text="${#dates.format(doc.contrato.fechaInicio, 'yyyy-MM-dd')}"></td>
+            <td th:text="${doc.contrato.seguro.nombre}"></td>
+            <td th:text="${doc.nombreArchivo}"></td>
+            <td th:text="${#temporals.format(doc.fechaSubida, 'yyyy-MM-dd HH:mm:ss')}"></td>
+            <td th:text="${doc.cliente.nombre + ' ' + doc.cliente.apellido}"></td>
+            <td th:text="${doc.contrato.agente.nombre + ' ' + doc.contrato.agente.apellido}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div th:unless="${!documentosPorTipo.isEmpty()}">
+    <h3>No hay documentos pendientes.</h3>
+</div>
+</body>
+</html>
