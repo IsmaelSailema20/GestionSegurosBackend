@@ -74,6 +74,17 @@ public class ReembolsoService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<ReembolsoRespuestaDTO> obtenerReembolsosPorContrato(Long contratoId) {
+        try {
+            List<Reembolso> reembolsos = reembolsoRepository.findByContratoId(contratoId);
+            return reembolsos.stream().map(this::convertReembolsoToDTO).toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al obtener reembolsos por contrato: " + e.getMessage());
+        }
+    }
+
     private ReembolsoRespuestaDTO convertReembolsoToDTO(Reembolso reembolso) {
         ReembolsoRespuestaDTO dto = new ReembolsoRespuestaDTO();
         dto.setIdReembolso(reembolso.getId_reembolo());
