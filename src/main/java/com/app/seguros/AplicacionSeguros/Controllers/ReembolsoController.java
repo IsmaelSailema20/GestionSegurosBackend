@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/reembolsos")
+@RequestMapping("/Reembolsos")
 @RequiredArgsConstructor
 public class ReembolsoController {
     private final ReembolsoService reembolsoService;
