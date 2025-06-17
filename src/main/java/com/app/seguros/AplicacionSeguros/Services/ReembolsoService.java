@@ -1,5 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
+import com.app.seguros.AplicacionSeguros.Config.AESUtil;
 import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
@@ -48,6 +49,8 @@ public class ReembolsoService {
 
     @Autowired
     private ReembolsoDocumentoRepository reembolsoDocumentoRepository;
+
+    AESUtil aesUtil = new AESUtil();
 
     @Transactional(readOnly = true)
     public List<ReembolsoRespuestaDTO> obtenerReembolsos() {
