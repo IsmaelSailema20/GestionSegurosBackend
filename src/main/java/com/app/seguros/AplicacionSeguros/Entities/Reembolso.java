@@ -40,6 +40,6 @@ public class Reembolso {
     private TipoReembolso tipoReembolso;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_contratro", nullable = false)
+    @JoinColumn(name = "id_contrato", nullable = false)
     private Contrato contrato;
 }
