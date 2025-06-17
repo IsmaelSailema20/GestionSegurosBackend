@@ -25,10 +25,12 @@ public class ReportesPdfService {
     public byte[] generarContratoPdf(
             List<ContratoRespuestaDTO> listaImpagos,
             List<ContratoRespuestaDTO> listaPorCliente,
-            List<ContratoRespuestaDTO> listaVencidos
+            List<ContratoRespuestaDTO> listaVencidos,
+            List<ContratoRespuestaDTO> listaPorVencer
     ) throws Exception {
         // 1) Preparar el contexto Thymeleaf
         Context ctx = new Context();
+        ctx.setVariable("contratosPorVencer", listaPorVencer);
         ctx.setVariable("contratosImpagos", listaImpagos);
         ctx.setVariable("contratosPorCliente", listaPorCliente);
         ctx.setVariable("contratosVencidos", listaVencidos);

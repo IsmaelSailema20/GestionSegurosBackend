@@ -97,8 +97,24 @@ public class PdfController {
         byte[] pdf = reportesPdfService.generarContratoPdf(
                         contratoService.listarImpagos(),
                         contratoService.listarTodos(),
-                        contratoService.listarVencidos()
+                        contratoService.listarVencidos(),
+                        contratoService.listarPorVencer()
                 );
                 return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/Reportes/{id}")
+    public ResponseEntity<?> ReportesPdf(@PathVariable Integer id) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.inline().filename("Reportes").build());
+
+        byte[] pdf = reportesPdfService.generarContratoPdf(
+                contratoService.listarImpagos(id),
+                contratoService.listarPorAgente(id),
+                contratoService.listarVencidos(id),
+                contratoService.listarPorVencer(id)
+        );
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 }

@@ -383,17 +383,13 @@ public class ContratoService {
             ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
             contratos.add(contratoResponse);
         }
-        return contratos;
-    }
-    public List<ContratoRespuestaDTO> listarPorCliente(int id) {
-        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
-
-        for(Contrato contrato:contratoRepo.findContratosPorCliente(id)){
+        for(Contrato contrato:contratoRepo.findContratosSinPagos()){
             ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
             contratos.add(contratoResponse);
         }
         return contratos;
     }
+
     public List<ContratoRespuestaDTO> listarVencidos() {
         List<ContratoRespuestaDTO> contratos = new ArrayList<>();
 
@@ -403,4 +399,56 @@ public class ContratoService {
         }
         return contratos;
     }
+    public List<ContratoRespuestaDTO> listarPorVencer() {
+        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
+
+        for(Contrato contrato:contratoRepo.findContratosProximosAVencer(LocalDate.now().plusMonths(1))){
+            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
+            contratos.add(contratoResponse);
+        }
+        return contratos;
+    }
+/////////
+    public List<ContratoRespuestaDTO> listarImpagos(int id) {
+        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
+
+        for(Contrato contrato:contratoRepo.findContratosImpagos( id)){
+            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
+            contratos.add(contratoResponse);
+        }
+        for(Contrato contrato:contratoRepo.findContratosSinPagos(id)){
+            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
+            contratos.add(contratoResponse);
+        }
+        return contratos;
+    }
+
+    public List<ContratoRespuestaDTO> listarVencidos(int id) {
+        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
+
+        for(Contrato contrato:contratoRepo.findContratosVencidos(id)){
+            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
+            contratos.add(contratoResponse);
+        }
+        return contratos;
+    }
+    public List<ContratoRespuestaDTO> listarPorVencer(int id) {
+        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
+
+        for(Contrato contrato:contratoRepo.findContratosProximosAVencer(LocalDate.now().plusMonths(1),id)){
+            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
+            contratos.add(contratoResponse);
+        }
+        return contratos;
+    }
+    public List<ContratoRespuestaDTO> listarPorAgente(int id) {
+        List<ContratoRespuestaDTO> contratos = new ArrayList<>();
+
+        for(Contrato contrato:contratoRepo.findContratosPorAgente(id)){
+            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
+            contratos.add(contratoResponse);
+        }
+        return contratos;
+    }
+
 }
