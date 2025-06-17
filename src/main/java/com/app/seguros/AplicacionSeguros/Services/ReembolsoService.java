@@ -330,4 +330,48 @@ public class ReembolsoService {
                 .pesoKg(dto.getPesoKg())
                 .build();
     }
+
+    @Transactional
+    public ReembolsoRespuestaDTO subirDocumentoAReembolso(Long reembolsoId, MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
+        try {
+            // Verificar que el reembolso existe
+            Reembolso reembolso = reembolsoRepository.findById(reembolsoId)
+                    .orElseThrow(() -> new RuntimeException(MensajeError.REEMBOLSO_NO_ENCONTRADO.getMensaje()));
+            // Verificar que el archivo no haya sido subido previamente
+            List<Reembolsos_Documentos> relacionesExistentes = reembolsoDocumentoRepository.findByReembolsoId(reembolsoId);
+            for (Reembolsos_Documentos relacion : relacionesExistentes) {
+                Documento docExistente = relacion.getDocumento();
+                if (docExistente.getNombreArchivo().equals(archivo.getOriginalFilename())) {
+                    throw new RuntimeException("El archivo ya ha sido subido previamente para este reembolso.");
+                }
+            }
+
+            // Subir el nuevo documento
+            Documento nuevoDocumento = documentoService.subirDocumento(archivo, dto);
+
+            // Crear relación con el reembolso
+            Reembolsos_Documentos nuevaRelacion = Reembolsos_Documentos.builder()
+                    .reembolso(reembolso)
+                    .documento(nuevoDocumento)
+                    .build();
+            reembolsoDocumentoRepository.save(nuevaRelacion);
+
+            // Enviar notificación al cliente (opcional)
+            ContratoRespuestaDTO contrato = contratoService.buscarPorId(reembolso.getContrato().getId().intValue())
+                    .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
+            String correoCliente = clienteService.getCorreoCliente(contrato.getCliente().getId_Cliente());
+            String asunto = "Nuevo Documento Subido a Reembolso";
+            String cuerpo = String.format(
+                    "Estimado cliente,\n\nSe ha subido un nuevo documento a su solicitud de reembolso %s.\n\nSaludos,\nEquipo Walk Seguros",
+                    reembolso.getId_reembolo()
+            );
+            emailService.enviarCorreo(correoCliente, asunto, cuerpo);
+
+            return convertReembolsoToDTO(reembolso);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al subir el documento al reembolso: " + e.getMessage());
+        }
+    }
+
 }
