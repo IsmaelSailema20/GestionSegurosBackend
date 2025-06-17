@@ -69,6 +69,12 @@ public class DocumentoService {
 
         Path rutaCompleta = rutaDestino.resolve(nombreArchivo);
 
+        // Verificar si el archivo ya existe para evitar duplicados
+        if (Files.exists(rutaCompleta)) {
+            System.out.println("Archivo ya existe en: " + rutaCompleta + ". Sobrescribiendo...");
+            Files.delete(rutaCompleta);
+        }
+
         guardarArchivoFisico(archivo, rutaCompleta);
 
         Documento documento = construirDocumento(rutaCompleta, nombreArchivo, contrato, dto.getTipo());
