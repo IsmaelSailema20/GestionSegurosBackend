@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface PagoDocumentoRepository extends JpaRepository<PagoDocumento, Long> {
     List<PagoDocumento> findByPagoId(Long pagoId);
+    PagoDocumento findByDocumentoIdDocumento(Long documentoId);
 }
