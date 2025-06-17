@@ -230,6 +230,11 @@ public class ReembolsoService {
             Reembolso reembolso = reembolsoRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException(MensajeError.REEMBOLSO_NO_ENCONTRADO.getMensaje()));
 
+            // Validar que no esté aprobado
+            if (reembolso.getEstado().equals(EstadoDocumento.Aprobado)) {
+                throw new RuntimeException("No se puede rechazar un reembolso que ya ha sido aprobado.");
+            }
+
             reembolso.setEstado(EstadoDocumento.Rechazado);
             reembolso.setFechaResolucion(LocalDate.now());
 
