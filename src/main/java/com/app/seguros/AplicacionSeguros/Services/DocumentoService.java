@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Config.AESUtil;
+import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
@@ -8,6 +9,7 @@ import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoDocumento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoReembolso;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -23,10 +25,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -53,56 +57,146 @@ public class DocumentoService {
     private AESUtil aesUtil = new AESUtil();
 
     public Documento subirDocumento(MultipartFile archivo, DocumentoRegistroDTO dto) throws IOException {
-        ContratoRespuestaDTO contrato = contratoService.buscarPorId(dto.getIdContrato().intValue())
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
-        String contentType = archivo.getContentType();
-        if (!Arrays.asList("application/pdf", "image/jpeg", "image/png").contains(contentType)) {
-            throw new IllegalArgumentException("Tipo de archivo no permitido");
+        ContratoRespuestaDTO contrato = obtenerContrato(dto.getIdContrato());
+
+        validarTipoArchivo(archivo.getContentType());
+
+        Path rutaDestino = construirRutaArchivo(contrato, dto.getTipo());
+
+        Files.createDirectories(rutaDestino);
+
+        String nombreArchivo = generarNombreArchivo(archivo.getOriginalFilename(), dto.getTipo(),convertirClienteDTO(contrato.getCliente()));
+
+        Path rutaCompleta = rutaDestino.resolve(nombreArchivo);
+
+        // Verificar si el archivo ya existe para evitar duplicados
+        if (Files.exists(rutaCompleta)) {
+            System.out.println("Archivo ya existe en: " + rutaCompleta + ". Sobrescribiendo...");
+            Files.delete(rutaCompleta);
         }
 
-        String nombreCarpetaCliente = contrato.getCliente().getCedula() + "_" +
+        guardarArchivoFisico(archivo, rutaCompleta);
+
+        Documento documento = construirDocumento(rutaCompleta, nombreArchivo, contrato, dto.getTipo());
+
+        return documentoRepository.save(documento);
+    }
+
+
+    private ContratoRespuestaDTO obtenerContrato(Long idContrato) {
+        return contratoService.buscarPorId(idContrato.intValue())
+                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+    }
+
+    private void validarTipoArchivo(String contentType) {
+        List<String> tiposPermitidos = List.of("application/pdf", "image/jpeg", "image/png");
+        if (!tiposPermitidos.contains(contentType)) {
+            throw new IllegalArgumentException(MensajeError.TIPO_ARCHIVO_NO_PERMITIDO.getMensaje());
+        }
+    }
+
+
+    private Path construirRutaArchivo(ContratoRespuestaDTO contrato, TipoDocumento tipo) {
+        String nombreCliente = contrato.getCliente().getCedula() + "_" +
                 contrato.getCliente().getNombre().replace(" ", "_") + "_" +
                 contrato.getCliente().getApellido().replace(" ", "_");
 
-        // Nombre carpeta contrato: [Seguro]_[ID Contrato]
-        String nombreCarpetaContrato = contrato.getSeguro().getNombre().replace(" ", "_") + "_" +
+        String nombreContrato = contrato.getSeguro().getNombre().replace(" ", "_") + "_" +
                 contrato.getId();
 
-        // Crear ruta completa: directorioBase/cliente/contrato/
-        Path directorioCliente = Paths.get(directorioBase, nombreCarpetaCliente);
-        Path directorioContrato = directorioCliente.resolve(nombreCarpetaContrato);
+        Path directorioBaseCliente = Paths.get(directorioBase, nombreCliente);
+        Path directorioContrato = directorioBaseCliente.resolve(nombreContrato);
 
-        // Crear subcarpeta para pagos si es un comprobante de pago
-        if (dto.getTipo().toString().equals("Comprobante_pago")) {
+        if (tipo == TipoDocumento.Comprobante_pago) {
             directorioContrato = directorioContrato.resolve("pagos");
+        } else if (esTipoReembolso(tipo) && tipo != null) {
+
+            String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String carpetaReembolso=nombreTipoReembolso(tipo.toString(),fecha);
+            directorioContrato = directorioContrato.resolve("Reembolsos");
+            directorioContrato = directorioContrato.resolve(carpetaReembolso);
         }
 
-        Files.createDirectories(directorioContrato);
+        return directorioContrato;
+    }
 
-        // Usar timestamp para evitar colisiones de nombres
+    private String nombreTipoReembolso(String tipoDocumento, String fecha){
+        String nombreReembolso="";
+        if(
+                tipoDocumento.equals("Factura_consulta") ||
+                tipoDocumento.equals("Informe_medico")
+        ){
+        nombreReembolso ="Reembolso_consultas_medicas_"+fecha;
+        } else if(
+                tipoDocumento.equals("Orden_medica") ||
+                tipoDocumento.equals("Resultado_laboratorio") ||
+                tipoDocumento.equals("Factura_laboratorio")
+                ){
+        nombreReembolso ="Reembolso_examenes_medicos_"+fecha;
+        }else if(
+                tipoDocumento.equals("Factura_hospital") ||
+                tipoDocumento.equals("Informe_alta") ||
+                tipoDocumento.equals("Autorizacion_seguro")
+        ){
+        nombreReembolso ="Reembolso_internacion"+fecha;
+        }
+        return  nombreReembolso;
+    }
+
+    private boolean esTipoReembolso(TipoDocumento tipo) {
+        return switch (tipo) {
+            case Factura_consulta, Informe_medico,
+                 Orden_medica, Resultado_laboratorio, Factura_laboratorio,
+                 Factura_hospital, Informe_alta, Autorizacion_seguro -> true;
+            default -> false;
+        };
+    }
+
+    private String generarNombreArchivo(String nombreOriginal, TipoDocumento tipo, ClienteDTO cliente) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String extension = obtenerExtension(nombreOriginal);
 
-        String nombreArchivo = dto.getTipo() + "_" +
-                contrato.getCliente().getNombre() + "_" +
-                contrato.getCliente().getApellido() + "_" +
-                timestamp +
-                obtenerExtension(archivo.getOriginalFilename());
+        return tipo + "_" +
+                cliente.getNombre() + "_" +
+                cliente.getApellido() + "_" +
+                timestamp + extension;
+    }
 
-        Path rutaCompleta = directorioContrato.resolve(nombreArchivo);
-        Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
+    private void guardarArchivoFisico(MultipartFile archivo, Path rutaDestino) throws IOException {
+        Files.copy(archivo.getInputStream(), rutaDestino, StandardCopyOption.REPLACE_EXISTING);
+    }
 
+    private Documento construirDocumento(Path ruta, String nombreArchivo, ContratoRespuestaDTO contrato, TipoDocumento tipo) {
         Documento documento = new Documento();
-        documento.setRutaArchivo(aesUtil.encrypt(rutaCompleta.toString()));
+        documento.setRutaArchivo(aesUtil.encrypt(ruta.toString()));
         documento.setContrato(convertirDTOAContrato(contrato));
         documento.setCliente(convertirDTOACliente(contrato.getCliente()));
         documento.setEstado(EstadoDocumento.Pendiente);
         documento.setNombreArchivo(aesUtil.encrypt(nombreArchivo));
-        documento.setTipo(dto.getTipo());
+        documento.setTipo(tipo);
         documento.setFechaSubida(LocalDateTime.now());
-
-        return documentoRepository.save(documento);
+        return documento;
     }
-    //Método auxiliar para obtener extensión del archivo
+
+    public static ClienteDTO convertirClienteDTO(ClienteRespuestaDTO cliente) {
+        return ClienteDTO.builder()
+                .nombre(cliente.getNombre())
+                .apellido(cliente.getApellido())
+                .cedula(cliente.getCedula())
+                .direccion(cliente.getDireccion())
+                .telefono(cliente.getTelefono())
+                .estaturaMetros(cliente.getEstaturaMetros())
+                .pesoKg(cliente.getPesoKg())
+                .email(cliente.getEmail())
+                .genero(cliente.getGenero())
+                .fecha_nacimiento(cliente.getFecha_nacimiento())
+                .estado(cliente.getEstado())
+                .numeroCuenta(cliente.getNumeroCuenta())
+                .build();
+    }
+
+
+    //Metodo auxiliar para obtener extensión del archivo
     private String obtenerExtension(String nombreArchivo) {
         if (nombreArchivo == null || !nombreArchivo.contains(".")) {
             return ".pdf"; // Extensión por defecto
@@ -196,5 +290,16 @@ public class DocumentoService {
 
     public void setDirectorBase(String directorioBase) {
         this.directorioBase = directorioBase;
+    }
+
+    public List<Documento> obtenerDocumentosPendientes() {
+        return documentoRepository.findDocumentosPendiente().stream()
+                .map(this::desencriptarCampos)
+                .collect(Collectors.toList());
+    }
+    public List<Documento> obtenerDocumentosPendientes(int idAgente) {
+        return documentoRepository.findDocumentosPendiente(idAgente).stream()
+                .map(this::desencriptarCampos)
+                .collect(Collectors.toList());
     }
 }
