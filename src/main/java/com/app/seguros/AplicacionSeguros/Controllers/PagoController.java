@@ -54,11 +54,9 @@ public class PagoController {
         PagoRegistroDTO dto = PagoRegistroDTO.builder()
                 .clienteId(jsonNode.get("clienteId").asLong())
                 .contratoId(jsonNode.get("contratoId").asLong())
-                .fechaPago(LocalDate.parse(jsonNode.get("fechaPago").asText()))
-                .monto(jsonNode.get("monto").decimalValue())
                 .metodo(MetodoPago.valueOf(jsonNode.get("metodo").asText()))
                 .build();
-        System.out.println("DTO del pago"+dto);
+        System.out.println("DTO del pago" + dto);
         DocumentoRegistroDTO documentoDTO = DocumentoRegistroDTO.builder()
                 .idContrato(dto.getContratoId())
                 .idCliente(dto.getClienteId())
@@ -83,16 +81,11 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.listarPagosPorContrato(contratoId));
     }
 
-    @PutMapping("/{id}/confirmar")
-    public ResponseEntity<Void> confirmarPago(@PathVariable Long id) {
-        pagoService.confirmarPago(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("contrato/{contratoId}/pedientes")
-    public ResponseEntity<?> listarPagosPendientesPorContratos(@PathVariable Long contratoId){
+    public ResponseEntity<?> listarPagosPendientesPorContratos(@PathVariable Long contratoId) {
         return ResponseEntity.ok(pagoService.listarPagosPendientesPorContrato(contratoId));
     }
+
     @GetMapping("/estado/{contratoId}")
     public ResponseEntity<EstadoDocumento> obtenerEstadoPagoPorContrato(@PathVariable Long contratoId) {
         EstadoDocumento estado = pagoService.obtenerEstadoUltimoPagoPorContrato(contratoId);
@@ -109,5 +102,24 @@ public class PagoController {
                 .build();
 
         return response;
+    }
+    @PutMapping("/aceptarPago/{idDocumento}")
+    public ResponseEntity<?> aprobarPago(@PathVariable Long idDocumento) {
+        try {
+            pagoService.confirmarPagoDoc(idDocumento);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar el pago: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/rechazarPago/{idDocumento}")
+    public ResponseEntity<?> rechazarPago(@PathVariable Long idDocumento) {
+        try {
+            pagoService.rechazarPago(idDocumento);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("adsad");
+        }
     }
 }
