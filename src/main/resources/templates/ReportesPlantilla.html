@@ -68,8 +68,9 @@
 <body>
 
 <!-- CONTRATOS IMPAGOS -->
+<h2>Reporte: Contratos Impagos</h2>
 <div th:if="${contratosImpagos != null and !contratosImpagos.isEmpty()}">
-  <h2>Reporte: Contratos Impagos</h2>
+
   <table>
     <thead>
     <tr>
@@ -93,10 +94,13 @@
     </tbody>
   </table>
 </div>
-
+<div th:unless="${contratosImpagos != null and !contratosImpagos.isEmpty()}">
+  <h3>No hay contratos inpagos.</h3>
+</div>
 <!-- CONTRATOS POR CLIENTE -->
+<h2>Reporte: Contratos por Cliente</h2>
 <div th:if="${contratosPorCliente != null and !contratosPorCliente.isEmpty()}">
-  <h2>Reporte: Contratos por Cliente</h2>
+
 
   <div class="card-container">
     <div th:each="c : ${contratosPorCliente}" class="card">
@@ -118,10 +122,14 @@
     </div>
   </div>
 </div>
+<div th:unless="${contratosPorCliente != null and !contratosPorCliente.isEmpty()}">
+  <h3>No hay contratos.</h3>
+</div>
 
 <!-- CONTRATOS VENCIDOS -->
+<h2>Reporte: Contratos Vencidos</h2>
 <div th:if="${contratosVencidos != null and !contratosVencidos.isEmpty()}">
-  <h2>Reporte: Contratos Vencidos</h2>
+
   <table>
     <thead>
     <tr>
@@ -143,10 +151,14 @@
     </tbody>
   </table>
 </div>
+<div th:unless="${contratosVencidos != null and !contratosVencidos.isEmpty()}">
+  <h3>No hay contratos vencidos.</h3>
+</div>
 
 <!-- CONTRATOS POR VENCER -->
+<h2>Reporte: Contratos por Vencer</h2>
 <div th:if="${contratosPorVencer != null and !contratosPorVencer.isEmpty()}">
-  <h2>Reporte: Contratos por Vencer</h2>
+
   <table>
     <thead>
     <tr>
@@ -168,6 +180,8 @@
     </tbody>
   </table>
 </div>
-
+<div th:unless="${contratosPorVencer != null and !contratosPorVencer.isEmpty()}">
+  <h3>No hay contratos proximos a vencer.</h3>
+</div>
 </body>
 </html>
