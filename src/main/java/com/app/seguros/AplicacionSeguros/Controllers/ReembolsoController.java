@@ -5,7 +5,6 @@ import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ReembolsoDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ReembolsoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
-import com.app.seguros.AplicacionSeguros.Entities.Reembolso;
 import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
 import com.app.seguros.AplicacionSeguros.Services.ReembolsoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,14 +33,14 @@ public class ReembolsoController {
     private ObjectMapper objectMapper;
 
     @PostMapping("/crearConDocumentos")
-    public ResponseEntity<Reembolso> crearReembolsoConDocumentos(
+    public ResponseEntity<ReembolsoRespuestaDTO> crearReembolsoConDocumentos(
             @RequestParam("reembolso") String reembolsoJson,
             @RequestParam("archivos") MultipartFile[] archivos,
             @RequestParam("documentos") String documentosJson) {
         try {
             ReembolsoDTO reembolsoDTO = objectMapper.readValue(reembolsoJson, ReembolsoDTO.class);
             DocumentoRegistroDTO[] documentosDTO = objectMapper.readValue(documentosJson, DocumentoRegistroDTO[].class);
-            Reembolso reembolso = reembolsoService.crearReembolsoConDocumentos(reembolsoDTO, archivos, documentosDTO);
+            ReembolsoRespuestaDTO reembolso = reembolsoService.crearReembolsoConDocumentos(reembolsoDTO, archivos, documentosDTO);
             return ResponseEntity.ok(reembolso);
         } catch (IOException e) {
             e.printStackTrace();
