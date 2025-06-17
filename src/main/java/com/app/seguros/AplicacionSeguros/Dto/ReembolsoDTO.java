@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Data
 public class ReembolsoDTO {
     private Long id;
+    private Long contratoId;
     private String descripcion;
     private double montoSolicitado;
     private EstadoDocumento estado;
