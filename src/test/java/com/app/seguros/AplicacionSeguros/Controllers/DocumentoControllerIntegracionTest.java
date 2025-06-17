@@ -248,7 +248,7 @@ class DocumentoControllerIntegracionTest {
         doNothing().when(documentoService).rechazarDocumento(1L);
         doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
 
-        mockMvc.perform(put("/documentos/1/rechazar")
+        mockMvc.perform(put("/documentos/1/rechazarReembolso")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
 
@@ -258,9 +258,9 @@ class DocumentoControllerIntegracionTest {
     @Test
     void rechazarDocumentoError() throws Exception {
         when(documentoService.obtenerDocumentosPorContrato(1L))
-                .thenThrow(new RuntimeException("Error al rechazar documentos"));
+                .thenThrow(new RuntimeException("Error al rechazarReembolso documentos"));
 
-        mockMvc.perform(put("/documentos/1/rechazar")
+        mockMvc.perform(put("/documentos/1/rechazarReembolso")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isInternalServerError());
     }
