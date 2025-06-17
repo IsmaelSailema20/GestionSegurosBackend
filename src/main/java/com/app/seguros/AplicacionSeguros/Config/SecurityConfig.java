@@ -40,12 +40,14 @@ public class SecurityConfig {
                                 .requestMatchers("/Clientes/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers("/Seguros").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
                                 .requestMatchers("/Seguros/**").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
-                                .requestMatchers("/Tarjetas").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name())
-                                .requestMatchers( "/Tarjetas").hasAuthority(Rol.Cliente.name())
+                                .requestMatchers("/Tarjetas").hasAnyAuthority(Rol.Administrador.name(),Rol.Agente.name(),Rol.Cliente.name())
                                 .requestMatchers( "/Tarjetas/**").hasAuthority(Rol.Cliente.name())
                                 //.requestMatchers("/Pagos/**").hasAnyAuthority(Rol.Administrador.name(), Rol.Agente.name(),Rol.Cliente.name())
-                                .requestMatchers("/Pagos/**").permitAll()
-
+                               // .requestMatchers("/Pagos").hasAnyAuthority(Rol.Cliente.name())
+                                .requestMatchers("/Pagos/**").hasAnyAuthority(Rol.Cliente.name(),Rol.Administrador.name(),Rol.Agente.name())
+                                .requestMatchers("/Pagos/").permitAll()
+                                .requestMatchers("/documentos").permitAll()
+                                .requestMatchers("/documentos/").hasAnyAuthority(Rol.Administrador.name(),Rol.Cliente.name(),Rol.Agente.name())
                                 .anyRequest().authenticated()
                         )
                 .sessionManagement( sessionManager->

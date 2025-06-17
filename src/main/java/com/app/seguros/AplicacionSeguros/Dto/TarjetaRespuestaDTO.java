@@ -17,6 +17,7 @@ public class TarjetaRespuestaDTO {
     private String numero;
     private LocalDate vencimiento;
     private String tipo;
+    private String marca;
     private EstadoTarjeta estado;
     private Long idCliente;
 }

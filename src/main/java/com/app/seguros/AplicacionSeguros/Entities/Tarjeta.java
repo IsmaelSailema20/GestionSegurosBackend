@@ -24,6 +24,7 @@ public class Tarjeta {
     private LocalDate vencimiento;
     private String cvv;
     private String tipo;
+    private String marca;
     private EstadoTarjeta estado;
 
     @ManyToOne
