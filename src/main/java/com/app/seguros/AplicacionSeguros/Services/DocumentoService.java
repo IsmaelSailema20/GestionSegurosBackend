@@ -197,4 +197,10 @@ public class DocumentoService {
     public void setDirectorBase(String directorioBase) {
         this.directorioBase = directorioBase;
     }
+
+    public List<Documento> obtenerDocumentosPendientes() {
+        return documentoRepository.findDocumentosPendiente().stream()
+                .map(this::desencriptarCampos)
+                .collect(Collectors.toList());
+    }
 }

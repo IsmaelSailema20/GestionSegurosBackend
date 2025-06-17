@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
+import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
 import com.app.seguros.AplicacionSeguros.Services.ReportesPdfService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,8 @@ public class PdfController {
     private ReportesPdfService reportesPdfService;
     @Autowired
     private ContratoService contratoService;
+    @Autowired
+    private DocumentoService documentoService;
     @Value("${documentos.directorio}")
     private String directorioBase;
 
@@ -114,6 +117,18 @@ public class PdfController {
                 contratoService.listarPorAgente(id),
                 contratoService.listarVencidos(id),
                 contratoService.listarPorVencer(id)
+        );
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/Reportes/documentos")
+    public ResponseEntity<?> ReportesDocumentosPdf() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.inline().filename("Reportes-documentos").build());
+
+        byte[] pdf = reportesPdfService.generarReporteDocumentosPdf(
+                documentoService.obtenerDocumentosPendientes()
         );
         return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
