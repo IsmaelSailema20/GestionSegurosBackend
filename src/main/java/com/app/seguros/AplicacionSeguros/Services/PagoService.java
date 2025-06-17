@@ -45,7 +45,7 @@ public class PagoService {
         pago.setMonto(BigDecimal.valueOf(seguro.getPrecio()));
         pago.setFechaPago(LocalDate.now());
         pago.setMetodo(dto.getMetodo());
-        pago.setConfirmado(EstadoDocumento.Pendiente);
+        pago.setConfirmado(EstadoDocumento.Aprobado);
 
         Pago guardado = pagoRepository.save(pago);
         return mapToDto(guardado);
@@ -122,5 +122,27 @@ public class PagoService {
                 .metodo(pago.getMetodo())
                 .confirmado(pago.getConfirmado())
                 .build();
+    }
+    public Pago confirmarPagoDoc(Long idDocumento){
+        PagoDocumento relacion = pagoDocumentoRepository.findByDocumentoIdDocumento(idDocumento);
+        System.out.println(relacion);
+        Pago pago = pagoRepository.findById(relacion.getPago().getId())
+                .orElseThrow(()-> new RuntimeException("Pago no encontrado"));
+        pago.setConfirmado(EstadoDocumento.Aprobado);
+
+        System.out.println(pago);
+        pagoRepository.save(pago);
+        return pago;
+    }
+
+    public Pago rechazarPago(Long idDocumento){
+        PagoDocumento relacion = pagoDocumentoRepository.findByDocumentoIdDocumento(idDocumento);
+        Pago pago = pagoRepository.findById(relacion.getPago().getId())
+                .orElseThrow(()-> new RuntimeException("Pago no encontrado"));
+        pago.setConfirmado(EstadoDocumento.Rechazado);
+        pagoRepository.save(pago);
+        pagoDocumentoRepository.delete(relacion);
+        documentoService.rechazarDocumento(relacion.getDocumento().getIdDocumento());
+        return pago;
     }
 }
