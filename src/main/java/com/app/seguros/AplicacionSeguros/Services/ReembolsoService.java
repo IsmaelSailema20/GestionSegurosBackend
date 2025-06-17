@@ -185,10 +185,22 @@ public class ReembolsoService {
     @Transactional
     public ReembolsoRespuestaDTO aceptarReembolso(Long id) {
         try {
-            Reembolso r = reembolsoRepository.findById(id)
+            Reembolso reembolso = reembolsoRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException(MensajeError.REEMBOLSO_NO_ENCONTRADO.getMensaje()));
-            r.setEstado(EstadoDocumento.Aprobado);
-            r.setFechaResolucion(LocalDate.now());
+
+            // Verificar que todos los documentos estén aprobados
+            List<Reembolsos_Documentos> relaciones = reembolsoDocumentoRepository.findByReembolsoId(id);
+            if (relaciones.isEmpty()) {
+                throw new RuntimeException("No hay documentos asociados al reembolso.");
+            }
+            for (Reembolsos_Documentos relacion : relaciones) {
+                if (!relacion.getDocumento().getEstado().equals(EstadoDocumento.Aprobado)) {
+                    throw new RuntimeException("No se puede aceptar el reembolso hasta que todos los documentos estén aprobados.");
+                }
+            }
+
+            reembolso.setEstado(EstadoDocumento.Aprobado);
+            reembolso.setFechaResolucion(LocalDate.now());
 
             // Acceder al contrato para inicializarlo si es necesario
             Long contratoId = r.getContrato() != null ? r.getContrato().getId().longValue() : null;
