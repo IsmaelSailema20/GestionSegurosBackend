@@ -106,7 +106,7 @@ public class DocumentoController {
         }
     }
 
-
+    /*aqui esta de confirmaer pago PARA CORREO, AGENTE-ADMINISTRADOR*/
     @PutMapping("/{idDocumento}/aprobar")
     public ResponseEntity<Void> aprobarDocumento(@PathVariable Long idDocumento) {
         try {
