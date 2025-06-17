@@ -104,19 +104,44 @@ public class DocumentoService {
         if (tipo == TipoDocumento.Comprobante_pago) {
             directorioContrato = directorioContrato.resolve("pagos");
         } else if (esTipoReembolso(tipo) && tipo != null) {
+
             String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            String carpetaReembolso = tipo.name() + "_" + fecha;
+            String carpetaReembolso=nombreTipoReembolso(tipo.toString(),fecha);
+            directorioContrato = directorioContrato.resolve("Reembolsos");
             directorioContrato = directorioContrato.resolve(carpetaReembolso);
         }
 
         return directorioContrato;
     }
 
+    private String nombreTipoReembolso(String tipoDocumento, String fecha){
+        String nombreReembolso="";
+        if(
+                tipoDocumento.equals("Factura_consulta") ||
+                tipoDocumento.equals("Informe_medico")
+        ){
+        nombreReembolso ="Reembolso_consultas_medicas_"+fecha;
+        } else if(
+                tipoDocumento.equals("Orden_medica") ||
+                tipoDocumento.equals("Resultado_laboratorio") ||
+                tipoDocumento.equals("Factura_laboratorio")
+                ){
+        nombreReembolso ="Reembolso_examenes_medicos_"+fecha;
+        }else if(
+                tipoDocumento.equals("Factura_hospital") ||
+                tipoDocumento.equals("Informe_alta") ||
+                tipoDocumento.equals("Autorizacion_seguro")
+        ){
+        nombreReembolso ="Reembolso_internacion"+fecha;
+        }
+        return  nombreReembolso;
+    }
+
     private boolean esTipoReembolso(TipoDocumento tipo) {
         return switch (tipo) {
             case Factura_consulta, Informe_medico,
                  Orden_medica, Resultado_laboratorio, Factura_laboratorio,
-                 Factura_hospital, Informe_alta, autorizacion_seguro -> true;
+                 Factura_hospital, Informe_alta, Autorizacion_seguro -> true;
             default -> false;
         };
     }
