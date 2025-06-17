@@ -117,6 +117,36 @@ public class ReembolsoController {
         return dto;
     }
 
+    @GetMapping("/porContrato/{contratoId}")
+    public ResponseEntity<List<ReembolsoRespuestaDTO>> obtenerReembolsosPorContrato(@PathVariable Long contratoId) {
+        try {
+            List<ReembolsoRespuestaDTO> reembolsos = reembolsoService.obtenerReembolsosPorContrato(contratoId);
+            return ResponseEntity.ok(reembolsos);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @PostMapping("/subirDocumento/{reembolsoId}")
+    public ResponseEntity<ReembolsoRespuestaDTO> subirDocumentoAReembolso(
+            @PathVariable Long reembolsoId,
+            @RequestParam("archivo") MultipartFile archivo,
+            @RequestParam("documento") String documentoJson) {
+        try {
+            DocumentoRegistroDTO dto = objectMapper.readValue(documentoJson, DocumentoRegistroDTO.class);
+            Long idContrato = reembolsoService.obtenerPorId(reembolsoId).getContratoId();
+            dto.setIdContrato(idContrato);
+            ReembolsoRespuestaDTO reembolso = reembolsoService.subirDocumentoAReembolso(reembolsoId, archivo, dto);
+            return ResponseEntity.ok(reembolso);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ReembolsoRespuestaDTO> obtenerPorId(@PathVariable Long id) {
