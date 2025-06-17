@@ -101,7 +101,7 @@ public class ReembolsoService {
     }
 
     @Transactional
-    public Reembolso crearReembolsoConDocumentos(ReembolsoDTO reembolsoDTO, MultipartFile[] archivos, DocumentoRegistroDTO[] documentosDTO) throws IOException {
+    public ReembolsoRespuestaDTO crearReembolsoConDocumentos(ReembolsoDTO reembolsoDTO, MultipartFile[] archivos, DocumentoRegistroDTO[] documentosDTO) throws IOException {
         // Validar contrato
         ContratoRespuestaDTO contrato = contratoService.buscarPorId(reembolsoDTO.getContratoId().intValue())
                 .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
@@ -147,7 +147,7 @@ public class ReembolsoService {
         );
         emailService.enviarCorreo(correoCliente, asunto, cuerpo);
 
-        return reembolso;
+        return convertReembolsoToDTO(reembolso);
     }
 
     @Transactional(readOnly = true)
@@ -203,21 +203,21 @@ public class ReembolsoService {
             reembolso.setFechaResolucion(LocalDate.now());
 
             // Acceder al contrato para inicializarlo si es necesario
-            Long contratoId = r.getContrato() != null ? r.getContrato().getId().longValue() : null;
+            Long contratoId = reembolso.getContrato() != null ? reembolso.getContrato().getId().longValue() : null;
 
             // Enviar correo al cliente
-            ContratoRespuestaDTO contrato = contratoService.buscarPorId(r.getContrato().getId().intValue())
+            ContratoRespuestaDTO contrato = contratoService.buscarPorId(reembolso.getContrato().getId().intValue())
                     .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
             String correoCliente = clienteService.getCorreoCliente(contrato.getCliente().getId_Cliente());
             String asunto = "Reembolso Aprobado";
             String cuerpo = String.format(
                     "Estimado cliente,\n\nEl reembolso %s por un monto de $%.2f ha sido aprobado.\n\nSaludos,\nEquipo Walk Seguros",
-                    r.getId_reembolo(), r.getMontoSolicitado()
+                    reembolso.getId_reembolo(), reembolso.getMontoSolicitado()
             );
             emailService.enviarCorreo(correoCliente, asunto, cuerpo);
 
-            reembolsoRepository.save(r);
-            return convertReembolsoToDTO(r);
+            reembolsoRepository.save(reembolso);
+            return convertReembolsoToDTO(reembolso);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error al aceptar reembolso: " + e.getMessage());
@@ -238,12 +238,6 @@ public class ReembolsoService {
             reembolso.setEstado(EstadoDocumento.Rechazado);
             reembolso.setFechaResolucion(LocalDate.now());
 
-            // Obtener documentos asociados y rechazarlos
-            /*List<Reembolsos_Documentos> relaciones = reembolsoDocumentoRepository.findByReembolsoId(id);
-            for (Reembolsos_Documentos relacion : relaciones) {
-                documentoService.rechazarDocumento(relacion.getDocumento().getIdDocumento());
-            }*/
-
             // Enviar correo al cliente
             ContratoRespuestaDTO contrato = contratoService.buscarPorId(reembolso.getContrato().getId().intValue())
                     .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
@@ -263,7 +257,29 @@ public class ReembolsoService {
         }
     }
 
+    @Transactional
+    public void rechazarDocumentoReembolso(Long idDocumento) {
+        try {
+            Reembolsos_Documentos relacion = reembolsoDocumentoRepository.findByDocumentoIdDocumento(idDocumento)
+                    .orElseThrow(() -> new RuntimeException("Relación del documento no encontrada."));
+            Documento documento = relacion.getDocumento();
+            reembolsoDocumentoRepository.delete(relacion);
+            documento.setRutaArchivo(aesUtil.decrypt(documento.getRutaArchivo()));
+            documento.setNombreArchivo(aesUtil.decrypt(documento.getNombreArchivo()));
+            documentoService.rechazarDocumento(documento.getIdDocumento());
 
+
+            // Si no hay más documentos asociados, no cambiar el estado del reembolso
+            Reembolso reembolso = relacion.getReembolso();
+            if (reembolsoDocumentoRepository.findByReembolsoId(reembolso.getId_reembolo()).isEmpty() &&
+                    reembolso.getEstado().equals(EstadoDocumento.Pendiente)) {
+                reembolsoRepository.save(reembolso); // Mantener estado si está vacío
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al rechazar el documento del reembolso: " + e.getMessage());
+        }
+    }
 
     @Transactional(readOnly = true)
     public ReembolsoRespuestaDTO obtenerPorId(Long id) {
@@ -291,6 +307,13 @@ public class ReembolsoService {
             r.setTipoReembolso(reembolso.getTipoReembolso());
             r.setFechaSolicitud(LocalDate.now());
             r.setMontoSolicitado(reembolso.getMontoSolicitado());
+
+            // Si el estado era Rechazado, cambiar a Pendiente
+            if (r.getEstado().equals(EstadoDocumento.Rechazado)) {
+                r.setEstado(EstadoDocumento.Pendiente);
+                r.setFechaResolucion(null);
+            }
+
             Reembolso updatedReembolso = reembolsoRepository.save(r);
             return convertReembolsoToDTO(updatedReembolso);
         } catch (Exception e) {
