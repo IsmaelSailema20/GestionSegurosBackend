@@ -21,6 +21,7 @@ public class Documento {
     private Long idDocumento;
 
     private String nombreArchivo;
+    @Column(columnDefinition = "TEXT")
     private String rutaArchivo;
     private LocalDateTime fechaSubida;
 
