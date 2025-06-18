@@ -89,6 +89,7 @@ public class PagoController {
     @GetMapping("/estado/{contratoId}")
     public ResponseEntity<EstadoDocumento> obtenerEstadoPagoPorContrato(@PathVariable Long contratoId) {
         EstadoDocumento estado = pagoService.obtenerEstadoUltimoPagoPorContrato(contratoId);
+        System.out.println(estado);
         return ResponseEntity.ok(estado);
     }
 

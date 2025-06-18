@@ -99,12 +99,11 @@ public class PagoService {
         return pagosPendientes;
     }
     public EstadoDocumento obtenerEstadoUltimoPagoPorContrato(Long contratoId) {
-        EstadoDocumento estado = pagoRepository.findFirstByContratoIdOrderByFechaPagoDesc(contratoId);
-        if (estado == null) {
-            return null;
-        }
-        return estado;
+        return pagoRepository.findFirstByContratoIdOrderByIdDesc(contratoId)
+                .map(Pago::getConfirmado)
+                .orElse(null);
     }
+
 
     public void confirmarPago(Long id) {
         Pago pago = pagoRepository.findById(id)
