@@ -64,23 +64,25 @@ class ClienteControllerIntegracionTest {
     private Long idGenerado;
 
     private ClienteDTO createDTO(Long id, String numeroCuenta, String cedula, String email) {
-        ClienteDTO dto = new ClienteDTO(Estado.Activo);
-        dto.setId_Cliente(id);
-        dto.setNombre("Juan");
-        dto.setApellido("Pérez");
-        dto.setCedula(cedula);
-        dto.setDireccion("Calle Principal 123");
-        dto.setTelefono("987654321");
-        dto.setEmail(email);
-        dto.setGenero("Masculino");
-        dto.setFecha_nacimiento(new Date(1990 - 1900, 4, 15));
-        dto.setEstado(Estado.Activo);
-        dto.setEstaturaMetros(1.75f);
-        dto.setPesoKg(70.0f);
-        dto.setNumeroCuenta(numeroCuenta);
         CondicionMedica cond = new CondicionMedica();
         cond.setDiagnostico("Hipertensión");
-        dto.setCondicionesMedicas(List.of(cond));
+
+        ClienteDTO dto = ClienteDTO.builder()
+            .id_Cliente(id)
+            .nombre("Juan")
+            .apellido("Pérez")
+            .cedula(cedula)
+            .direccion("Calle Principal 123")
+            .telefono("987654321")
+            .email(email)
+            .genero("Masculino")
+            .fecha_nacimiento(new Date(1990 - 1900, 4, 15))
+            .estado(Estado.Activo)
+            .estaturaMetros(1.75f)
+            .pesoKg(70.0f)
+            .numeroCuenta(numeroCuenta)
+            .condicionesMedicas(List.of(cond))
+            .build();
         return dto;
     }
 
