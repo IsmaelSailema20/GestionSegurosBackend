@@ -72,20 +72,21 @@ public class ClienteServiceTest {
                 .numeroCuenta("1234567890123456")
                 .build();
 
-        clienteDTO = new ClienteDTO(Estado.Activo);
-        clienteDTO.setId_Cliente(1L);
-        clienteDTO.setNombre("Juan");
-        clienteDTO.setApellido("Perez");
-        clienteDTO.setCedula("1234567890");
-        clienteDTO.setEmail("juan@example.com");
-        clienteDTO.setDireccion("Calle 123");
-        clienteDTO.setTelefono("123456789");
-        clienteDTO.setGenero("Masculino");
-        clienteDTO.setFecha_nacimiento(fechaNacimiento);
-        clienteDTO.setEstado(Estado.Activo);
-        clienteDTO.setPesoKg(70.0);
-        clienteDTO.setEstaturaMetros(1.75);
-        clienteDTO.setNumeroCuenta("1234567890123456");
+        clienteDTO = ClienteDTO.builder()
+                .id_Cliente(1L)
+                .nombre("Juan")
+                .apellido("Perez")
+                .cedula("1234567890")
+                .email("juan@example.com")
+                .direccion("Calle 123")
+                .telefono("123456789")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(70.0)
+                .estaturaMetros(1.75)
+                .numeroCuenta("1234567890123456")
+                .build();
 
         condicionMedica = CondicionMedica.builder()
                 .id_condicion(1)
@@ -209,20 +210,21 @@ public class ClienteServiceTest {
     @Test
     void testUpdateCliente_Success() {
         // Arrange
-        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
-        updatedDTO.setNombre("Carlos");
-        updatedDTO.setApellido("Gomez");
-        updatedDTO.setCedula("0987654321");
-        updatedDTO.setEmail("carlos@example.com");
-        updatedDTO.setDireccion("Avenida 456");
-        updatedDTO.setTelefono("987654321");
-        updatedDTO.setGenero("Masculino");
-        updatedDTO.setFecha_nacimiento(fechaNacimiento);
-        updatedDTO.setEstado(Estado.Activo);
-        updatedDTO.setPesoKg(80.0);
-        updatedDTO.setEstaturaMetros(1.80);
-        updatedDTO.setNumeroCuenta("6543219876543210");
-        updatedDTO.setCondicionesMedicas(List.of(condicionMedica));
+        ClienteDTO updatedDTO =  ClienteDTO.builder()
+                .nombre("Carlos")
+                .apellido("Gomez")
+                .cedula("0987654321")
+                .email("carlos@example.com")
+                .direccion("Avenida 456")
+                .telefono("987654321")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(80.0)
+                .estaturaMetros(1.80)
+                .numeroCuenta("6543219876543210")
+                .condicionesMedicas(List.of(condicionMedica))
+                .build();
 
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
         when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.empty());
@@ -284,11 +286,26 @@ public class ClienteServiceTest {
     @Test
     void testUpdateCliente_DuplicateCedula() {
         // Arrange
-        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
-        updatedDTO.setCedula("0987654321");
-        updatedDTO.setEmail("juan@example.com");
+        // Arrange
+        ClienteDTO updatedDTO = ClienteDTO.builder()
+                .id_Cliente(1L)
+                .nombre("Carlos")
+                .apellido("Gomez")
+                .cedula("0987654321")
+                .email("juan@example.com")
+                .direccion("Avenida 456")
+                .telefono("987654321")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(80.0)
+                .estaturaMetros(1.80)
+                .numeroCuenta("6543219876543210")
+                .condicionesMedicas(List.of(condicionMedica))
+                .build();
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.of(new Cliente()));
+        Cliente otroCliente = Cliente.builder().id(2L).cedula("0987654321").build();
+        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.of(otroCliente));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
@@ -299,12 +316,27 @@ public class ClienteServiceTest {
     @Test
     void testUpdateCliente_DuplicateEmail() {
         // Arrange
-        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
-        updatedDTO.setCedula("1234567890");
-        updatedDTO.setEmail("carlos@example.com");
+        ClienteDTO updatedDTO = ClienteDTO.builder()
+                .id_Cliente(1L)
+                .nombre("Carlos")
+                .apellido("Gomez")
+                .cedula("1234567890")
+                .email("carlos@example.com")
+                .direccion("Avenida 456")
+                .telefono("987654321")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(80.0)
+                .estaturaMetros(1.80)
+                .numeroCuenta("6543219876543210")
+                .condicionesMedicas(List.of(condicionMedica))
+                .build();
+
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        Cliente otroCliente = Cliente.builder().id(2L).email("carlos@example.com").build();
+        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.of(otroCliente));
         lenient().when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.of(new Cliente()));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
