@@ -199,12 +199,19 @@ public class ContratoServiceTest {
     }
 
     @Test
-    void testBuscarContratosPorAgente() {
+    void testBuscarContratosPorAgente_Success() {
         // Arrange
         Long idAgente = 1L;
+
+        // Mock EntityManager and TypedQuery
         when(entityManager.createQuery(anyString(), eq(Contrato.class))).thenReturn(typedQuery);
         when(typedQuery.setParameter(eq("idAgente"), eq(idAgente))).thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(List.of(contrato));
+
+        // Mock dependencies for mapearContrato
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
 
         // Act
         List<ContratoRespuestaDTO> resultado = contratoService.buscarContratosPorAgente(idAgente);
@@ -214,10 +221,46 @@ public class ContratoServiceTest {
         assertEquals(1, resultado.size());
 
         ContratoRespuestaDTO dto = resultado.get(0);
+
+        // Verify AgenteDTO
+        assertEquals(1, dto.getAgente().getId());
         assertEquals("Ana", dto.getAgente().getNombre());
         assertEquals("Gomez", dto.getAgente().getApellido());
         assertEquals("ana@example.com", dto.getAgente().getEmail());
-        assertEquals(1, dto.getAgente().getId());
+
+        // Verify Contrato fields
+        assertEquals(1, dto.getId());
+        assertEquals(EstadoContrato.PENDIENTE, dto.getEstado());
+        assertEquals(fechaInicio, dto.getFechaInicio());
+        assertEquals(fechaFin, dto.getFechaFin());
+
+        // Verify Seguro
+        assertEquals("Seguro de Vida", dto.getSeguro().getNombre());
+        assertEquals(1, dto.getSeguro().getIdSeguro());
+
+        // Verify Cliente
+        assertEquals(1L, dto.getCliente().getId_Cliente());
+        assertEquals("Juan", dto.getCliente().getNombre());
+        assertEquals("Perez", dto.getCliente().getApellido());
+        assertEquals("1234567890", dto.getCliente().getCedula());
+        assertEquals("juan@example.com", dto.getCliente().getEmail());
+
+        // Verify Beneficiarios
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Maria", dto.getBeneficiarios().get(0).getNombre());
+        assertEquals("0987654321", dto.getBeneficiarios().get(0).getCedula());
+
+        // Verify Condiciones Médicas
+        assertEquals(1, dto.getCliente().getCondicionesMedicas().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+
+        // Verify interactions
+        verify(entityManager, times(1)).createQuery(anyString(), eq(Contrato.class));
+        verify(typedQuery, times(1)).setParameter(eq("idAgente"), eq(idAgente));
+        verify(typedQuery, times(1)).getResultList();
+        verify(usuarioRepo, times(1)).findById(1);
+        verify(benService, times(1)).listarPorContrato(1);
+        verify(condRepo, times(1)).findByClienteId(1);
     }
 
     @Test
@@ -226,7 +269,7 @@ public class ContratoServiceTest {
         rel.setBeneficiario(beneficiario);
         when(contratoRepo.findById(1)).thenReturn(Optional.of(contrato));
         when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
-        when(beneficiarioContratoRepo.findByContratoId(1)).thenReturn(List.of(rel));
+        lenient().when(beneficiarioContratoRepo.findByContratoId(1)).thenReturn(List.of(rel));
         when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
         when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
 
