@@ -52,18 +52,19 @@ class ClienteControllerUnitariasTest {
     private String token = "mock-valid-token";
 
     private ClienteDTO createDTO(Long id) {
-        ClienteDTO dto = new ClienteDTO(Estado.Activo);
-        dto.setId_Cliente(id);
-        dto.setNombre("Juan");
-        dto.setApellido("Pérez");
-        dto.setCedula("1234567890");
-        dto.setDireccion("Calle Principal 123");
-        dto.setTelefono("987654321");
-        dto.setEmail("juan.perez@example.com");
-        dto.setGenero("Masculino");
-        dto.setFecha_nacimiento(new Date(1990 - 1900, 4, 15)); // Mes 0-indexed
-        dto.setEstado(Estado.Activo);
-        dto.setNumeroCuenta("1234567892224");
+        ClienteDTO dto = ClienteDTO.builder()
+            .id_Cliente(id)
+            .nombre("Juan")
+            .apellido("Pérez")
+            .cedula("1234567890")
+            .direccion("Calle Principal 123")
+            .telefono("987654321")
+            .email("juan.perez@example.com")
+            .genero("Masculino")
+            .fecha_nacimiento(new Date(1990 - 1900, 4, 15)) // Mes 0-indexed
+            .estado(Estado.Activo)
+            .numeroCuenta("1234567892224")
+            .build();
         return dto;
     }
 
