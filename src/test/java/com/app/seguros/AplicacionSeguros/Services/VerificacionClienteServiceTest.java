@@ -8,6 +8,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
+import com.app.seguros.AplicacionSeguros.Services.Daemons.VerificacionClienteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
