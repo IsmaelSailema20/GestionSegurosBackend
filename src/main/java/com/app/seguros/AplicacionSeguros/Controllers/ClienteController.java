@@ -1,5 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
+import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.EstadoDTO;
@@ -19,8 +20,12 @@ public class ClienteController {
     private ClienteService clienteService;
 
     @PostMapping
-    public ResponseEntity<?> saveCliente(@Valid @RequestBody ClienteDTO clienteDTO){
+    public ResponseEntity<?> saveCliente(@Valid @RequestBody ClienteDTO clienteDTO,@RequestHeader("Authorization") String authHeader){
         try {
+            String token = authHeader.replace("Bearer ", "");
+            JwtService jwtService=new JwtService();
+            Integer idUsuario = jwtService.getClaim(token, claims -> claims.get("idUsuario", Integer.class));
+            clienteDTO.setIdAgente(idUsuario);
             return ResponseEntity.ok(clienteService.saveCliente(clienteDTO));
         }catch (Exception e){
             return ResponseEntity.internalServerError().body(e.getMessage());
@@ -48,5 +53,13 @@ public class ClienteController {
     @PutMapping("/estado/{id}")
     public ResponseEntity<ClienteRespuestaDTO> deleteCliente(@PathVariable Long id, @RequestBody EstadoDTO estado){
         return  ResponseEntity.ok(clienteService.actualizarEstado(id,estado));
+    }
+    @GetMapping("/agente")
+    public  ResponseEntity<List<ClienteRespuestaDTO>> getAllClientesPorAgente(@RequestHeader("Authorization") String authHeader){
+        String token = authHeader.replace("Bearer ", "");
+        JwtService jwtService=new JwtService();
+        Integer idUsuario = jwtService.getClaim(token, claims -> claims.get("idUsuario", Integer.class));
+
+        return ResponseEntity.ok(clienteService.getAllClientesPorAgente(idUsuario));
     }
 }

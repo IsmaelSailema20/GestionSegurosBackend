@@ -63,6 +63,7 @@ public class ClienteService {
                 .pesoKg(clienteDTO.getPesoKg())
                 .estaturaMetros(clienteDTO.getEstaturaMetros())
                 .numeroCuenta(clienteDTO.getNumeroCuenta())
+                .agente(usuarioService.getUsuarioById(clienteDTO.getIdAgente()))
                 .build();
         cliente = clienteRepository.save(cliente);
 
@@ -322,4 +323,28 @@ public class ClienteService {
                 .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()+" ID: " + idCliente));
     }
 
+    public List<ClienteRespuestaDTO> getAllClientesPorAgente(Integer idAgente) {
+        return clienteRepository.findClientesPorAgente(idAgente)
+                .stream()
+                .map(cliente -> {
+                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                            .estaturaMetros(cliente.getEstaturaMetros())
+                            .fecha_nacimiento(cliente.getFecha_nacimiento())
+                            .direccion(cliente.getDireccion())
+                            .id_Cliente(cliente.getId())
+                            .genero(cliente.getGenero())
+                            .cedula(cliente.getCedula())
+                            .pesoKg(cliente.getPesoKg())
+                            .telefono(cliente.getTelefono())
+                            .condicionesMedicas(condService.getAll((int) cliente.getId()))
+                            .apellido(cliente.getApellido())
+                            .email(cliente.getEmail())
+                            .estado(cliente.getEstado())
+                            .nombre(cliente.getNombre())
+                            .numeroCuenta(cliente.getNumeroCuenta())
+                            .build();
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
 }
