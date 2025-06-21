@@ -330,4 +330,55 @@ class PagoControllerTest {
         verify(pagoService, times(1)).rechazarPago(1L);
         verifyNoMoreInteractions(pagoService);
     }
+
+    @Test
+    void registrarPago_ThrowsException_WhenServiceFails() {
+        // Arrange
+        when(pagoService.registrarPago(any(PagoRegistroDTO.class))).thenThrow(new RuntimeException("Error al registrar pago"));
+
+        // Act
+        Exception exception = assertThrows(RuntimeException.class, () -> pagoController.registrarPago(pagoRegistroDTO));
+
+        // Assert
+        assertEquals("Error al registrar pago", exception.getMessage(), "El mensaje de error debe coincidir");
+        verify(pagoService, times(1)).registrarPago(pagoRegistroDTO);
+        verifyNoMoreInteractions(pagoService);
+    }
+
+    @Test
+    void registrarPagoConComprobante_ThrowsException_WhenServiceFails() throws IOException {
+        // Arrange
+        String pagoJson = "{\"clienteId\":1,\"contratoId\":1,\"metodo\":\"Tarjeta\"}";
+        when(pagoService.registrarPagoConComprobante(any(PagoRegistroDTO.class), any(MultipartFile.class), any(DocumentoRegistroDTO.class)))
+                .thenThrow(new RuntimeException("Error al registrar pago con comprobante"));
+
+        // Act
+        Exception exception = assertThrows(RuntimeException.class, () ->
+                pagoController.registrarPagoConComprobante(pagoJson, archivoComprobante));
+
+        // Assert
+        assertEquals("Error al registrar pago con comprobante", exception.getMessage(), "El mensaje de error debe coincidir");
+        verify(pagoService, times(1)).registrarPagoConComprobante(
+                argThat(dto -> dto.getClienteId().equals(1L) && dto.getContratoId().equals(1L) && dto.getMetodo() == MetodoPago.Tarjeta),
+                eq(archivoComprobante),
+                argThat(dto -> dto.getIdCliente().equals(1L) && dto.getIdContrato().equals(1L) && dto.getTipo() == TipoDocumento.Comprobante_pago)
+        );
+        verifyNoMoreInteractions(pagoService);
+    }
+
+    @Test
+    void obtenerEstadoPagoPorContrato_ReturnsNull_WhenNoPagoExists() {
+        // Arrange
+        when(pagoService.obtenerEstadoUltimoPagoPorContrato(1L)).thenReturn(null);
+
+        // Act
+        ResponseEntity<EstadoDocumento> response = pagoController.obtenerEstadoPagoPorContrato(1L);
+
+        // Assert
+        assertNotNull(response, "La respuesta no debe ser null");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "El código de estado debe ser 200 OK");
+        assertNull(response.getBody(), "El estado debe ser null");
+        verify(pagoService, times(1)).obtenerEstadoUltimoPagoPorContrato(1L);
+        verifyNoMoreInteractions(pagoService);
+    }
 }
