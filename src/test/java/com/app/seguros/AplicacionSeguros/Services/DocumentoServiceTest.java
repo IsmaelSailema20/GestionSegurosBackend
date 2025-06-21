@@ -26,9 +26,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -338,5 +340,179 @@ class DocumentoServiceTest {
         assertThrows(RuntimeException.class, () -> documentoService.convertirDTOAContrato(contratoDto));
     }
 
+
+    @Test
+    void rechazarDocumento_ValidId_DeletesDocumentAndFile() throws IOException {
+        // Arrange
+        when(documentoRepository.findById(1L)).thenReturn(Optional.of(documento));
+        lenient().when(aesUtil.decrypt(documento.getRutaArchivo())).thenReturn(documento.getRutaArchivo());
+
+        // Mock Files.deleteIfExists to return true (file was deleted)
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.deleteIfExists(any(Path.class))).thenReturn(true);
+
+            // Act
+            documentoService.rechazarDocumento(1L);
+
+            // Assert
+            verify(documentoRepository, times(1)).findById(1L);
+            verify(documentoRepository, times(1)).delete(documento);
+            filesMock.verify(() -> Files.deleteIfExists(any(Path.class)), times(1));
+        }
+    }
+
+    @Test
+    void rechazarDocumento_DocumentNotFound_ThrowsRuntimeException() {
+        // Arrange
+        when(documentoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> documentoService.rechazarDocumento(1L));
+        assertEquals(MensajeError.DOCUMENTO_NO_ENCONTRADO.getMensaje(), exception.getMessage());
+        verify(documentoRepository, times(1)).findById(1L);
+        verify(documentoRepository, never()).delete(any());
+    }
+
+    @Test
+    void rechazarDocumento_FileDeletionFails_ThrowsRuntimeException() throws IOException {
+        // Arrange
+        when(documentoRepository.findById(1L)).thenReturn(Optional.of(documento));
+        lenient().when(aesUtil.decrypt(documento.getRutaArchivo())).thenReturn(documento.getRutaArchivo());
+
+        // Mock Files.deleteIfExists to throw IOException
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.deleteIfExists(any(Path.class))).thenThrow(new IOException("Error deleting file"));
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> documentoService.rechazarDocumento(1L));
+            assertTrue(exception.getMessage().contains(MensajeError.ERROR_ELIMINAR_ARCHIVO.getMensaje()));
+            verify(documentoRepository, times(1)).findById(1L);
+            verify(documentoRepository, never()).delete(any());
+        }
+    }
+
+    @Test
+    void subirDocumento_FileAlreadyExists_OverwritesFile() throws IOException {
+        // Arrange
+        DocumentoRegistroDTO dto = new DocumentoRegistroDTO();
+        dto.setIdContrato(1L);
+        dto.setTipo(TipoDocumento.Identificacion);
+
+        when(contratoService.buscarPorId(1)).thenReturn(Optional.of(contratoDto));
+        when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
+        when(seguroRepository.findById(99)).thenReturn(Optional.of(seguro));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(agente));
+        when(aesUtil.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentoRepository.save(any(Documento.class))).thenReturn(documento);
+
+        // Mock Files.exists to return true and Files.delete to do nothing
+        try (var filesMock = mockStatic(Files.class)) {
+            // Configurar los mocks para los métodos estáticos
+            filesMock.when(() -> Files.exists(any(Path.class))).thenReturn(true);
+            filesMock.when(() -> Files.createDirectories(any(Path.class))).thenReturn(null);
+            filesMock.when(() -> Files.delete(any(Path.class))).thenAnswer(invocation -> null);
+            filesMock.when(() -> Files.copy(any(InputStream.class), any(Path.class), eq(StandardCopyOption.REPLACE_EXISTING)))
+                    .thenReturn(123L);
+
+            // Act
+            Documento result = documentoService.subirDocumento(archivo, dto);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(EstadoDocumento.Pendiente, result.getEstado());
+            verify(documentoRepository, times(1)).save(any(Documento.class));
+
+            // Verificaciones específicas para cada método estático
+            filesMock.verify(() -> Files.createDirectories(any(Path.class)), times(1));
+            filesMock.verify(() -> Files.exists(any(Path.class)), times(1));
+            filesMock.verify(() -> Files.delete(any(Path.class)), times(1));
+            filesMock.verify(() -> Files.copy(any(InputStream.class), any(Path.class), eq(StandardCopyOption.REPLACE_EXISTING)), times(1));
+        }
+    }
+
+    @Test
+    void subirDocumento_ReembolsoType_CreatesCorrectFolderStructure() throws IOException {
+        // Arrange
+        DocumentoRegistroDTO dto = new DocumentoRegistroDTO();
+        dto.setIdContrato(1L);
+        dto.setTipo(TipoDocumento.Factura_consulta);
+
+        when(contratoService.buscarPorId(1)).thenReturn(Optional.of(contratoDto));
+        when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
+        when(seguroRepository.findById(99)).thenReturn(Optional.of(seguro));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(agente));
+        when(aesUtil.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentoRepository.save(any(Documento.class))).thenReturn(documento);
+
+        // Mockear LocalDate.now() para una fecha fija
+        LocalDate fixedDate = LocalDate.of(2025, 6, 21);
+        try (var mockedLocalDate = mockStatic(LocalDate.class, CALLS_REAL_METHODS)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(fixedDate);
+
+            // Construir la ruta esperada para la verificación
+            String expectedFolder = "/test_documentos/1234567890_Juan_Pérez/Seguro_de_Vida_1/Reembolsos/Reembolso_consultas_medicas_20250621";
+
+            try (var filesMock = mockStatic(Files.class)) {
+                filesMock.when(() -> Files.exists(any(Path.class))).thenReturn(false);
+                filesMock.when(() -> Files.createDirectories(any(Path.class))).thenReturn(null);
+                filesMock.when(() -> Files.copy(any(InputStream.class), any(Path.class), eq(StandardCopyOption.REPLACE_EXISTING)))
+                        .thenReturn(123L);
+
+                // Act
+                Documento result = documentoService.subirDocumento(archivo, dto);
+
+                // Assert
+                assertNotNull(result);
+                assertEquals(EstadoDocumento.Pendiente, result.getEstado());
+                verify(documentoRepository, times(1)).save(any(Documento.class));
+
+                // Verificar la estructura de carpetas para reembolso
+                filesMock.verify(() -> Files.createDirectories(argThat(path -> path.toString().replace("\\", "/").contains(expectedFolder))), times(1));
+                filesMock.verify(() -> Files.copy(any(InputStream.class), any(Path.class), eq(StandardCopyOption.REPLACE_EXISTING)), times(1));
+            }
+        }
+    }
+
+    @Test
+    void obtenerDocumentosPorContrato_NoDocuments_ReturnsEmptyList() {
+        // Arrange
+        when(documentoRepository.findByContratoId(1L)).thenReturn(List.of());
+
+        // Act
+        List<Documento> result = documentoService.obtenerDocumentosPorContrato(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(documentoRepository, times(1)).findByContratoId(1L);
+    }
+
+    @Test
+    void obtenerDocumentosPendientes_NoPendingDocuments_ReturnsEmptyList() {
+        // Arrange
+        when(documentoRepository.findDocumentosPendiente()).thenReturn(List.of());
+
+        // Act
+        List<Documento> result = documentoService.obtenerDocumentosPendientes();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(documentoRepository, times(1)).findDocumentosPendiente();
+    }
+
+    @Test
+    void obtenerDocumentosPendientesPorAgente_NoPendingDocuments_ReturnsEmptyList() {
+        // Arrange
+        when(documentoRepository.findDocumentosPendiente(1)).thenReturn(List.of());
+
+        // Act
+        List<Documento> result = documentoService.obtenerDocumentosPendientes(1);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(documentoRepository, times(1)).findDocumentosPendiente(1);
+    }
 
 }
