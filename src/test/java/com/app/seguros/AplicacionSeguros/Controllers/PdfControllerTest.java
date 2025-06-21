@@ -3,12 +3,16 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 import com.app.seguros.AplicacionSeguros.Dto.AgenteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Dto.DocumentoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
+import com.app.seguros.AplicacionSeguros.Entities.Documento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
+import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
+import com.app.seguros.AplicacionSeguros.Services.ReportesPdfService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -40,6 +44,12 @@ public class PdfControllerTest {
 
     @Mock
     private ContratoService contratoService;
+
+    @Mock
+    private ReportesPdfService reportesPdfService;
+
+    @Mock
+    private DocumentoService documentoService;
 
     @InjectMocks
     private PdfController pdfController;
@@ -301,5 +311,160 @@ public class PdfControllerTest {
                 contrato.getBeneficiarios(),
                 null
         );
+    }
+
+
+
+    // Tests corregidos para ReportesPdf y ReportesDocumentosPdf
+    @Test
+    void testReportesPdf_Success() throws Exception {
+        // Arrange
+        List<ContratoRespuestaDTO> contratosImpagos = new ArrayList<>();
+        List<ContratoRespuestaDTO> contratosTodos = new ArrayList<>();
+        List<ContratoRespuestaDTO> contratosVencidos = new ArrayList<>();
+        List<ContratoRespuestaDTO> contratosPorVencer = new ArrayList<>();
+        byte[] pdfBytes = "Generated Report PDF".getBytes();
+
+        when(contratoService.listarImpagos()).thenReturn(contratosImpagos);
+        when(contratoService.listarTodos()).thenReturn(contratosTodos);
+        when(contratoService.listarVencidos()).thenReturn(contratosVencidos);
+        when(contratoService.listarPorVencer()).thenReturn(contratosPorVencer);
+        when(reportesPdfService.generarContratoPdf(contratosImpagos, contratosTodos, contratosVencidos, contratosPorVencer))
+                .thenReturn(pdfBytes);
+
+        // Act
+        ResponseEntity<?> response = pdfController.ReportesPdf();
+
+        // Assert
+        assertNotNull(response, "Response should not be null");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected HTTP status OK");
+        assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType(), "Expected PDF content type");
+        assertEquals("inline; filename=\"Reportes\"", response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION), "Expected correct content disposition");
+        assertArrayEquals(pdfBytes, (byte[]) response.getBody(), "PDF content mismatch");
+        verify(contratoService, times(1)).listarImpagos();
+        verify(contratoService, times(1)).listarTodos();
+        verify(contratoService, times(1)).listarVencidos();
+        verify(contratoService, times(1)).listarPorVencer();
+        verify(reportesPdfService, times(1)).generarContratoPdf(contratosImpagos, contratosTodos, contratosVencidos, contratosPorVencer);
+    }
+
+    @Test
+    void testReportesPdf_GeneralException() throws Exception {
+        // Arrange
+        when(contratoService.listarImpagos()).thenThrow(new RuntimeException("Error fetching unpaid contracts"));
+
+        // Act & Assert
+        Exception exception = assertThrows(Exception.class, () -> pdfController.ReportesPdf(), "Expected RuntimeException to be thrown");
+
+        // Assert
+        assertEquals("Error fetching unpaid contracts", exception.getMessage(), "Exception message mismatch");
+        verify(contratoService, times(1)).listarImpagos();
+        verify(contratoService, never()).listarTodos();
+        verify(contratoService, never()).listarVencidos();
+        verify(contratoService, never()).listarPorVencer();
+        verify(reportesPdfService, never()).generarContratoPdf(any(), any(), any(), any());
+    }
+
+    @Test
+    void testReportesPdfById_Success() throws Exception {
+        // Arrange
+        Integer id = 1;
+        List<ContratoRespuestaDTO> contratosImpagos = new ArrayList<>();
+        List<ContratoRespuestaDTO> contratosPorAgente = new ArrayList<>();
+        List<ContratoRespuestaDTO> contratosVencidos = new ArrayList<>();
+        List<ContratoRespuestaDTO> contratosPorVencer = new ArrayList<>();
+        byte[] pdfBytes = "Generated Agent Report PDF".getBytes();
+
+        when(contratoService.listarImpagos(id)).thenReturn(contratosImpagos);
+        when(contratoService.listarPorAgente(id)).thenReturn(contratosPorAgente);
+        when(contratoService.listarVencidos(id)).thenReturn(contratosVencidos);
+        when(contratoService.listarPorVencer(id)).thenReturn(contratosPorVencer);
+        when(reportesPdfService.generarContratoPdf(contratosImpagos, contratosPorAgente, contratosVencidos, contratosPorVencer))
+                .thenReturn(pdfBytes);
+
+        // Act
+        ResponseEntity<?> response = pdfController.ReportesPdf(id);
+
+        // Assert
+        assertNotNull(response, "Response should not be null");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected HTTP status OK");
+        assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType(), "Expected PDF content type");
+        assertEquals("inline; filename=\"Reportes\"", response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION), "Expected correct content disposition");
+        assertArrayEquals(pdfBytes, (byte[]) response.getBody(), "PDF content mismatch");
+        verify(contratoService, times(1)).listarImpagos(id);
+        verify(contratoService, times(1)).listarPorAgente(id);
+        verify(contratoService, times(1)).listarVencidos(id);
+        verify(contratoService, times(1)).listarPorVencer(id);
+        verify(reportesPdfService, times(1)).generarContratoPdf(contratosImpagos, contratosPorAgente, contratosVencidos, contratosPorVencer);
+    }
+
+    @Test
+    void testReportesPdfById_GeneralException() throws Exception {
+        // Arrange
+        Integer id = 1;
+        when(contratoService.listarImpagos(id)).thenThrow(new RuntimeException("Error fetching unpaid contracts"));
+
+        // Act & Assert
+        Exception exception = assertThrows(Exception.class, () -> pdfController.ReportesPdf(id), "Expected RuntimeException to be thrown");
+
+        // Assert
+        assertEquals("Error fetching unpaid contracts", exception.getMessage(), "Exception message mismatch");
+        verify(contratoService, times(1)).listarImpagos(id);
+        verify(contratoService, never()).listarPorAgente(id);
+        verify(contratoService, never()).listarVencidos(id);
+        verify(contratoService, never()).listarPorVencer(id);
+        verify(reportesPdfService, never()).generarContratoPdf(any(), any(), any(), any());
+    }
+
+    @Test
+    void testReportesDocumentosPdf_GeneralException() throws Exception {
+        // Arrange
+        when(documentoService.obtenerDocumentosPendientes()).thenThrow(new RuntimeException("Error fetching pending documents"));
+
+        // Act & Assert
+        Exception exception = assertThrows(Exception.class, () -> pdfController.ReportesDocumentosPdf(), "Expected RuntimeException to be thrown");
+
+        // Assert
+        assertEquals("Error fetching pending documents", exception.getMessage(), "Exception message mismatch");
+        verify(documentoService, times(1)).obtenerDocumentosPendientes();
+        verify(reportesPdfService, never()).generarReporteDocumentosPdf(any());
+    }
+
+    @Test
+    void testReportesDocumentosPdfByAgent_Success() throws Exception {
+        // Arrange
+        Integer idAgente = 1;
+        List<Documento> documentosPendientes = new ArrayList<>();
+        byte[] pdfBytes = "Generated Agent Documents Report PDF".getBytes();
+
+        when(documentoService.obtenerDocumentosPendientes(idAgente)).thenReturn(documentosPendientes);
+        when(reportesPdfService.generarReporteDocumentosPdf(documentosPendientes)).thenReturn(pdfBytes);
+
+        // Act
+        ResponseEntity<?> response = pdfController.ReportesDocumentosPdf(idAgente);
+
+        // Assert
+        assertNotNull(response, "Response should not be null");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "Expected HTTP status OK");
+        assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType(), "Expected PDF content type");
+        assertEquals("inline; filename=\"Reportes-documentos\"", response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION), "Expected correct content disposition");
+        assertArrayEquals(pdfBytes, (byte[]) response.getBody(), "PDF content mismatch");
+        verify(documentoService, times(1)).obtenerDocumentosPendientes(idAgente);
+        verify(reportesPdfService, times(1)).generarReporteDocumentosPdf(documentosPendientes);
+    }
+
+    @Test
+    void testReportesDocumentosPdfByAgent_GeneralException() throws Exception {
+        // Arrange
+        Integer idAgente = 1;
+        when(documentoService.obtenerDocumentosPendientes(idAgente)).thenThrow(new RuntimeException("Error fetching agent pending documents"));
+
+        // Act & Assert
+        Exception exception = assertThrows(Exception.class, () -> pdfController.ReportesDocumentosPdf(idAgente), "Expected RuntimeException to be thrown");
+
+        // Assert
+        assertEquals("Error fetching agent pending documents", exception.getMessage(), "Exception message mismatch");
+        verify(documentoService, times(1)).obtenerDocumentosPendientes(idAgente);
+        verify(reportesPdfService, never()).generarReporteDocumentosPdf(any());
     }
 }
