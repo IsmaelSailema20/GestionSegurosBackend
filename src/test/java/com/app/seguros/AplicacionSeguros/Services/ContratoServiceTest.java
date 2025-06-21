@@ -783,4 +783,271 @@ public class ContratoServiceTest {
                     any(Seguro.class), any(AgenteDTO.class), any(Date.class), any(Date.class), anyList(), anyList());
         }
     }
+
+    @Test
+    void testListarImpagos_Success() {
+        // Arrange
+        when(contratoRepo.findContratosImpagos()).thenReturn(List.of(contrato));
+        when(contratoRepo.findContratosSinPagos()).thenReturn(Collections.emptyList());
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarImpagos();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosImpagos();
+        verify(contratoRepo, times(1)).findContratosSinPagos();
+    }
+
+    @Test
+    void testListarImpagos_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosImpagos()).thenReturn(Collections.emptyList());
+        when(contratoRepo.findContratosSinPagos()).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarImpagos();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosImpagos();
+        verify(contratoRepo, times(1)).findContratosSinPagos();
+    }
+
+    @Test
+    void testListarVencidos_Success() {
+        // Arrange
+        when(contratoRepo.findContratosVencidos()).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarVencidos();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosVencidos();
+    }
+
+    @Test
+    void testListarVencidos_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosVencidos()).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarVencidos();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosVencidos();
+    }
+
+    @Test
+    void testListarPorVencer_Success() {
+        // Arrange
+        when(contratoRepo.findContratosProximosAVencer(any(LocalDate.class))).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarPorVencer();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosProximosAVencer(any(LocalDate.class));
+    }
+
+    @Test
+    void testListarPorVencer_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosProximosAVencer(any(LocalDate.class))).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarPorVencer();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosProximosAVencer(any(LocalDate.class));
+    }
+
+    @Test
+    void testListarImpagosPorAgente_Success() {
+        // Arrange
+        when(contratoRepo.findContratosImpagos(1)).thenReturn(List.of(contrato));
+        when(contratoRepo.findContratosSinPagos(1)).thenReturn(Collections.emptyList());
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarImpagos(1);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosImpagos(1);
+        verify(contratoRepo, times(1)).findContratosSinPagos(1);
+    }
+
+    @Test
+    void testListarImpagosPorAgente_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosImpagos(1)).thenReturn(Collections.emptyList());
+        when(contratoRepo.findContratosSinPagos(1)).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarImpagos(1);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosImpagos(1);
+        verify(contratoRepo, times(1)).findContratosSinPagos(1);
+    }
+
+    @Test
+    void testListarVencidosPorAgente_Success() {
+        // Arrange
+        when(contratoRepo.findContratosVencidos(1)).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarVencidos(1);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosVencidos(1);
+    }
+
+    @Test
+    void testListarVencidosPorAgente_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosVencidos(1)).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarVencidos(1);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosVencidos(1);
+    }
+
+    @Test
+    void testListarPorVencerPorAgente_Success() {
+        // Arrange
+        when(contratoRepo.findContratosProximosAVencer(any(LocalDate.class), eq(1))).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarPorVencer(1);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosProximosAVencer(any(LocalDate.class), eq(1));
+    }
+
+    @Test
+    void testListarPorVencerPorAgente_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosProximosAVencer(any(LocalDate.class), eq(1))).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarPorVencer(1);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosProximosAVencer(any(LocalDate.class), eq(1));
+    }
+
+    @Test
+    void testListarPorAgente_Success() {
+        // Arrange
+        when(contratoRepo.findContratosPorAgente(1)).thenReturn(List.of(contrato));
+        when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
+        when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
+        when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarPorAgente(1);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        ContratoRespuestaDTO dto = result.get(0);
+        assertEquals(1, dto.getId());
+        assertEquals(cliente.getNombre(), dto.getCliente().getNombre());
+        assertEquals(agente.getNombre(), dto.getAgente().getNombre());
+        assertEquals(1, dto.getBeneficiarios().size());
+        assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
+        verify(contratoRepo, times(1)).findContratosPorAgente(1);
+    }
+
+    @Test
+    void testListarPorAgente_Empty() {
+        // Arrange
+        when(contratoRepo.findContratosPorAgente(1)).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ContratoRespuestaDTO> result = contratoService.listarPorAgente(1);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(contratoRepo, times(1)).findContratosPorAgente(1);
+    }
 }
