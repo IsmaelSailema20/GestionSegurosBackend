@@ -515,4 +515,133 @@ class DocumentoServiceTest {
         verify(documentoRepository, times(1)).findDocumentosPendiente(1);
     }
 
+    @Test
+    void obtenerDocumentosPendientesPorAgente_NoAgentDocuments_ReturnsEmptyList() {
+        // Arrange
+        when(documentoRepository.findDocumentosPendiente(999)).thenReturn(List.of()); // ID de agente no existente
+        lenient().when(aesUtil.decrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        List<Documento> result = documentoService.obtenerDocumentosPendientes(999);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(documentoRepository).findDocumentosPendiente(999);
+    }
+
+    @Test
+    void rechazarDocumento_FileDoesNotExist_NoExceptionThrown() throws IOException {
+        // Arrange
+        when(documentoRepository.findById(1L)).thenReturn(Optional.of(documento));
+        lenient().when(aesUtil.decrypt(documento.getRutaArchivo())).thenReturn(documento.getRutaArchivo());
+
+        // Mock Files.deleteIfExists to return false (file does not exist)
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.deleteIfExists(any(Path.class))).thenReturn(false);
+
+            // Act
+            documentoService.rechazarDocumento(1L);
+
+            // Assert
+            assertEquals(EstadoDocumento.Pendiente, documento.getEstado()); // Verificar que el estado se actualice
+            verify(documentoRepository).findById(1L);
+            verify(documentoRepository).delete(documento);
+            filesMock.verify(() -> Files.deleteIfExists(any(Path.class)), times(1));
+        }
+    }
+
+    @Test
+    void aprobarDocumento_ThrowsException_WhenSaveFails() {
+        // Arrange
+        when(documentoRepository.findById(1L)).thenReturn(Optional.of(documento));
+        when(aesUtil.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentoRepository.save(any(Documento.class))).thenThrow(new RuntimeException("Error al guardar"));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> documentoService.aprobarDocumento(1L));
+        assertTrue(exception.getMessage().contains("Error al guardar"));
+        verify(documentoRepository).findById(1L);
+        verify(documentoRepository).save(documento);
+    }
+
+    @Test
+    void subirDocumento_FailsOnDirectoryCreation_ThrowsIOException() throws IOException {
+        // Arrange
+        DocumentoRegistroDTO dto = new DocumentoRegistroDTO();
+        dto.setIdContrato(1L);
+        dto.setTipo(TipoDocumento.Identificacion);
+
+        when(contratoService.buscarPorId(1)).thenReturn(Optional.of(contratoDto));
+        lenient().when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
+        lenient().when(seguroRepository.findById(99)).thenReturn(Optional.of(seguro));
+        lenient().when(usuarioRepository.findById(1)).thenReturn(Optional.of(agente));
+        lenient().when(aesUtil.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Mock Files.createDirectories to throw IOException
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.createDirectories(any(Path.class))).thenThrow(new IOException("Error creating directory"));
+
+            // Act & Assert
+            assertThrows(IOException.class, () -> documentoService.subirDocumento(archivo, dto));
+            verify(documentoRepository, never()).save(any(Documento.class));
+            filesMock.verify(() -> Files.createDirectories(any(Path.class)), times(1));
+        }
+    }
+
+    @Test
+    void subirDocumento_FailsOnFileCopy_ThrowsIOException() throws IOException {
+        // Arrange
+        DocumentoRegistroDTO dto = new DocumentoRegistroDTO();
+        dto.setIdContrato(1L);
+        dto.setTipo(TipoDocumento.Identificacion);
+
+        when(contratoService.buscarPorId(1)).thenReturn(Optional.of(contratoDto));
+        lenient().when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
+        lenient().when(seguroRepository.findById(99)).thenReturn(Optional.of(seguro));
+        lenient().when(usuarioRepository.findById(1)).thenReturn(Optional.of(agente));
+        lenient().when(aesUtil.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(documentoRepository.save(any(Documento.class))).thenReturn(documento);
+
+        // Mock Files.copy to throw IOException
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.createDirectories(any(Path.class))).thenReturn(null);
+            filesMock.when(() -> Files.copy(any(InputStream.class), any(Path.class), eq(StandardCopyOption.REPLACE_EXISTING)))
+                    .thenThrow(new IOException("Error copying file"));
+
+            // Act & Assert
+            assertThrows(IOException.class, () -> documentoService.subirDocumento(archivo, dto));
+            verify(documentoRepository, never()).save(documento); // Asegura que no se guarde si falla la copia
+            filesMock.verify(() -> Files.copy(any(InputStream.class), any(Path.class), eq(StandardCopyOption.REPLACE_EXISTING)), times(1));
+        }
+    }
+
+    @Test
+    void convertirDTOAContrato_AgenteNotFound_ThrowsRuntimeException() {
+        // Arrange
+        when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
+        when(seguroRepository.findById(99)).thenReturn(Optional.of(seguro));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> documentoService.convertirDTOAContrato(contratoDto));
+        verify(clienteRepository).findById(10L);
+        verify(seguroRepository).findById(99);
+        verify(usuarioRepository).findById(1);
+    }
+
+    @Test
+    void convertirDTOAContrato_SeguroNotFound_ThrowsRuntimeException() {
+        // Arrange
+        when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
+        when(seguroRepository.findById(99)).thenReturn(Optional.empty());
+        // No configuramos usuarioRepository.findById(1) porque no se invocará
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> documentoService.convertirDTOAContrato(contratoDto));
+        assertTrue(exception.getMessage().contains("Seguro no encontrado"), "El mensaje debe indicar que el seguro no fue encontrado");
+        verify(clienteRepository).findById(10L);
+        verify(seguroRepository).findById(99);
+        verifyNoInteractions(usuarioRepository); // Aseguramos que no haya interacciones con usuarioRepository
+    }
 }
