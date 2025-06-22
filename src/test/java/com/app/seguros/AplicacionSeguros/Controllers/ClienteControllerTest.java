@@ -11,9 +11,10 @@ import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.CondicionMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.impl.DefaultClaims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,27 +22,32 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc(addFilters = false)
 class ClienteControllerUnitariasTest {
 
     @Autowired
     private MockMvc mockMvc;
+
     @MockBean
     private ClienteService clienteService;
+
     @MockBean
     private UsuariosRepository usuariosRepository;
+
     @MockBean
     private CondicionMedicaService condicionMedicaService;
+
     @MockBean
     private BeneficiarioRepository beneficiarioRepository;
+
     @MockBean
     private JwtService jwtService;
 
@@ -49,23 +55,23 @@ class ClienteControllerUnitariasTest {
     private ClienteRepository clienteRepository;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-    private String token = "mock-valid-token";
+    private String token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LXVzZXIifQ.signature";
 
     private ClienteDTO createDTO(Long id) {
-        ClienteDTO dto = ClienteDTO.builder()
-            .id_Cliente(id)
-            .nombre("Juan")
-            .apellido("Pérez")
-            .cedula("1234567890")
-            .direccion("Calle Principal 123")
-            .telefono("987654321")
-            .email("juan.perez@example.com")
-            .genero("Masculino")
-            .fecha_nacimiento(new Date(1990 - 1900, 4, 15)) // Mes 0-indexed
-            .estado(Estado.Activo)
-            .numeroCuenta("1234567892224")
-            .build();
-        return dto;
+        return ClienteDTO.builder()
+                .id_Cliente(id)
+                .nombre("Juan")
+                .apellido("Pérez")
+                .cedula("1234567890")
+                .direccion("Calle Principal 123")
+                .telefono("987654321")
+                .email("juan.perez@example.com")
+                .genero("Masculino")
+                .fecha_nacimiento(new Date(1990 - 1900, 4, 15))
+                .estado(Estado.Activo)
+                .numeroCuenta("1234567892224")
+                .idAgente(1)
+                .build();
     }
 
     private ClienteRespuestaDTO createRespuestaDTO(Long id) {
@@ -84,12 +90,17 @@ class ClienteControllerUnitariasTest {
                 .build();
     }
 
-
-
     @BeforeEach
-    void setUpSecurity() {
-        JwtService jwtMock = Mockito.mock(JwtService.class);
-        when(jwtMock.getToken(any(Usuario.class))).thenReturn("mock-token");
+    void setUp() {
+        // Configurar mocks para JwtService
+        when(jwtService.getToken(any(Usuario.class))).thenReturn(token);
+        when(jwtService.getUsernameFromToken(anyString())).thenReturn("test-user");
+        when(jwtService.isTokenValid(anyString(), any())).thenReturn(true);
+
+        // Mockear usuariosRepository para idAgente
+        Usuario mockUsuario = new Usuario();
+        mockUsuario.setID_Usuario(1);
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(mockUsuario));
     }
 
     @Test
@@ -162,6 +173,4 @@ class ClienteControllerUnitariasTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id_Cliente").value(1L));
     }
-
-
 }
