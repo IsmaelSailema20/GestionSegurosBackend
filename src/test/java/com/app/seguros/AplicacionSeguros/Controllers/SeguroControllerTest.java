@@ -157,4 +157,51 @@ class SeguroControllerUnitariasTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isInternalServerError());
     }
+
+    @Test
+    void activarSeguro_Success() throws Exception {
+        SeguroDTO dto = createDTO(1);
+
+        when(seguroService.activarSeguro(anyInt())).thenReturn(dto);
+
+        mockMvc.perform(post("/Seguros/1")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.estado").value("Activo"));
+    }
+
+    @Test
+    void activarSeguro_Exception() throws Exception {
+        when(seguroService.activarSeguro(anyInt())).thenThrow(new RuntimeException("Error al activar"));
+
+        mockMvc.perform(post("/Seguros/1")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al activar"));
+    }
+
+    @Test
+    void seguroEsEditable_True() throws Exception {
+        when(seguroService.esEditable(anyInt())).thenReturn(true);
+
+        mockMvc.perform(post("/Seguros/editable/1")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Es Editable"));
+    }
+
+    @Test
+    void seguroEsEditable_False() throws Exception {
+        when(seguroService.esEditable(anyInt())).thenReturn(false);
+
+        mockMvc.perform(post("/Seguros/editable/1")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("No Es Editable"));
+    }
 }

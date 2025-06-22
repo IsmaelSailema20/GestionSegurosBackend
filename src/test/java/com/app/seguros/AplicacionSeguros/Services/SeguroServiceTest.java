@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Services;
 
 import com.app.seguros.AplicacionSeguros.Dto.SeguroDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficio;
+import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
@@ -149,12 +150,10 @@ class SeguroServiceTest {
         assertEquals(Tipo.Salud, actualizado.getTipo());
     }
     @Test
-    void testEliminar() {
-        when(contratoRepository.findBySeguroIdSeguro(any(Integer.class))).thenReturn(new ArrayList<>());
-        when(seguroRepository.findById(1)).thenReturn(Optional.of(seguro));
-        when(seguroRepository.save(any(Seguro.class))).thenReturn(seguro);
-        seguroService.deleteSeguro(1);
-        verify(seguroRepository, times(1)).save(seguro);
+    void testEliminarWithContracts() {
+        when(contratoRepository.findBySeguroIdSeguro(1)).thenReturn(List.of(new Contrato()));
+        assertThrows(RuntimeException.class, () -> seguroService.deleteSeguro(1));
+        verify(seguroRepository, never()).deleteById(anyInt());
     }
     @Test
     void testActivar() {

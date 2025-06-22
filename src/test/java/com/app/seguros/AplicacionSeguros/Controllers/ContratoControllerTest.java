@@ -167,4 +167,109 @@ class ContratoControllerTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void obtenerContratosPorCedula_found() throws Exception {
+        String cedula = "123456789";
+        ContratoRespuestaDTO contrato = ContratoRespuestaDTO.builder().id(1).build();
+        when(contratoService.buscarContratosPorCedula(cedula)).thenReturn(List.of(contrato));
+
+        mockMvc.perform(get("/contratos/cliente/" + cedula)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    void obtenerContratosPorCedula_noContent() throws Exception {
+        String cedula = "123456789";
+        when(contratoService.buscarContratosPorCedula(cedula)).thenReturn(List.of());
+
+        mockMvc.perform(get("/contratos/cliente/" + cedula)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void obtenerContratosPorAgente_found() throws Exception {
+        Long idAgente = 1L;
+        ContratoRespuestaDTO contrato = ContratoRespuestaDTO.builder().id(1).build();
+        when(contratoService.buscarContratosPorAgente(idAgente)).thenReturn(List.of(contrato));
+
+        mockMvc.perform(get("/contratos/agente/" + idAgente)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+
+    @Test
+    void obtenerContratosPorAgente_noContent() throws Exception {
+        Long idAgente = 1L;
+        when(contratoService.buscarContratosPorAgente(idAgente)).thenReturn(List.of());
+
+        mockMvc.perform(get("/contratos/agente/" + idAgente)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
+
+    @Test
+    void crearContrato_error() throws Exception {
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idCliente(1)
+                .idSeguro(2)
+                .idAgente(3)
+                .fechaInicio(new Date())
+                .fechaFin(new Date())
+                .beneficiarios(List.of())
+                .build();
+
+        when(contratoService.registrarContrato(any())).thenThrow(new RuntimeException("Error al crear contrato"));
+
+        mockMvc.perform(post("/contratos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al crear contrato"));
+    }
+
+    @Test
+    void editarContrato_error() throws Exception {
+        ContratoRegistrarDTO dto = ContratoRegistrarDTO.builder()
+                .idCliente(1).idSeguro(2).idAgente(3)
+                .fechaInicio(new Date()).fechaFin(new Date())
+                .beneficiarios(List.of()).build();
+
+        when(contratoService.editarContrato(any(), any())).thenThrow(new RuntimeException("Error al editar contrato"));
+
+        mockMvc.perform(put("/contratos/20")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al editar contrato"));
+    }
+
+    @Test
+    void activarContrato_success() throws Exception {
+        ContratoRespuestaDTO response = ContratoRespuestaDTO.builder().id(40).build();
+        when(contratoService.editarContrato(40)).thenReturn(response);
+
+        mockMvc.perform(put("/contratos/activar/40")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(40));
+    }
+
+    @Test
+    void activarContrato_error() throws Exception {
+        when(contratoService.editarContrato(40)).thenThrow(new RuntimeException("Error al activar contrato"));
+
+        mockMvc.perform(put("/contratos/activar/40")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al activar contrato"));
+    }
 }
