@@ -208,15 +208,24 @@ class DocumentoControllerUnitariasTest {
 
     @Test
     void aprobarDocumento() throws Exception {
-        List<Documento> documentos = List.of(createDocumento(1L));
-        when(documentoService.obtenerDocumentosPorContrato(1L)).thenReturn(documentos);
-        when(clienteService.getCorreoCliente(1L)).thenReturn("cliente@example.com");
-        doNothing().when(documentoService).aprobarDocumento(anyLong());
-        doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
+        // Arrange
+        Long idDocumento = 1L;
+        Documento documento = createDocumento(idDocumento);
+        when(documentoService.obtenerDocumento(idDocumento)).thenReturn(documento);
+        when(clienteService.getCorreoCliente(documento.getCliente().getId())).thenReturn("cliente@example.com");
+        doNothing().when(documentoService).aprobarDocumento(idDocumento);
+        doNothing().when(emailService).enviarCorreo(eq("cliente@example.com"), eq("Documento Aprobado"), anyString());
 
+        // Act & Assert
         mockMvc.perform(put("/documentos/1/aprobar")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+
+        // Verify
+        verify(documentoService, times(1)).obtenerDocumento(idDocumento);
+        verify(documentoService, times(1)).aprobarDocumento(idDocumento);
+        verify(clienteService, times(1)).getCorreoCliente(documento.getCliente().getId());
+        verify(emailService, times(1)).enviarCorreo(eq("cliente@example.com"), eq("Documento Aprobado"), anyString());
     }
 
     @Test
@@ -230,15 +239,24 @@ class DocumentoControllerUnitariasTest {
 
     @Test
     void rechazarDocumento() throws Exception {
-        List<Documento> documentos = List.of(createDocumento(1L));
-        when(documentoService.obtenerDocumentosPorContrato(1L)).thenReturn(documentos);
-        when(clienteService.getCorreoCliente(1L)).thenReturn("cliente@example.com");
-        doNothing().when(documentoService).rechazarDocumento(anyLong());
-        doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
+        // Arrange
+        Long idDocumento = 1L;
+        Documento documento = createDocumento(idDocumento);
+        when(documentoService.obtenerDocumento(idDocumento)).thenReturn(documento);
+        when(clienteService.getCorreoCliente(documento.getCliente().getId())).thenReturn("cliente@example.com");
+        doNothing().when(documentoService).rechazarDocumento(idDocumento);
+        doNothing().when(emailService).enviarCorreo(eq("cliente@example.com"), eq("Documento Rechazado"), anyString());
 
+        // Act & Assert
         mockMvc.perform(put("/documentos/1/rechazar")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+
+        // Verify
+        verify(documentoService, times(1)).obtenerDocumento(idDocumento);
+        verify(documentoService, times(1)).rechazarDocumento(idDocumento);
+        verify(clienteService, times(1)).getCorreoCliente(documento.getCliente().getId());
+        verify(emailService, times(1)).enviarCorreo(eq("cliente@example.com"), eq("Documento Rechazado"), anyString());
     }
 
     @Test

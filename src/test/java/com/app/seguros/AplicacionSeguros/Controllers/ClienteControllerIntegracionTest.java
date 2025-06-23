@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
+import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.EstadoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Date;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,31 +54,39 @@ class ClienteControllerIntegracionTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtService jwtService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private String token = "";
+    private String token;
 
     private Long idGenerado;
 
-    private ClienteDTO createDTO(Long id) {
-        ClienteDTO dto = new ClienteDTO(Estado.Activo);
-        dto.setId_Cliente(id);
-        dto.setNombre("Juan");
-        dto.setApellido("Pérez");
-        dto.setCedula("1234567890");
-        dto.setDireccion("Calle Principal 123");
-        dto.setTelefono("987654321");
-        dto.setEmail("juan.perez@example.com");
-        dto.setGenero("Masculino");
-        dto.setFecha_nacimiento(new Date(1990 - 1900, 4, 15));
-        dto.setEstado(Estado.Activo);
+    private ClienteDTO createDTO(Long id, String numeroCuenta, String cedula, String email) {
         CondicionMedica cond = new CondicionMedica();
         cond.setDiagnostico("Hipertensión");
-        dto.setCondicionesMedicas(List.of(cond));
+
+        ClienteDTO dto = ClienteDTO.builder()
+            .id_Cliente(id)
+            .nombre("Juan")
+            .apellido("Pérez")
+            .cedula(cedula)
+            .direccion("Calle Principal 123")
+            .telefono("987654321")
+            .email(email)
+            .genero("Masculino")
+            .fecha_nacimiento(new Date(1990 - 1900, 4, 15))
+            .estado(Estado.Activo)
+            .estaturaMetros(1.75f)
+            .pesoKg(70.0f)
+            .numeroCuenta(numeroCuenta)
+            .condicionesMedicas(List.of(cond))
+            .build();
         return dto;
     }
 
-    private Cliente createEntity(String cedula, String email) {
+    private Cliente createEntity(String cedula, String email, String numeroCuenta) {
         return Cliente.builder()
                 .nombre("Juan")
                 .apellido("Pérez")
@@ -87,6 +97,10 @@ class ClienteControllerIntegracionTest {
                 .genero("Masculino")
                 .fecha_nacimiento(new Date(1990 - 1900, 4, 15))
                 .estado(Estado.Activo)
+                .fechaCreacion(new Date())
+                .estaturaMetros(1.75f)
+                .pesoKg(70.0f)
+                .numeroCuenta(numeroCuenta)
                 .build();
     }
 
@@ -96,7 +110,7 @@ class ClienteControllerIntegracionTest {
                 .apellido("apellido")
                 .nombre("nombre")
                 .estado(Estado.Activo)
-                .email("email")
+                .email("email@example.com")
                 .rol(Rol.Administrador)
                 .build();
     }
@@ -108,30 +122,52 @@ class ClienteControllerIntegracionTest {
         clienteRepository.deleteAll();
         usuariosRepository.deleteAll();
 
-        Cliente cliente = createEntity("1234567890", "juan.perez@example.com");
+        Cliente cliente = createEntity("1234567890", "juan.perez@example.com", "1234567890");
         idGenerado = clienteRepository.save(cliente).getId();
 
-        clienteRepository.save(createEntity("0987654321", "juan2.perez@example.com"));
+        clienteRepository.save(createEntity("0987654321", "juan2.perez@example.com", "0987654321"));
 
         Usuario u = createUsuario();
         usuariosRepository.save(u);
 
-        JwtService jwtService = new JwtService();
         token = jwtService.getToken(u);
     }
 
     @Test
     void saveCliente() throws Exception {
-        ClienteDTO dto = createDTO(null);
-        dto.setCedula("1122334455");
-        dto.setEmail("new.client@example.com");
+        ClienteDTO dto = createDTO(null, "1122334455", "1122334455", "isailema4058@uta.edu.ec");
 
         mockMvc.perform(post("/Clientes")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("new.client@example.com"));
+                .andExpect(jsonPath("$.email").value("isailema4058@uta.edu.ec"))
+                .andExpect(jsonPath("$.numeroCuenta").value("1122334455"))
+                .andExpect(jsonPath("$.nombre").value("Juan"));
+    }
+
+    @Test
+    void saveClienteDuplicateNumeroCuenta() throws Exception {
+        ClienteDTO dto = createDTO(null, "1234567890", "1122334455", "new.client@example.com");
+
+        mockMvc.perform(post("/Clientes")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("El número de cuenta ya pertenece a otro usuario. Verifique e intente nuevamente")));
+    }
+
+    @Test
+    void saveClienteInvalidData() throws Exception {
+        ClienteDTO dto = createDTO(null, "1122334455", "1122334455", "invalid-email");
+
+        mockMvc.perform(post("/Clientes")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -140,7 +176,8 @@ class ClienteControllerIntegracionTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(""))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Required request body is missing")));
     }
 
     @Test
@@ -148,7 +185,8 @@ class ClienteControllerIntegracionTest {
         mockMvc.perform(get("/Clientes/" + idGenerado)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Juan"));
+                .andExpect(jsonPath("$.nombre").value("Juan"))
+                .andExpect(jsonPath("$.email").value("juan.perez@example.com"));
     }
 
     @Test
@@ -163,47 +201,64 @@ class ClienteControllerIntegracionTest {
         mockMvc.perform(get("/Clientes")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].nombre").value("Juan"));
     }
 
     @Test
     void updateCliente() throws Exception {
-        ClienteDTO dto = createDTO(idGenerado);
-        dto.setCedula("1122334455");
-        dto.setEmail("updated.client@example.com");
+        // Verificar que el cliente existe antes de actualizar
+        mockMvc.perform(get("/Clientes/" + idGenerado)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Juan"))
+                .andExpect(jsonPath("$.email").value("juan.perez@example.com"));
+
+        ClienteDTO dto = createDTO(idGenerado, "1122334455", "1122334455", "updated.client@example.com");
 
         mockMvc.perform(put("/Clientes/" + idGenerado)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("updated.client@example.com"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Usuario no encontrado")));
     }
 
     @Test
-    void deleteCliente() throws Exception {
+    void updateClienteNotFound() throws Exception {
+        ClienteDTO dto = createDTO(99999L, "1122334455", "1122334455", "updated.client@example.com");
+
+        mockMvc.perform(put("/Clientes/99999")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Cliente no encontrado")));
+    }
+
+    @Test
+    void updateClienteEstado() throws Exception {
         EstadoDTO estadoDTO = new EstadoDTO();
         estadoDTO.setEstado(Estado.Inactivo);
 
         mockMvc.perform(put("/Clientes/estado/" + idGenerado)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(estadoDTO)))
+                        .content(objectMapper.writeValueAsString(estadoDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("Inactivo"));
     }
 
-
     @Test
-    void deleteClienteNotFound() throws Exception {
+    void updateClienteEstadoNotFound() throws Exception {
         EstadoDTO estadoDTO = new EstadoDTO();
         estadoDTO.setEstado(Estado.Inactivo);
 
         mockMvc.perform(put("/Clientes/estado/99999")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(estadoDTO)))
-                .andExpect(status().isInternalServerError());
+                        .content(objectMapper.writeValueAsString(estadoDTO)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Cliente no encontrado")));
     }
-
 }

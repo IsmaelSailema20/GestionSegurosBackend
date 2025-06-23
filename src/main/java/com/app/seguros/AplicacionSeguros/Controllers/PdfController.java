@@ -41,7 +41,7 @@ public class PdfController {
                     .orElseThrow(() -> new RuntimeException("Contrato no encontrado con ID: " + id));
 
             // 2) Construye la ruta del PDF
-            String cedula = contrato.getCliente().getCedula();
+            String cedula = contrato.getCliente().getCedula() != null ? contrato.getCliente().getCedula() : "";
             String nombreCompleto = contrato.getCliente().getNombre().replace(" ", "_") + "_" + contrato.getCliente().getApellido().replace(" ", "_");
             String nombreCarpetaCliente = cedula + "_" + nombreCompleto;
             String nombreCarpetaContrato = contrato.getSeguro().getNombre().replace(" ", "_") + "_" + contrato.getId();

@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
@@ -188,5 +189,80 @@ class UsuariosControllerUnitariasTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void putCredencialesUsuarioCliente_success() throws Exception {
+        // Arrange
+        UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L) // Added to pass validation
+                .email("newemail@example.com")
+                .password("newpassword")
+                .build();
+        Usuario u = create(1);
+        u.setEmail("newemail@example.com");
+        u.setContraseña("newpassword");
+        when(usuarioService.actualizarCredencialesUsuarioCliente(eq(dto))).thenReturn(u);
+
+        // Act & Assert
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("newemail@example.com"))
+                .andExpect(jsonPath("$.password").value("newpassword")); // Fixed field name
+
+        // Verify
+        verify(usuarioService, times(1)).actualizarCredencialesUsuarioCliente(eq(dto));
+    }
+
+    @Test
+    void putCredencialesUsuarioCliente_nullBody() throws Exception {
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void putCredencialesUsuarioCliente_invalidDTO() throws Exception {
+        // DTO con password en blanco (violando @NotBlank)
+        UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .email("newemail@example.com")
+                .password("")
+                .build();
+
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void putCredencialesUsuarioCliente_runtimeException() throws Exception {
+        // Arrange
+        UsuarioClienteCredencialesDTO dto = UsuarioClienteCredencialesDTO.builder()
+                .idUsuario(1)
+                .idCliente(1L)
+                .email("newemail@example.com")
+                .password("newpassword")
+                .build();
+        doThrow(new RuntimeException("Error al actualizar credenciales")).when(usuarioService)
+                .actualizarCredencialesUsuarioCliente(eq(dto));
+
+        // Act & Assert
+        mockMvc.perform(put("/Usuarios/credencialesCliente")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error: Error al actualizar credenciales"));
+
+        // Verify
+        verify(usuarioService, times(1)).actualizarCredencialesUsuarioCliente(eq(dto));
+    }
 
 }

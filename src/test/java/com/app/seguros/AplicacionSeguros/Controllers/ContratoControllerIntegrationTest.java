@@ -6,6 +6,8 @@ import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.EstadoContratoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
+import com.app.seguros.AplicacionSeguros.Entities.Cliente;
+import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
@@ -13,6 +15,8 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
+import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +57,16 @@ class ContratoControllerIntegracionTest {
     private UsuariosRepository usuariosRepository;
 
     @Autowired
+    private ClienteRepository clienteRepository;
+
+    @Autowired
+    private ContratoRepository contratoRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -65,7 +78,7 @@ class ContratoControllerIntegracionTest {
                 .cliente(ClienteRespuestaDTO.builder()
                         .id_Cliente(1L)
                         .nombre("Juan")
-                        .estado(Estado.Activo) // Explicitly set the estado field
+                        .estado(Estado.Activo)
                         .build())
                 .seguro(Seguro.builder()
                         .idSeguro(1)
@@ -124,6 +137,7 @@ class ContratoControllerIntegracionTest {
 
     private Usuario createUsuario() {
         return Usuario.builder()
+                .ID_Usuario(1)
                 .contraseña(passwordEncoder.encode("contraseña"))
                 .apellido("Apellido")
                 .nombre("Nombre")
@@ -135,12 +149,16 @@ class ContratoControllerIntegracionTest {
 
     @BeforeEach
     void setUp() {
+        // Limpiar tablas dependientes en el orden correcto
+        clienteRepository.deleteAll();
+        contratoRepository.deleteAll();
         usuariosRepository.deleteAll();
 
+        // Crear un usuario para el token
         Usuario usuario = createUsuario();
         usuariosRepository.save(usuario);
 
-        JwtService jwtService = new JwtService();
+        // Generar el token usando el JwtService inyectado
         token = jwtService.getToken(usuario);
     }
 
@@ -204,7 +222,7 @@ class ContratoControllerIntegracionTest {
 
         mockMvc.perform(get("/contratos/cliente/9999999999")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -246,7 +264,6 @@ class ContratoControllerIntegracionTest {
                 .andExpect(jsonPath("$.beneficiarios[0].parentesco").value("Hijo"))
                 .andExpect(jsonPath("$.cliente.estado").value("Activo"));
     }
-
 
     @Test
     void editarContrato() throws Exception {

@@ -1,6 +1,7 @@
 package com.app.seguros.AplicacionSeguros.Entities;
 
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -56,5 +57,10 @@ public class Cliente {
   
     @Column(nullable = false,length = 100,unique = true)
     private String numeroCuenta;
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Agente", nullable = false)
+    @JsonIgnore
+    private Usuario agente;
 
 }

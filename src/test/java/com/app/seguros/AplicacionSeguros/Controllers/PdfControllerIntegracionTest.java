@@ -16,6 +16,7 @@ import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +27,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +64,8 @@ class PdfControllerIntegracionTest {
         ClienteRespuestaDTO cliente = new ClienteRespuestaDTO();
         cliente.setId_Cliente(1L);
         cliente.setNombre("Juan");
+        cliente.setApellido("Pérez");
+        cliente.setCedula("1234567890");
         cliente.setEstado(Estado.Activo);
         cliente.setCondicionesMedicas(List.of(new CondicionMedica()));
 
@@ -96,7 +101,7 @@ class PdfControllerIntegracionTest {
                 .cliente(cliente)
                 .seguro(seguro)
                 .agente(agente)
-                .fechaInicio(new Date(2025, 5, 1))
+                .fechaInicio(new Date(2025 - 1900, 5, 1))
                 .fechaFin(new Date(2026, 5, 1))
                 .estado(EstadoContrato.ACTIVO)
                 .beneficiarios(List.of(beneficiario))
@@ -127,7 +132,10 @@ class PdfControllerIntegracionTest {
 
     @Test
     void descargarPdfSuccess() throws Exception {
+        // Arrange
         ContratoRespuestaDTO dto = createContratoRespuestaDTO(1);
+        dto.setEstado(EstadoContrato.PENDIENTE); // Asegúrate que no sea ACTIVO
+
         byte[] pdfBytes = "Sample PDF content".getBytes();
 
         when(contratoService.buscarPorId(1)).thenReturn(Optional.of(dto));
@@ -136,6 +144,7 @@ class PdfControllerIntegracionTest {
                 any(Date.class), any(Date.class), anyList(), anyList()))
                 .thenReturn(pdfBytes);
 
+        // Act & Assert
         mockMvc.perform(get("/pdf/contrato/1")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -144,6 +153,7 @@ class PdfControllerIntegracionTest {
                 .andExpect(content().bytes(pdfBytes));
     }
 
+
     @Test
     void descargarPdfContractNotFound() throws Exception {
         when(contratoService.buscarPorId(999)).thenReturn(Optional.empty());
@@ -151,12 +161,14 @@ class PdfControllerIntegracionTest {
         mockMvc.perform(get("/pdf/contrato/999")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Contrato no encontrado"));
+                .andExpect(content().string("Error al procesar el PDF: Contrato no encontrado con ID: 999"));
     }
 
     @Test
     void descargarPdfGenerationError() throws Exception {
         ContratoRespuestaDTO dto = createContratoRespuestaDTO(1);
+
+        dto.setEstado(EstadoContrato.PENDIENTE);
 
         when(contratoService.buscarPorId(1)).thenReturn(Optional.of(dto));
         when(contratoPdfService.generarContratoPdf(
@@ -167,6 +179,6 @@ class PdfControllerIntegracionTest {
         mockMvc.perform(get("/pdf/contrato/1")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Error generating PDF"));
+                .andExpect(content().string("Error al procesar el PDF: Error generating PDF"));
     }
 }

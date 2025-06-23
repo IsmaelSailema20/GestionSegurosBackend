@@ -5,7 +5,10 @@ import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
+import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,10 +39,17 @@ public class ClienteServiceTest {
     @Mock
     private UsuarioService usuarioService;
 
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private UsuariosRepository usuariosRepository;
+
     private Cliente cliente;
     private ClienteDTO clienteDTO;
     private CondicionMedica condicionMedica;
     private Date fechaNacimiento;
+    private Usuario usuario;
 
     @BeforeEach
     void setUp() {
@@ -59,25 +69,37 @@ public class ClienteServiceTest {
                 .estado(Estado.Activo)
                 .pesoKg(70.0)
                 .estaturaMetros(1.75)
+                .numeroCuenta("1234567890123456")
                 .build();
 
-        clienteDTO = new ClienteDTO(Estado.Activo);
-        clienteDTO.setId_Cliente(1L);
-        clienteDTO.setNombre("Juan");
-        clienteDTO.setApellido("Perez");
-        clienteDTO.setCedula("1234567890");
-        clienteDTO.setEmail("juan@example.com");
-        clienteDTO.setDireccion("Calle 123");
-        clienteDTO.setTelefono("123456789");
-        clienteDTO.setGenero("Masculino");
-        clienteDTO.setFecha_nacimiento(fechaNacimiento);
-        clienteDTO.setEstado(Estado.Activo);
-        clienteDTO.setPesoKg(70.0);
-        clienteDTO.setEstaturaMetros(1.75);
+        clienteDTO = ClienteDTO.builder()
+                .id_Cliente(1L)
+                .nombre("Juan")
+                .apellido("Perez")
+                .cedula("1234567890")
+                .email("juan@example.com")
+                .direccion("Calle 123")
+                .telefono("123456789")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(70.0)
+                .estaturaMetros(1.75)
+                .numeroCuenta("1234567890123456")
+                .build();
 
         condicionMedica = CondicionMedica.builder()
                 .id_condicion(1)
                 .diagnostico("Hipertension")
+                .build();
+
+        usuario = Usuario.builder()
+                .ID_Usuario(1)
+                .nombre("Juan")
+                .apellido("Perez")
+                .email("juan@example.com")
+                .contraseña("1234567890")
+                .rol(Rol.Cliente)
                 .build();
     }
 
@@ -87,9 +109,12 @@ public class ClienteServiceTest {
         clienteDTO.setCondicionesMedicas(List.of(condicionMedica));
         when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.empty());
         when(clienteRepository.findByEmail("juan@example.com")).thenReturn(Optional.empty());
+        when(clienteRepository.findByNumeroCuenta("1234567890123456")).thenReturn(Optional.empty());
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
         lenient().when(condService.post(any(CondicionMedica.class))).thenReturn(condicionMedica);
         when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
+        when(usuarioService.register(any(UsuarioCrearRequest.class))).thenReturn(null); // Mock register to return null
+        doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
 
         // Act
         ClienteRespuestaDTO result = clienteService.saveCliente(clienteDTO);
@@ -100,10 +125,13 @@ public class ClienteServiceTest {
         assertEquals("Juan", result.getNombre());
         assertEquals("1234567890", result.getCedula());
         assertEquals("juan@example.com", result.getEmail());
+        assertEquals("1234567890123456", result.getNumeroCuenta());
         assertEquals(1, result.getCondicionesMedicas().size());
         assertEquals("Hipertension", result.getCondicionesMedicas().get(0).getDiagnostico());
         verify(clienteRepository, times(1)).save(any(Cliente.class));
         verify(condService, times(1)).postRelacion(any(CondicionMedica.class), any(Cliente.class));
+        verify(usuarioService, times(1)).register(any(UsuarioCrearRequest.class));
+        verify(emailService, times(1)).enviarCorreo(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -182,40 +210,66 @@ public class ClienteServiceTest {
     @Test
     void testUpdateCliente_Success() {
         // Arrange
-        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
-        updatedDTO.setId_Cliente(1L);
-        updatedDTO.setNombre("Carlos");
-        updatedDTO.setApellido("Lopez");
-        updatedDTO.setCedula("0987654321");
-        updatedDTO.setEmail("carlos@example.com");
-        updatedDTO.setDireccion("Calle 456");
-        updatedDTO.setTelefono("987654321");
-        updatedDTO.setGenero("Masculino");
-        updatedDTO.setFecha_nacimiento(fechaNacimiento);
-        updatedDTO.setEstado(Estado.Activo);
-        updatedDTO.setPesoKg(75.0);
-        updatedDTO.setEstaturaMetros(1.80);
-        updatedDTO.setCondicionesMedicas(List.of(condicionMedica));
+        ClienteDTO updatedDTO =  ClienteDTO.builder()
+                .nombre("Carlos")
+                .apellido("Gomez")
+                .cedula("0987654321")
+                .email("carlos@example.com")
+                .direccion("Avenida 456")
+                .telefono("987654321")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(80.0)
+                .estaturaMetros(1.80)
+                .numeroCuenta("6543219876543210")
+                .condicionesMedicas(List.of(condicionMedica))
+                .build();
 
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
         when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.empty());
         when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.empty());
+        when(clienteRepository.findByNumeroCuenta("6543219876543210")).thenReturn(Optional.empty());
+        when(usuariosRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(usuario));
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuario);
         lenient().when(condService.post(any(CondicionMedica.class))).thenReturn(condicionMedica);
         when(condService.getAll(1)).thenReturn(List.of(condicionMedica));
+        doNothing().when(emailService).enviarCorreo(anyString(), anyString(), anyString());
+        doNothing().when(condService).deleteByClienteId(1);
+
 
         // Act
         ClienteRespuestaDTO result = clienteService.updateCliente(1L, updatedDTO);
 
         // Assert
         assertNotNull(result);
+        assertEquals(1L, result.getId_Cliente());
         assertEquals("Carlos", result.getNombre());
+        assertEquals("Gomez", result.getApellido());
         assertEquals("0987654321", result.getCedula());
         assertEquals("carlos@example.com", result.getEmail());
+        assertEquals("Avenida 456", result.getDireccion());
+        assertEquals("987654321", result.getTelefono());
+        assertEquals("Masculino", result.getGenero());
+        assertEquals(fechaNacimiento, result.getFecha_nacimiento());
+        assertEquals(Estado.Activo, result.getEstado());
+        assertEquals(80.0, result.getPesoKg());
+        assertEquals(1.80, result.getEstaturaMetros());
+        assertEquals("6543219876543210", result.getNumeroCuenta());
         assertEquals(1, result.getCondicionesMedicas().size());
+        assertEquals("Hipertension", result.getCondicionesMedicas().get(0).getDiagnostico());
+
+        verify(clienteRepository, times(1)).findById(1L);
+        verify(clienteRepository, times(1)).findByCedula("0987654321");
+        verify(clienteRepository, times(1)).findByEmail("carlos@example.com");
+        verify(clienteRepository, times(1)).findByNumeroCuenta("6543219876543210");
+        verify(usuariosRepository, times(1)).findByEmail("juan@example.com");
+        verify(usuariosRepository, times(1)).save(any(Usuario.class));
         verify(clienteRepository, times(1)).save(any(Cliente.class));
         verify(condService, times(1)).deleteByClienteId(1);
         verify(condService, times(1)).postRelacion(any(CondicionMedica.class), any(Cliente.class));
+        verify(emailService, times(1)).enviarCorreo(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -232,11 +286,26 @@ public class ClienteServiceTest {
     @Test
     void testUpdateCliente_DuplicateCedula() {
         // Arrange
-        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
-        updatedDTO.setCedula("0987654321");
-        updatedDTO.setEmail("juan@example.com");
+        // Arrange
+        ClienteDTO updatedDTO = ClienteDTO.builder()
+                .id_Cliente(1L)
+                .nombre("Carlos")
+                .apellido("Gomez")
+                .cedula("0987654321")
+                .email("juan@example.com")
+                .direccion("Avenida 456")
+                .telefono("987654321")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(80.0)
+                .estaturaMetros(1.80)
+                .numeroCuenta("6543219876543210")
+                .condicionesMedicas(List.of(condicionMedica))
+                .build();
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.of(new Cliente()));
+        Cliente otroCliente = Cliente.builder().id(2L).cedula("0987654321").build();
+        when(clienteRepository.findByCedula("0987654321")).thenReturn(Optional.of(otroCliente));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
@@ -247,12 +316,27 @@ public class ClienteServiceTest {
     @Test
     void testUpdateCliente_DuplicateEmail() {
         // Arrange
-        ClienteDTO updatedDTO = new ClienteDTO(Estado.Activo);
-        updatedDTO.setCedula("1234567890");
-        updatedDTO.setEmail("carlos@example.com");
+        ClienteDTO updatedDTO = ClienteDTO.builder()
+                .id_Cliente(1L)
+                .nombre("Carlos")
+                .apellido("Gomez")
+                .cedula("1234567890")
+                .email("carlos@example.com")
+                .direccion("Avenida 456")
+                .telefono("987654321")
+                .genero("Masculino")
+                .fecha_nacimiento(fechaNacimiento)
+                .estado(Estado.Activo)
+                .pesoKg(80.0)
+                .estaturaMetros(1.80)
+                .numeroCuenta("6543219876543210")
+                .condicionesMedicas(List.of(condicionMedica))
+                .build();
+
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        Cliente otroCliente = Cliente.builder().id(2L).email("carlos@example.com").build();
+        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.of(otroCliente));
         lenient().when(clienteRepository.findByCedula("1234567890")).thenReturn(Optional.of(cliente));
-        when(clienteRepository.findByEmail("carlos@example.com")).thenReturn(Optional.of(new Cliente()));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clienteService.updateCliente(1L, updatedDTO));
