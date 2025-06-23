@@ -10,6 +10,7 @@ import com.app.seguros.AplicacionSeguros.Repositories.ReembolsoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,41 @@ public class ReembolsoService {
             throw new RuntimeException("Error al obtener todos los reembolsos: " + e.getMessage());
         }
     }
+    @Transactional(readOnly = true)
+    public List<ReembolsoClienteDTO> obtenerTodosLosReembolsosConCliente() {
+        try {
+            List<Reembolso> reembolsos = reembolsoRepository.findAll();
+            return reembolsos.stream().map(this::convertToReembolsoClienteDTO).toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al obtener todos los reembolsos: " + e.getMessage());
+        }
+    }
+    @Transactional(readOnly = true)
+    public List<ReembolsoRespuestaDTO> obtenerReembolsosPorCliente(Long clienteId) {
+        try {
+            List<Reembolso> reembolsos = reembolsoRepository.findByContratoClienteId(clienteId);
+            return reembolsos.stream()
+                    .map(this::convertReembolsoToDTO)
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al obtener reembolsos por cliente: " + e.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReembolsoClienteDTO> obtenerReembolsosConClientePorAgente(Long agenteId) {
+        try {
+            List<Reembolso> reembolsos = reembolsoRepository.findReembolsosByAgenteId(agenteId);
+            return reembolsos.stream()
+                    .map(this::convertToReembolsoClienteDTO)
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al obtener reembolsos con cliente por agente: " + e.getMessage());
+        }
+    }
 
     @Transactional(readOnly = true)
     public List<ReembolsoRespuestaDTO> obtenerReembolsosPendientes() {
@@ -99,7 +135,28 @@ public class ReembolsoService {
         }
         return dto;
     }
+    private ReembolsoClienteDTO convertToReembolsoClienteDTO(Reembolso reembolso) {
+        ReembolsoClienteDTO dto = new ReembolsoClienteDTO();
+        dto.setIdReembolso(reembolso.getId_reembolo());
+        dto.setFechaResolucion(reembolso.getFechaResolucion());
+        dto.setDescripcion(reembolso.getDescripcion());
+        dto.setMontoSolicitado(reembolso.getMontoSolicitado());
+        dto.setEstado(reembolso.getEstado().name());
+        dto.setFechaSolicitud(reembolso.getFechaSolicitud());
+        dto.setTipoReembolso(reembolso.getTipoReembolso().toString());
 
+        if (reembolso.getContrato() != null) {
+            dto.setContratoId(reembolso.getContrato().getId().longValue());
+
+            Cliente cliente = reembolso.getContrato().getCliente();
+            if (cliente != null) {
+                dto.setNombreCliente(cliente.getNombre());
+                dto.setApellidoCliente(cliente.getApellido());
+            }
+        }
+
+        return dto;
+    }
     @Transactional
     public ReembolsoRespuestaDTO crearReembolsoConDocumentos(ReembolsoDTO reembolsoDTO, MultipartFile[] archivos, DocumentoRegistroDTO[] documentosDTO) throws IOException {
         // Validar contrato
@@ -211,7 +268,7 @@ public class ReembolsoService {
             String correoCliente = clienteService.getCorreoCliente(contrato.getCliente().getId_Cliente());
             String asunto = "Reembolso Aprobado";
             String cuerpo = String.format(
-                    "Estimado cliente,\n\nEl reembolso %s por un monto de $%.2f ha sido aprobado.\n\nSaludos,\nEquipo Walk Seguros",
+                    "Estimado cliente,\n\nEl reembolso %s por un monto de $%.2f ha sido aprobado y se desembolsara el valor solicitado a la cuenta que se brindo durante el registro.\n\nSaludos,\nEquipo Walk Seguros",
                     reembolso.getId_reembolo(), reembolso.getMontoSolicitado()
             );
             emailService.enviarCorreo(correoCliente, asunto, cuerpo);
