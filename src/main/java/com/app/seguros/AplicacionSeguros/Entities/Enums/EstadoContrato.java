@@ -4,5 +4,6 @@ public enum EstadoContrato {
         PENDIENTE,
         ACTIVO,
         ELIMINADO,
-        VENCIDO
+        VENCIDO,
+        IMPAGO
 }
