@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.UsuarioClienteCredencialesDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioEditarRequest;
@@ -64,24 +65,27 @@ public class UsuarioService {
                     });
         }
 
-        // Actualizar nombre y apellido en Usuario y Cliente si cambiaron
         boolean nombreApellidoCambiado = !usuario.getNombre().equals(request.getNombre()) ||
                 !usuario.getApellido().equals(request.getApellido());
 
-        if (nombreApellidoCambiado || !usuario.getEmail().equals(request.getEmail())) {
+        boolean emailCambiado = !usuario.getEmail().equals(request.getEmail());
+
+        if (nombreApellidoCambiado) {
+            usuario.setNombre(request.getNombre());
+            usuario.setApellido(request.getApellido());
+        }
+
+        // Solo actualizar el cliente si el rol es CLIENTE
+        if (usuario.getRol() == Rol.Cliente) {
             Cliente cliente = clienteRepository.findByEmail(usuario.getEmail())
                     .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
 
             if (nombreApellidoCambiado) {
-                usuario.setNombre(request.getNombre());
-                usuario.setApellido(request.getApellido());
                 cliente.setNombre(request.getNombre());
                 cliente.setApellido(request.getApellido());
             }
-
-            if (!usuario.getEmail().equals(request.getEmail())) {
+            if (emailCambiado) {
                 usuario.setEmail(request.getEmail());
-                cliente.setEmail(request.getEmail());
 
                 // Enviar notificación por correo
                 String destinatario = request.getEmail();
@@ -95,7 +99,6 @@ public class UsuarioService {
 
                 emailService.enviarCorreo(destinatario, asunto, cuerpo);
             }
-
             clienteRepository.save(cliente);
         }
 
@@ -108,6 +111,7 @@ public class UsuarioService {
 
         return usuariosRepository.save(usuario);
     }
+
 
 
     public Usuario actualizarCredencialesUsuarioCliente(UsuarioClienteCredencialesDTO request) {
