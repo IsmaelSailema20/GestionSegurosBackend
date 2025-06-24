@@ -26,19 +26,9 @@ public interface ContratoRepository extends JpaRepository<Contrato,Integer> {
     //Reportes
 
     @Query(value = """
-    SELECT c.* 
-    FROM contratos c
-    LEFT JOIN pagos p ON p.contrato_id = c.id_contrato
-    WHERE p.id IS NULL OR p.confirmado = 0
-    """, nativeQuery = true)
-    List<Contrato> findContratosSinPagos();
-
-    @Query(value = """
     SELECT c.*
     FROM contratos c
-    LEFT JOIN pagos p ON p.contrato_id = c.id_contrato
-    where p.id is NOT null or p.confirmado <> 0
-    GROUP BY c.id_contrato having max(p.fecha_pago) + INTERVAL '30 days' < CURRENT_DATE 
+    WHERE c.estado='IMPAGO'
     """, nativeQuery = true)
     List<Contrato> findContratosImpagos();
 
@@ -59,19 +49,9 @@ public interface ContratoRepository extends JpaRepository<Contrato,Integer> {
     //Reportes por agente
 
     @Query(value = """
-    SELECT c.* 
-    FROM contratos c
-    LEFT JOIN pagos p ON p.contrato_id = c.id_contrato
-    WHERE (p.id IS NULL OR p.confirmado = 0) AND c.id_agente= :idAgente
-    """, nativeQuery = true)
-    List<Contrato> findContratosSinPagos(@Param("idAgente")int idAgente);
-
-    @Query(value = """
     SELECT c.*
     FROM contratos c
-    LEFT JOIN pagos p ON p.contrato_id = c.id_contrato
-    where (p.id is NOT null or p.confirmado <> 0) and c.id_agente= :idAgente
-    GROUP BY c.id_contrato having max(p.fecha_pago) + INTERVAL '30 days' < CURRENT_DATE 
+    WHERE c.estado='IMPAGO' and c.id_agente= :idAgente
     """, nativeQuery = true)
     List<Contrato> findContratosImpagos(@Param("idAgente")int idAgente);
 
