@@ -383,10 +383,6 @@ public class ContratoService {
             ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
             contratos.add(contratoResponse);
         }
-        for(Contrato contrato:contratoRepo.findContratosSinPagos()){
-            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
-            contratos.add(contratoResponse);
-        }
         return contratos;
     }
 
@@ -413,10 +409,6 @@ public class ContratoService {
         List<ContratoRespuestaDTO> contratos = new ArrayList<>();
 
         for(Contrato contrato:contratoRepo.findContratosImpagos( id)){
-            ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
-            contratos.add(contratoResponse);
-        }
-        for(Contrato contrato:contratoRepo.findContratosSinPagos(id)){
             ContratoRespuestaDTO contratoResponse=mapearContrato(contrato);
             contratos.add(contratoResponse);
         }
