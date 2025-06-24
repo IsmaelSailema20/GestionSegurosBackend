@@ -2,6 +2,7 @@ package com.app.seguros.AplicacionSeguros.Services.Daemons;
 
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MetodoPago;
 import com.app.seguros.AplicacionSeguros.Entities.Pago;
@@ -41,7 +42,7 @@ public class CobroAutomaticoService {
 
     @Scheduled(cron = "0 0 2 * * *") // Cada día a las 2:00 AM
     public void ejecutarCobros() {
-        List<Contrato> contratosActivos = contratoRepository.findByEstado("ACTIVO");
+        List<Contrato> contratosActivos = contratoRepository.findByEstado(EstadoContrato.ACTIVO);
 
         for (Contrato contrato : contratosActivos) {
             // Obtener todos los pagos para el contrato

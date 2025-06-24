@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface ContratoRepository extends JpaRepository<Contrato,Integer> {
     List<Contrato> findByClienteCedula(String cedula);
-    List<Contrato> findByEstado(String estado);
+    List<Contrato> findByEstado(EstadoContrato estado);
    // List<Contrato> findByAgente_ID_Usuario(Long idAgente);
    Optional<Contrato> findByClienteId(Long idCliente);
 

@@ -1,9 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
-import com.app.seguros.AplicacionSeguros.Dto.DocumentoDTO;
-import com.app.seguros.AplicacionSeguros.Dto.DocumentoRegistroDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ReembolsoDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ReembolsoRespuestaDTO;
+import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
 import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
 import com.app.seguros.AplicacionSeguros.Services.ReembolsoService;
@@ -74,6 +71,18 @@ public class ReembolsoController {
         }
     }
 
+    @GetMapping("/administrador/reembolsosClientes")
+    public ResponseEntity<List<ReembolsoClienteDTO>> obtenerTodosConCliente() {
+        try {
+            List<ReembolsoClienteDTO> reembolsos = reembolsoService.obtenerTodosLosReembolsosConCliente();
+            return ResponseEntity.ok(reembolsos);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
     @GetMapping("/pendientes")
     public ResponseEntity<List<ReembolsoRespuestaDTO>> obtenerPendientes() {
         try {
@@ -126,6 +135,17 @@ public class ReembolsoController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<ReembolsoRespuestaDTO>> obtenerPorCliente(@PathVariable Long clienteId) {
+        List<ReembolsoRespuestaDTO> reembolsos = reembolsoService.obtenerReembolsosPorCliente(clienteId);
+        return ResponseEntity.ok(reembolsos);
+    }
+
+    @GetMapping("/agente/{agenteId}")
+    public List<ReembolsoClienteDTO> obtenerReembolsosConClientePorAgente(@PathVariable Long agenteId) {
+        return reembolsoService.obtenerReembolsosConClientePorAgente(agenteId);
     }
 
     @PostMapping("/subirDocumento/{reembolsoId}")
