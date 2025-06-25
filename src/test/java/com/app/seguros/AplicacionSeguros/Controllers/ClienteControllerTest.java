@@ -3,6 +3,7 @@ package com.app.seguros.AplicacionSeguros.Controllers;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
 import com.app.seguros.AplicacionSeguros.Repositories.BeneficiarioRepository;
@@ -11,8 +12,6 @@ import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.app.seguros.AplicacionSeguros.Services.ClienteService;
 import com.app.seguros.AplicacionSeguros.Services.CondicionMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.impl.DefaultClaims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
-import java.util.function.Function;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -97,10 +95,19 @@ class ClienteControllerUnitariasTest {
         when(jwtService.getUsernameFromToken(anyString())).thenReturn("test-user");
         when(jwtService.isTokenValid(anyString(), any())).thenReturn(true);
 
+
         // Mockear usuariosRepository para idAgente
-        Usuario mockUsuario = new Usuario();
-        mockUsuario.setID_Usuario(1);
-        when(usuariosRepository.findById(1)).thenReturn(Optional.of(mockUsuario));
+        Usuario u = new Usuario();
+        u.setID_Usuario(1);
+        u.setEmail("email");
+        u.setContraseña("pass");
+        u.setNombre("nombre");
+        u.setApellido("apellido");
+        u.setEstado(Estado.Activo);
+        u.setRol(Rol.Administrador);
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(u));
+        JwtService jwtService = new JwtService();
+        token = jwtService.getToken(u);
     }
 
     @Test

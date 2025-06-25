@@ -1,7 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Repositories;
 
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

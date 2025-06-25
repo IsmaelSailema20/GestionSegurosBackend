@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -93,17 +92,6 @@ public class PagoController {
         return ResponseEntity.ok(estado);
     }
 
-    private PagoRespuestaDTO transformarDTO(@Valid @RequestBody PagoRegistroDTO dto) {
-        PagoRespuestaDTO response = PagoRespuestaDTO.builder()
-                .contratoId(dto.getContratoId())
-                .monto(dto.getMonto())
-                .fechaPago(dto.getFechaPago())
-                .metodo(dto.getMetodo())
-                .confirmado(EstadoDocumento.Pendiente) // Valor por defecto
-                .build();
-
-        return response;
-    }
     @PutMapping("/aceptarPago/{idDocumento}")
     public ResponseEntity<?> aprobarPago(@PathVariable Long idDocumento) {
         try {

@@ -20,8 +20,12 @@ public enum MensajeError {
     NUMERO_DE_CUENTA_DUPLICADO("El número de cuenta ya pertenece a otro usuario. Verifique e intente nuevamente"),
     TIPO_ARCHIVO_NO_PERMITIDO("El archivo que desea subir no está permitido solo: pdf, jpg, png"),
     REEMBOLSO_NO_ENCONTRADO("El reembolso no existe"),
-    REEMBOLSO_APROBADO("El reembolso solo se puede editar cuando está pendiente o rechazado")
-    ;
+    REEMBOLSO_APROBADO("El reembolso solo se puede editar cuando está pendiente o rechazado"),
+    TARJETA_NO_ENCONTRADA("Tarjeta no encontrada"),
+    TARJETA_PRINCIPAL_NO_PUEDE_ELIMINARSE("No se puede eliminar una tarjeta Principal"),
+    TARJETA_PRINCIPAL_NO_ENCONTRADA("Tarjeta principal no encontrada"),
+    TARJETA_PRINCIPAL_ACTUAL_NO_ENCONTRADA("No se encontró una tarjeta con estado 'Principal'"),
+    PAGO_NO_ENCONTRADO("El pago no se encontro");
 
     private final String mensaje;
 

@@ -9,9 +9,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MetodoPago;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoDocumento;
 import com.app.seguros.AplicacionSeguros.Repositories.PagoDocumentoRepository;
-import com.app.seguros.AplicacionSeguros.Services.DocumentoService;
 import com.app.seguros.AplicacionSeguros.Services.PagoService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,8 +38,6 @@ class PagoControllerTest {
     @Mock
     private PagoService pagoService;
 
-    @Mock
-    private DocumentoService documentoService;
 
     @Mock
     private PagoDocumentoRepository pagoDocumentoRepository;
@@ -55,7 +51,6 @@ class PagoControllerTest {
     private Documento documento;
     private PagoDocumento pagoDocumento;
     private MultipartFile archivoComprobante;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -97,7 +92,6 @@ class PagoControllerTest {
                 "contenido del archivo".getBytes()
         );
 
-        objectMapper = new ObjectMapper();
     }
 
     @Test

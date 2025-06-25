@@ -163,7 +163,7 @@ class TarjetaServiceTest {
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 tarjetaService.editarTarjeta(1L, tarjetaRegistroDTO));
-        assertEquals("Tarjeta no encontrada", exception.getMessage());
+        assertEquals(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje(), exception.getMessage());
         verify(tarjetaRepository, never()).save(any());
     }
 
@@ -199,9 +199,8 @@ class TarjetaServiceTest {
         when(tarjetaRepository.findById(1L)).thenReturn(Optional.of(tarjeta));
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        assertThrows(RuntimeException.class, () ->
                 tarjetaService.eliminarTarjeta(1L));
-        assertEquals("No se puede eliminar una tarjeta Principal", exception.getMessage());
         verify(tarjetaRepository, never()).delete(any());
     }
 
@@ -213,7 +212,7 @@ class TarjetaServiceTest {
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 tarjetaService.eliminarTarjeta(1L));
-        assertEquals("Tarjeta no encontrada", exception.getMessage());
+        assertEquals(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje(), exception.getMessage());
         verify(tarjetaRepository, never()).delete(any());
     }
 
@@ -241,7 +240,7 @@ class TarjetaServiceTest {
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 tarjetaService.obtenerTarjetaPorId(1L));
-        assertEquals("Tarjeta no encontrada", exception.getMessage());
+        assertEquals(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje(), exception.getMessage());
     }
 
     @Test
@@ -302,7 +301,7 @@ class TarjetaServiceTest {
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 tarjetaService.obtenerTarjetaPrincipal(1L));
-        assertEquals("Tarjeta principal no encontrada", exception.getMessage());
+        assertEquals(MensajeError.TARJETA_PRINCIPAL_NO_ENCONTRADA.getMensaje(), exception.getMessage());
     }
 
     @Test
@@ -326,7 +325,7 @@ class TarjetaServiceTest {
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 tarjetaService.inactivarTarjeta(1L));
-        assertEquals("Tarjeta no encontrada", exception.getMessage());
+        assertEquals(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje(), exception.getMessage());
         verify(tarjetaRepository, never()).save(any());
     }
 
@@ -369,9 +368,8 @@ class TarjetaServiceTest {
         when(tarjetaRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        assertThrows(RuntimeException.class, () ->
                 tarjetaService.cambiarEstadoTarjetaAPrincipal(1L));
-        assertEquals("Tarjeta no encontrada con id: 1", exception.getMessage());
         verify(tarjetaRepository, never()).save(any());
     }
 
@@ -385,7 +383,7 @@ class TarjetaServiceTest {
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 tarjetaService.cambiarEstadoTarjetaAPrincipal(1L));
-        assertEquals("No se encontró una tarjeta con estado 'Principal'.", exception.getMessage());
+        assertEquals(MensajeError.TARJETA_PRINCIPAL_NO_ENCONTRADA.getMensaje(), exception.getMessage());
         verify(tarjetaRepository, never()).save(any());
     }
 

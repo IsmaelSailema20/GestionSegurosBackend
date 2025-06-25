@@ -4,6 +4,7 @@ import com.app.seguros.AplicacionSeguros.Dto.*;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Entities.Documento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
+import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Pago;
 import com.app.seguros.AplicacionSeguros.Entities.PagoDocumento;
 import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
@@ -37,9 +38,9 @@ public class PagoService {
 
     public PagoRespuestaDTO registrarPago(PagoRegistroDTO dto) {
         Contrato contrato = contratoRepository.findById(dto.getContratoId().intValue())
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
         SeguroDTO seguro = seguroService.getSeguro(contrato.getSeguro().getIdSeguro().intValue())
-                .orElseThrow(()-> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(()-> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
         Pago pago = new Pago();
         pago.setContrato(contrato);
         pago.setMonto(BigDecimal.valueOf(seguro.getPrecio()));
@@ -55,9 +56,9 @@ public class PagoService {
     public PagoRespuestaDTO registrarPagoConComprobante(PagoRegistroDTO dto, MultipartFile archivoComprobante, DocumentoRegistroDTO documentoDTO) throws IOException {
         // 1. Obtener contrato
         Contrato contrato = contratoRepository.findById(dto.getContratoId().intValue())
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
         SeguroDTO seguro = seguroService.getSeguro(contrato.getSeguro().getIdSeguro().intValue())
-                .orElseThrow(()-> new RuntimeException("Seguro no encontrado"));
+                .orElseThrow(()-> new RuntimeException(MensajeError.SEGURO_NO_ENCONTRADO.getMensaje()));
         // 2. Guardar el pago
         Pago pago = new Pago();
         pago.setContrato(contrato);
@@ -87,8 +88,8 @@ public class PagoService {
     }
 
     public List<PagoRespuestaDTO> listarPagosPendientesPorContrato(Long contratoId){
-        Contrato contrato = contratoRepository.findById(contratoId.intValue())
-                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+        contratoRepository.findById(contratoId.intValue())
+                .orElseThrow(() -> new RuntimeException(MensajeError.CONTRATO_NO_ENCONTRADO.getMensaje()));
         List<Pago> pagos = pagoRepository.findByContratoId(contratoId);
         List<PagoRespuestaDTO> pagosPendientes = new ArrayList<>();
         pagos.forEach(pago -> {
@@ -107,7 +108,7 @@ public class PagoService {
 
     public void confirmarPago(Long id) {
         Pago pago = pagoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pago no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.PAGO_NO_ENCONTRADO.getMensaje()));
         pago.setConfirmado(EstadoDocumento.Aprobado);
         pagoRepository.save(pago);
     }
@@ -126,7 +127,7 @@ public class PagoService {
         PagoDocumento relacion = pagoDocumentoRepository.findByDocumentoIdDocumento(idDocumento);
         System.out.println(relacion);
         Pago pago = pagoRepository.findById(relacion.getPago().getId())
-                .orElseThrow(()-> new RuntimeException("Pago no encontrado"));
+                .orElseThrow(()-> new RuntimeException(MensajeError.PAGO_NO_ENCONTRADO.getMensaje()));
         pago.setConfirmado(EstadoDocumento.Aprobado);
 
         System.out.println(pago);
@@ -137,7 +138,7 @@ public class PagoService {
     public Pago rechazarPago(Long idDocumento){
         PagoDocumento relacion = pagoDocumentoRepository.findByDocumentoIdDocumento(idDocumento);
         Pago pago = pagoRepository.findById(relacion.getPago().getId())
-                .orElseThrow(()-> new RuntimeException("Pago no encontrado"));
+                .orElseThrow(()-> new RuntimeException(MensajeError.PAGO_NO_ENCONTRADO.getMensaje()));
         pago.setConfirmado(EstadoDocumento.Rechazado);
         pagoRepository.save(pago);
         pagoDocumentoRepository.delete(relacion);

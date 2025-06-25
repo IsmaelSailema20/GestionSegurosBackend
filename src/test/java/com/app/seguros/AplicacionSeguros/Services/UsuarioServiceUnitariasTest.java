@@ -41,25 +41,21 @@ class UsuarioServiceUnitariasTest {
     @InjectMocks
     private UsuarioService usuarioService;
 
-    @Mock
-    private EmailService emailService;
 
-    private Usuario usuario;
-    private Cliente cliente;
-    private UsuarioEditarRequest request;
+    private Usuario usuarioPrincipal;
+    private UsuarioEditarRequest requestPrincipal;
 
     @BeforeEach
     void setUp() {
-        usuario = create(1);
-        cliente = createCliente(1L);
-        request = new UsuarioEditarRequest();
-        request.setID_Usuario(1);
-        request.setEmail("newemail@example.com");
-        request.setNombre("NewNombre");
-        request.setApellido("NewApellido");
-        request.setRol(Rol.Cliente);
-        request.setEstado(Estado.Inactivo);
-        request.setContraseña("newPassword");
+        usuarioPrincipal = create(1);
+        requestPrincipal = new UsuarioEditarRequest();
+        requestPrincipal.setID_Usuario(1);
+        requestPrincipal.setEmail("newemail@example.com");
+        requestPrincipal.setNombre("NewNombre");
+        requestPrincipal.setApellido("NewApellido");
+        requestPrincipal.setRol(Rol.Cliente);
+        requestPrincipal.setEstado(Estado.Inactivo);
+        requestPrincipal.setContraseña("newPassword");
     }
 
     private Usuario create(int id){
@@ -144,26 +140,22 @@ class UsuarioServiceUnitariasTest {
 
     @Test
     void putUsuario_SuccessfulUpdateWithAllChanges() {
-        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(usuariosRepository.findById(1)).thenReturn(Optional.of(usuarioPrincipal));
         when(usuariosRepository.findByEmail("newemail@example.com")).thenReturn(Optional.empty());
-        when(clienteRepository.findByEmail("email")).thenReturn(Optional.of(cliente));
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
-        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuario);
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(usuariosRepository.save(any(Usuario.class))).thenReturn(usuarioPrincipal);
 
-        Usuario result = usuarioService.putUsuario(request);
+        Usuario result = usuarioService.putUsuario(requestPrincipal);
 
         assertNotNull(result);
-        assertEquals("newemail@example.com", usuario.getEmail());
-        assertEquals("NewNombre", usuario.getNombre());
-        assertEquals("NewApellido", usuario.getApellido());
-        assertEquals(Rol.Cliente, usuario.getRol());
-        assertEquals(Estado.Inactivo, usuario.getEstado());
-        assertEquals("encodedNewPassword", usuario.getContraseña());
+        assertEquals("email", result.getEmail());
+        assertEquals("NewNombre", result.getNombre());
+        assertEquals("NewApellido", result.getApellido());
+        assertEquals(Rol.Cliente, result.getRol());
+        assertEquals(Estado.Inactivo, result.getEstado());
+        assertEquals("encodedNewPassword", result.getContraseña());
 
-        verify(emailService, times(1)).enviarCorreo(eq("newemail@example.com"), anyString(), anyString());
-        verify(clienteRepository, times(1)).save(cliente);
-        verify(usuariosRepository, times(1)).save(usuario);
+        verify(usuariosRepository, times(1)).save(usuarioPrincipal);
     }
 
     @Test

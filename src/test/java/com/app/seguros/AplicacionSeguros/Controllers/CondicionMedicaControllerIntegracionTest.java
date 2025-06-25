@@ -4,7 +4,7 @@ import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
-import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.*;
 import com.app.seguros.AplicacionSeguros.Services.CondicionMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +69,7 @@ class CondicionMedicaControllerIntegracionTest {
 
     @BeforeEach
     void setUp() {
-        usuariosRepository.deleteAll();
+        borrarTodo();
 
         Usuario usuario = createUsuario();
         usuariosRepository.save(usuario);
@@ -159,4 +159,42 @@ class CondicionMedicaControllerIntegracionTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+    private void borrarTodo() {
+        pagoDocumentoRepository.deleteAll();
+        documentoRepository.deleteAll();
+        beneficiarioContratoRepository.deleteAll();
+        condicionMedicaClienteRepository.deleteAll();
+        beneficioSeguroRepository.deleteAll();
+        reembolsoDocumentoRepository.deleteAll();
+
+        // Entidades dependientes de contrato/cliente/seguro
+        pagoRepository.deleteAll();
+        reembolsoRepository.deleteAll();
+        contratoRepository.deleteAll();
+        tarjetaRepository.deleteAll();
+        beneficiarioRepository.deleteAll();
+        beneficioRepository.deleteAll();
+        clienteRepository.deleteAll();
+
+        // Entidades base
+        condicionMedicaRepository.deleteAll();
+        seguroRepository.deleteAll();
+        usuariosRepository.deleteAll();
+    }
+    @Autowired protected BeneficiarioContratoRepository beneficiarioContratoRepository;
+    @Autowired protected BeneficiarioRepository beneficiarioRepository;
+    @Autowired protected BeneficioRepository beneficioRepository;
+    @Autowired protected BeneficioSeguroRepository beneficioSeguroRepository;
+    @Autowired protected ClienteRepository clienteRepository;
+    @Autowired protected CondicionMedicaClienteRepository condicionMedicaClienteRepository;
+    @Autowired protected CondicionMedicaRepository condicionMedicaRepository;
+    @Autowired protected ContratoRepository contratoRepository;
+    @Autowired protected DocumentoRepository documentoRepository;
+    @Autowired protected PagoDocumentoRepository pagoDocumentoRepository;
+    @Autowired protected PagoRepository pagoRepository;
+    @Autowired protected ReembolsoDocumentoRepository reembolsoDocumentoRepository;
+    @Autowired protected ReembolsoRepository reembolsoRepository;
+    @Autowired protected SeguroRepository seguroRepository;
+    @Autowired protected TarjetaRepository tarjetaRepository;
 }

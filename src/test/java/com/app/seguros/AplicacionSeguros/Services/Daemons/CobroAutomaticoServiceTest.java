@@ -24,13 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -61,13 +59,13 @@ class CobroAutomaticoServiceTest {
     private Tarjeta tarjeta;
     private Seguro seguro;
     private LocalDate hoy;
-    private YearMonth mesActual;
+    //private YearMonth mesActual;
 
     @BeforeEach
     void setUp() {
         // Configurar datos de prueba
-        hoy = LocalDate.of(2025, 6, 21);
-        mesActual = YearMonth.of(2025, 6);
+        hoy = LocalDate.now();
+        //mesActual = YearMonth.of(hoy.getYear(), hoy.getMonthValue());
 
         clienteDTO = ClienteRespuestaDTO.builder()
                 .id_Cliente(1L)
@@ -122,7 +120,7 @@ class CobroAutomaticoServiceTest {
     void ejecutarCobros_CreatesNewPaymentAndSendsEmail_WhenDueDateAndNoPaymentThisMonth() {
         // Arrange
         List<Contrato> contratos = Collections.singletonList(contrato);
-        when(contratoRepository.findByEstado("ACTIVO")).thenReturn(contratos);
+        when(contratoRepository.findByEstado(EstadoContrato.ACTIVO)).thenReturn(contratos);
 
         List<Pago> pagos = Collections.singletonList(pago);
         when(pagoRepository.findByContratoId(1L)).thenReturn(pagos);
@@ -139,7 +137,7 @@ class CobroAutomaticoServiceTest {
         cobroAutomaticoService.ejecutarCobros();
 
         // Assert
-        verify(contratoRepository, times(1)).findByEstado("ACTIVO");
+        verify(contratoRepository, times(1)).findByEstado(EstadoContrato.ACTIVO);
         verify(pagoRepository, times(1)).findByContratoId(1L);
         verify(tarjetaRepository, times(1)).findByClienteId(1L);
         verify(pagoRepository, times(1)).save(any(Pago.class));
@@ -156,7 +154,7 @@ class CobroAutomaticoServiceTest {
     void ejecutarCobros_SkipsContract_WhenNoConfirmedPaymentsExist() {
         // Arrange
         List<Contrato> contratos = Collections.singletonList(contrato);
-        when(contratoRepository.findByEstado("ACTIVO")).thenReturn(contratos);
+        when(contratoRepository.findByEstado(EstadoContrato.ACTIVO)).thenReturn(contratos);
 
         Pago pagoNoConfirmado = new Pago();
         pagoNoConfirmado.setId(1L);
@@ -170,7 +168,7 @@ class CobroAutomaticoServiceTest {
         cobroAutomaticoService.ejecutarCobros();
 
         // Assert
-        verify(contratoRepository, times(1)).findByEstado("ACTIVO");
+        verify(contratoRepository, times(1)).findByEstado(EstadoContrato.ACTIVO);
         verify(pagoRepository, times(1)).findByContratoId(1L);
         verifyNoInteractions(tarjetaRepository, clienteService, emailService);
         verify(pagoRepository, never()).save(any(Pago.class));
@@ -180,7 +178,7 @@ class CobroAutomaticoServiceTest {
     void ejecutarCobros_SkipsContract_WhenPaymentAlreadyMadeThisMonth() {
         // Arrange
         List<Contrato> contratos = Collections.singletonList(contrato);
-        when(contratoRepository.findByEstado("ACTIVO")).thenReturn(contratos);
+        when(contratoRepository.findByEstado(EstadoContrato.ACTIVO)).thenReturn(contratos);
 
         Pago pagoReciente = new Pago();
         pagoReciente.setId(2L);
@@ -195,7 +193,7 @@ class CobroAutomaticoServiceTest {
         cobroAutomaticoService.ejecutarCobros();
 
         // Assert
-        verify(contratoRepository, times(1)).findByEstado("ACTIVO");
+        verify(contratoRepository, times(1)).findByEstado(EstadoContrato.ACTIVO);
         verify(pagoRepository, times(1)).findByContratoId(1L);
         verifyNoInteractions(tarjetaRepository, clienteService, emailService);
         verify(pagoRepository, never()).save(any(Pago.class));
@@ -205,7 +203,7 @@ class CobroAutomaticoServiceTest {
     void ejecutarCobros_SkipsContract_WhenNotDueDate() {
         // Arrange
         List<Contrato> contratos = Collections.singletonList(contrato);
-        when(contratoRepository.findByEstado("ACTIVO")).thenReturn(contratos);
+        when(contratoRepository.findByEstado(EstadoContrato.ACTIVO)).thenReturn(contratos);
 
         Pago pagoAnterior = new Pago();
         pagoAnterior.setId(1L);
@@ -220,7 +218,7 @@ class CobroAutomaticoServiceTest {
         cobroAutomaticoService.ejecutarCobros();
 
         // Assert
-        verify(contratoRepository, times(1)).findByEstado("ACTIVO");
+        verify(contratoRepository, times(1)).findByEstado(EstadoContrato.ACTIVO);
         verify(pagoRepository, times(1)).findByContratoId(1L);
         verifyNoInteractions(tarjetaRepository, clienteService, emailService);
         verify(pagoRepository, never()).save(any(Pago.class));
@@ -230,7 +228,7 @@ class CobroAutomaticoServiceTest {
     void ejecutarCobros_SkipsContract_WhenNoTarjetasRegistered() {
         // Arrange
         List<Contrato> contratos = Collections.singletonList(contrato);
-        when(contratoRepository.findByEstado("ACTIVO")).thenReturn(contratos);
+        when(contratoRepository.findByEstado(EstadoContrato.ACTIVO)).thenReturn(contratos);
 
         List<Pago> pagos = Collections.singletonList(pago);
         when(pagoRepository.findByContratoId(1L)).thenReturn(pagos);
@@ -241,7 +239,7 @@ class CobroAutomaticoServiceTest {
         cobroAutomaticoService.ejecutarCobros();
 
         // Assert
-        verify(contratoRepository, times(1)).findByEstado("ACTIVO");
+        verify(contratoRepository, times(1)).findByEstado(EstadoContrato.ACTIVO);
         verify(pagoRepository, times(1)).findByContratoId(1L);
         verify(tarjetaRepository, times(1)).findByClienteId(1L);
         verifyNoInteractions(clienteService, emailService);
@@ -252,7 +250,7 @@ class CobroAutomaticoServiceTest {
     void ejecutarCobros_DoesNotSendEmail_WhenClienteNotFound() {
         // Arrange
         List<Contrato> contratos = Collections.singletonList(contrato);
-        when(contratoRepository.findByEstado("ACTIVO")).thenReturn(contratos);
+        when(contratoRepository.findByEstado(EstadoContrato.ACTIVO)).thenReturn(contratos);
 
         List<Pago> pagos = Collections.singletonList(pago);
         when(pagoRepository.findByContratoId(1L)).thenReturn(pagos);
@@ -269,7 +267,7 @@ class CobroAutomaticoServiceTest {
         cobroAutomaticoService.ejecutarCobros();
 
         // Assert
-        verify(contratoRepository, times(1)).findByEstado("ACTIVO");
+        verify(contratoRepository, times(1)).findByEstado(EstadoContrato.ACTIVO);
         verify(pagoRepository, times(1)).findByContratoId(1L);
         verify(tarjetaRepository, times(1)).findByClienteId(1L);
         verify(pagoRepository, times(1)).save(any(Pago.class));
@@ -277,4 +275,5 @@ class CobroAutomaticoServiceTest {
         verifyNoInteractions(emailService);
         verifyNoMoreInteractions(contratoRepository, pagoRepository, tarjetaRepository, clienteService);
     }
+    
 }

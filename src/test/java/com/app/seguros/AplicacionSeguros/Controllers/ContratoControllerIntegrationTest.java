@@ -6,8 +6,6 @@ import com.app.seguros.AplicacionSeguros.Dto.ContratoRegistrarDTO;
 import com.app.seguros.AplicacionSeguros.Dto.ContratoRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.EstadoContratoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
-import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
@@ -15,9 +13,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
-import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
-import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
-import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.*;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +67,7 @@ class ContratoControllerIntegracionTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String token;
+
 
     private ContratoRespuestaDTO createContratoRespuestaDTO(Integer id) {
         return ContratoRespuestaDTO.builder()
@@ -137,7 +134,7 @@ class ContratoControllerIntegracionTest {
 
     private Usuario createUsuario() {
         return Usuario.builder()
-                .ID_Usuario(1)
+                //.ID_Usuario(1)
                 .contraseña(passwordEncoder.encode("contraseña"))
                 .apellido("Apellido")
                 .nombre("Nombre")
@@ -150,13 +147,10 @@ class ContratoControllerIntegracionTest {
     @BeforeEach
     void setUp() {
         // Limpiar tablas dependientes en el orden correcto
-        clienteRepository.deleteAll();
-        contratoRepository.deleteAll();
-        usuariosRepository.deleteAll();
-
+        borrarTodo();
         // Crear un usuario para el token
         Usuario usuario = createUsuario();
-        usuariosRepository.save(usuario);
+        usuariosRepository.save(usuario).getID_Usuario();
 
         // Generar el token usando el JwtService inyectado
         token = jwtService.getToken(usuario);
@@ -305,4 +299,40 @@ class ContratoControllerIntegracionTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+    private void borrarTodo() {
+        pagoDocumentoRepository.deleteAll();
+        documentoRepository.deleteAll();
+        beneficiarioContratoRepository.deleteAll();
+        condicionMedicaClienteRepository.deleteAll();
+        beneficioSeguroRepository.deleteAll();
+        reembolsoDocumentoRepository.deleteAll();
+
+        // Entidades dependientes de contrato/cliente/seguro
+        pagoRepository.deleteAll();
+        reembolsoRepository.deleteAll();
+        contratoRepository.deleteAll();
+        tarjetaRepository.deleteAll();
+        beneficiarioRepository.deleteAll();
+        beneficioRepository.deleteAll();
+        clienteRepository.deleteAll();
+
+        // Entidades base
+        condicionMedicaRepository.deleteAll();
+        seguroRepository.deleteAll();
+        usuariosRepository.deleteAll();
+    }
+    @Autowired protected BeneficiarioContratoRepository beneficiarioContratoRepository;
+    @Autowired protected BeneficiarioRepository beneficiarioRepository;
+    @Autowired protected BeneficioRepository beneficioRepository;
+    @Autowired protected BeneficioSeguroRepository beneficioSeguroRepository;
+    @Autowired protected CondicionMedicaClienteRepository condicionMedicaClienteRepository;
+    @Autowired protected CondicionMedicaRepository condicionMedicaRepository;
+    @Autowired protected DocumentoRepository documentoRepository;
+    @Autowired protected PagoDocumentoRepository pagoDocumentoRepository;
+    @Autowired protected PagoRepository pagoRepository;
+    @Autowired protected ReembolsoDocumentoRepository reembolsoDocumentoRepository;
+    @Autowired protected ReembolsoRepository reembolsoRepository;
+    @Autowired protected SeguroRepository seguroRepository;
+    @Autowired protected TarjetaRepository tarjetaRepository;
 }
