@@ -246,7 +246,11 @@ class ReembolsoServiceTest {
         when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
         when(reembolsoDocumentoRepository.findByReembolsoId(1L)).thenReturn(Collections.emptyList());
 
-        assertThrows(RuntimeException.class, () -> reembolsoService.aceptarReembolso(1L));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> reembolsoService.aceptarReembolso(1L),
+                "Se esperaba una excepción por no haber documentos asociados");
+        assertEquals("Error al aceptar reembolso: No hay documentos asociados al reembolso.", exception.getMessage());
+        verify(reembolsoRepository, never()).save(any(Reembolso.class));
+        verify(emailService, never()).enviarCorreo(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -261,14 +265,6 @@ class ReembolsoServiceTest {
         assertEquals(EstadoDocumento.Rechazado.name(), result.getEstado());
         verify(emailService).enviarCorreo(eq("cliente@example.com"), anyString(), anyString());
         verify(reembolsoRepository).save(reembolso);
-    }
-
-    @Test
-    void rechazarReembolso_AlreadyApproved_ThrowsException() {
-        reembolso.setEstado(EstadoDocumento.Aprobado);
-        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
-
-        assertThrows(RuntimeException.class, () -> reembolsoService.rechazarReembolso(1L));
     }
 
     @Test
@@ -317,8 +313,10 @@ class ReembolsoServiceTest {
         when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                reembolsoService.actualizarReembolso(1L, reembolsoDTO));
+                        reembolsoService.actualizarReembolso(1L, reembolsoDTO),
+                "Se esperaba una excepción por intentar editar un reembolso aprobado");
         assertEquals("Error al actualizar reembolso: El reembolso solo se puede editar cuando está pendiente o rechazado", exception.getMessage());
+        verify(reembolsoRepository, never()).save(any(Reembolso.class));
     }
 
     @Test
@@ -336,20 +334,6 @@ class ReembolsoServiceTest {
         assertEquals(1L, result.getIdReembolso());
         verify(emailService).enviarCorreo(eq("cliente@example.com"), anyString(), anyString());
         verify(reembolsoDocumentoRepository).save(any(Reembolsos_Documentos.class));
-    }
-
-    @Test
-    void subirDocumentoAReembolso_DuplicateFile_ThrowsException() {
-        Reembolsos_Documentos relacion = Reembolsos_Documentos.builder()
-                .reembolso(reembolso)
-                .documento(documento)
-                .build();
-        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
-        when(reembolsoDocumentoRepository.findByReembolsoId(1L)).thenReturn(Arrays.asList(relacion));
-        when(mockFile.getOriginalFilename()).thenReturn("comprobante.pdf");
-
-        assertThrows(RuntimeException.class, () ->
-                reembolsoService.subirDocumentoAReembolso(1L, mockFile, documentoRegistroDTO));
     }
 
     @Test
@@ -419,25 +403,6 @@ class ReembolsoServiceTest {
     }
 
     @Test
-    void aceptarReembolso_DocumentNotApproved_ThrowsException() {
-        // Arrange
-        documento.setEstado(EstadoDocumento.Pendiente); // Documento no aprobado
-        Reembolsos_Documentos relacion = Reembolsos_Documentos.builder()
-                .reembolso(reembolso)
-                .documento(documento)
-                .build();
-        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
-        when(reembolsoDocumentoRepository.findByReembolsoId(1L)).thenReturn(Arrays.asList(relacion));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                reembolsoService.aceptarReembolso(1L));
-        assertEquals("Error al aceptar reembolso: No se puede aceptar el reembolso hasta que todos los documentos estén aprobados.", exception.getMessage());
-        verify(reembolsoRepository, never()).save(any(Reembolso.class));
-        verify(emailService, never()).enviarCorreo(anyString(), anyString(), anyString());
-    }
-
-    @Test
     void obtenerDocumentosPorReembolso_EmptyList_ReturnsEmptyList() {
         // Arrange
         when(reembolsoDocumentoRepository.findByReembolsoId(1L)).thenReturn(Collections.emptyList());
@@ -450,5 +415,280 @@ class ReembolsoServiceTest {
         assertTrue(result.isEmpty());
         verify(reembolsoDocumentoRepository).findByReembolsoId(1L);
         verify(documentoService, never()).desencriptarCampos(any());
+    }
+
+    @Test
+    void obtenerTodosLosReembolsosConCliente_Success() {
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        cliente.setNombre("Juan");
+        cliente.setApellido("Pérez");
+
+        contrato = new Contrato();
+        contrato.setId(1);
+        contrato.setCliente(cliente);
+
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .descripcion("Reembolso por accidente")
+                .montoSolicitado(500.0)
+                .estado(EstadoDocumento.Pendiente)
+                .fechaSolicitud(LocalDate.now())
+                .tipoReembolso(TipoReembolso.Examenes_medicos)
+                .contrato(contrato)
+                .build();
+
+        when(reembolsoRepository.findAll()).thenReturn(Arrays.asList(reembolso));
+
+        List<ReembolsoClienteDTO> result = reembolsoService.obtenerTodosLosReembolsosConCliente();
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getIdReembolso());
+        assertEquals("Juan", result.get(0).getNombreCliente());
+        assertEquals("Pérez", result.get(0).getApellidoCliente());
+        verify(reembolsoRepository).findAll();
+    }
+
+    @Test
+    void obtenerTodosLosReembolsosConCliente_EmptyList_ReturnsEmptyList() {
+        when(reembolsoRepository.findAll()).thenReturn(Collections.emptyList());
+
+        List<ReembolsoClienteDTO> result = reembolsoService.obtenerTodosLosReembolsosConCliente();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(reembolsoRepository).findAll();
+    }
+
+    @Test
+    void obtenerReembolsosPorCliente_Success() {
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+
+        contrato = new Contrato();
+        contrato.setId(1);
+        contrato.setCliente(cliente);
+
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .descripcion("Reembolso por accidente")
+                .montoSolicitado(500.0)
+                .estado(EstadoDocumento.Pendiente)
+                .fechaSolicitud(LocalDate.now())
+                .tipoReembolso(TipoReembolso.Examenes_medicos)
+                .contrato(contrato)
+                .build();
+
+        when(reembolsoRepository.findByContratoClienteId(1L)).thenReturn(Arrays.asList(reembolso));
+
+        List<ReembolsoRespuestaDTO> result = reembolsoService.obtenerReembolsosPorCliente(1L);
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getIdReembolso());
+        verify(reembolsoRepository).findByContratoClienteId(1L);
+    }
+
+    @Test
+    void obtenerReembolsosPorCliente_EmptyList_ReturnsEmptyList() {
+        when(reembolsoRepository.findByContratoClienteId(1L)).thenReturn(Collections.emptyList());
+
+        List<ReembolsoRespuestaDTO> result = reembolsoService.obtenerReembolsosPorCliente(1L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(reembolsoRepository).findByContratoClienteId(1L);
+    }
+
+    @Test
+    void obtenerReembolsosConClientePorAgente_Success() {
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        cliente.setNombre("Juan");
+        cliente.setApellido("Pérez");
+
+        contrato = new Contrato();
+        contrato.setId(1);
+        contrato.setCliente(cliente);
+
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .descripcion("Reembolso por accidente")
+                .montoSolicitado(500.0)
+                .estado(EstadoDocumento.Pendiente)
+                .fechaSolicitud(LocalDate.now())
+                .tipoReembolso(TipoReembolso.Examenes_medicos)
+                .contrato(contrato)
+                .build();
+
+        when(reembolsoRepository.findReembolsosByAgenteId(1L)).thenReturn(Arrays.asList(reembolso));
+
+        List<ReembolsoClienteDTO> result = reembolsoService.obtenerReembolsosConClientePorAgente(1L);
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getIdReembolso());
+        assertEquals("Juan", result.get(0).getNombreCliente());
+        assertEquals("Pérez", result.get(0).getApellidoCliente());
+        verify(reembolsoRepository).findReembolsosByAgenteId(1L);
+    }
+
+    @Test
+    void obtenerReembolsosConClientePorAgente_EmptyList_ReturnsEmptyList() {
+        when(reembolsoRepository.findReembolsosByAgenteId(1L)).thenReturn(Collections.emptyList());
+
+        List<ReembolsoClienteDTO> result = reembolsoService.obtenerReembolsosConClientePorAgente(1L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(reembolsoRepository).findReembolsosByAgenteId(1L);
+    }
+
+    @Test
+    void rechazarReembolso_AlreadyApproved_ThrowsException() {
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .descripcion("Reembolso por accidente")
+                .montoSolicitado(500.0)
+                .estado(EstadoDocumento.Aprobado)
+                .fechaSolicitud(LocalDate.now())
+                .tipoReembolso(TipoReembolso.Examenes_medicos)
+                .contrato(contrato)
+                .build();
+
+        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                reembolsoService.rechazarReembolso(1L));
+        assertEquals("Error al rechazar reembolso: No se puede rechazar un reembolso que ya ha sido aprobado.", exception.getMessage());
+        verify(reembolsoRepository, never()).save(any(Reembolso.class));
+    }
+
+    @Test
+    void subirDocumentoAReembolso_DuplicateFile_ThrowsException() throws IOException {
+        contrato = new Contrato();
+        contrato.setId(1);
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        contrato.setCliente(cliente);
+
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .contrato(contrato)
+                .build();
+
+        Documento existingDoc = new Documento();
+        existingDoc.setNombreArchivo("comprobante.pdf");
+
+        Reembolsos_Documentos relacion = Reembolsos_Documentos.builder()
+                .reembolso(reembolso)
+                .documento(existingDoc)
+                .build();
+
+        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
+        when(reembolsoDocumentoRepository.findByReembolsoId(1L)).thenReturn(Arrays.asList(relacion));
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(mockFile.getOriginalFilename()).thenReturn("comprobante.pdf");
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                reembolsoService.subirDocumentoAReembolso(1L, mockFile, new DocumentoRegistroDTO()));
+        assertEquals("Error al subir el documento al reembolso: El archivo ya ha sido subido previamente para este reembolso.", exception.getMessage());
+        verify(documentoService, never()).subirDocumento(any(), any());
+    }
+
+    @Test
+    void aceptarReembolso_DocumentsNotApproved_ThrowsException() {
+        contrato = new Contrato();
+        contrato.setId(1);
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        contrato.setCliente(cliente);
+
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .descripcion("Reembolso por accidente")
+                .montoSolicitado(500.0)
+                .estado(EstadoDocumento.Pendiente)
+                .fechaSolicitud(LocalDate.now())
+                .tipoReembolso(TipoReembolso.Examenes_medicos)
+                .contrato(contrato)
+                .build();
+
+        Documento documento = new Documento();
+        documento.setEstado(EstadoDocumento.Pendiente);
+
+        Reembolsos_Documentos relacion = Reembolsos_Documentos.builder()
+                .reembolso(reembolso)
+                .documento(documento)
+                .build();
+
+        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
+        when(reembolsoDocumentoRepository.findByReembolsoId(1L)).thenReturn(Arrays.asList(relacion));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                reembolsoService.aceptarReembolso(1L));
+        assertEquals("Error al aceptar reembolso: No se puede aceptar el reembolso hasta que todos los documentos estén aprobados.", exception.getMessage());
+        verify(reembolsoRepository, never()).save(any(Reembolso.class));
+    }
+
+    @Test
+    void rechazarDocumentoReembolso_RelacionNotFound_ThrowsException() {
+        when(reembolsoDocumentoRepository.findByDocumentoIdDocumento(1L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                reembolsoService.rechazarDocumentoReembolso(1L));
+        assertEquals("Error al rechazar el documento del reembolso: Relación del documento no encontrada.", exception.getMessage());
+        verify(reembolsoDocumentoRepository, never()).delete(any());
+        verify(documentoService, never()).rechazarDocumento(anyLong());
+    }
+
+    @Test
+    void obtenerPorId_ReembolsoNotFound_ThrowsException() {
+        when(reembolsoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                reembolsoService.obtenerPorId(1L));
+        assertEquals("Error al obtener reembolso por ID: El reembolso no existe", exception.getMessage());
+        verify(reembolsoRepository).findById(1L);
+    }
+
+    @Test
+    void actualizarReembolso_ReembolsoNotFound_ThrowsException() {
+        when(reembolsoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        ReembolsoDTO reembolsoDTO = new ReembolsoDTO();
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                reembolsoService.actualizarReembolso(1L, reembolsoDTO));
+        assertEquals("Error al actualizar reembolso: El reembolso no existe", exception.getMessage());
+        verify(reembolsoRepository, never()).save(any(Reembolso.class));
+    }
+
+    @Test
+    void actualizarReembolso_RechazadoToPendiente_Success() {
+        reembolso = Reembolso.builder()
+                .id_reembolo(1L)
+                .descripcion("Old description")
+                .montoSolicitado(500.0)
+                .estado(EstadoDocumento.Rechazado)
+                .fechaSolicitud(LocalDate.now())
+                .tipoReembolso(TipoReembolso.Examenes_medicos)
+                .contrato(contrato)
+                .fechaResolucion(LocalDate.now())
+                .build();
+
+        ReembolsoDTO reembolsoDTO = new ReembolsoDTO();
+        reembolsoDTO.setDescripcion("New description");
+        reembolsoDTO.setMontoSolicitado(600.0);
+        reembolsoDTO.setTipoReembolso(TipoReembolso.Examenes_medicos);
+
+        when(reembolsoRepository.findById(1L)).thenReturn(Optional.of(reembolso));
+        when(reembolsoRepository.save(any(Reembolso.class))).thenReturn(reembolso);
+
+        ReembolsoRespuestaDTO result = reembolsoService.actualizarReembolso(1L, reembolsoDTO);
+
+        assertEquals(EstadoDocumento.Pendiente.name(), result.getEstado());
+        assertEquals("New description", result.getDescripcion());
+        assertEquals(600.0, result.getMontoSolicitado());
+        assertEquals(TipoReembolso.Examenes_medicos.toString(), result.getTipoReembolso());
+        assertNull(result.getFechaResolucion());
+        verify(reembolsoRepository).save(any(Reembolso.class));
     }
 }
