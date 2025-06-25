@@ -277,7 +277,7 @@ public class ContratoService {
         List<Beneficiarios_Contratos> beneficiariosContratos = beneficiarioContratoRepo.findByContratoId(id);
         List<Beneficiario> beneficiarios = beneficiariosContratos.stream()
                 .map(Beneficiarios_Contratos::getBeneficiario)
-                .collect(Collectors.toList());
+                .toList();
 // Generar y guardar el PDF si no existe
         // Generar y guardar el PDF si no existe
         try {

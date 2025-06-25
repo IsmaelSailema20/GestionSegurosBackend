@@ -88,7 +88,7 @@ public class SeguroService {
                     dto.setBeneficios(beneficioService.listarPorSeguro(seguro.getIdSeguro()));
                     return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
     @Transactional
     public SeguroDTO updateSeguro(Integer id, SeguroDTO dto) {

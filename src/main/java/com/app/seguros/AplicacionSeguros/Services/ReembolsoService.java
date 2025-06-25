@@ -10,7 +10,6 @@ import com.app.seguros.AplicacionSeguros.Repositories.ReembolsoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -258,9 +257,6 @@ public class ReembolsoService {
 
             reembolso.setEstado(EstadoDocumento.Aprobado);
             reembolso.setFechaResolucion(LocalDate.now());
-
-            // Acceder al contrato para inicializarlo si es necesario
-            Long contratoId = reembolso.getContrato() != null ? reembolso.getContrato().getId().longValue() : null;
 
             // Enviar correo al cliente
             ContratoRespuestaDTO contrato = contratoService.buscarPorId(reembolso.getContrato().getId().intValue())

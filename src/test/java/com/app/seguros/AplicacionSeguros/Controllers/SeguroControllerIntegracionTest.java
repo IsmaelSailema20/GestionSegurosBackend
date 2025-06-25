@@ -7,8 +7,7 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
-import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
-import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.*;
@@ -82,8 +81,7 @@ class SeguroControllerIntegracionTest {
 
     @BeforeEach
     void setUp() {
-        seguroRepository.deleteAll();
-        usuariosRepository.deleteAll();
+        borrarTodo();
 
         Seguro seguro = createEntity("Seguro Vida");
         idGenerado = seguroRepository.save(seguro).getIdSeguro();
@@ -152,4 +150,42 @@ class SeguroControllerIntegracionTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+
+    private void borrarTodo() {
+        pagoDocumentoRepository.deleteAll();
+        documentoRepository.deleteAll();
+        beneficiarioContratoRepository.deleteAll();
+        condicionMedicaClienteRepository.deleteAll();
+        beneficioSeguroRepository.deleteAll();
+        reembolsoDocumentoRepository.deleteAll();
+
+        // Entidades dependientes de contrato/cliente/seguro
+        pagoRepository.deleteAll();
+        reembolsoRepository.deleteAll();
+        contratoRepository.deleteAll();
+        tarjetaRepository.deleteAll();
+        beneficiarioRepository.deleteAll();
+        beneficioRepository.deleteAll();
+        clienteRepository.deleteAll();
+
+        // Entidades base
+        condicionMedicaRepository.deleteAll();
+        seguroRepository.deleteAll();
+        usuariosRepository.deleteAll();
+    }
+    @Autowired protected BeneficiarioContratoRepository beneficiarioContratoRepository;
+    @Autowired protected BeneficiarioRepository beneficiarioRepository;
+    @Autowired protected BeneficioRepository beneficioRepository;
+    @Autowired protected BeneficioSeguroRepository beneficioSeguroRepository;
+    @Autowired protected ClienteRepository clienteRepository;
+    @Autowired protected CondicionMedicaClienteRepository condicionMedicaClienteRepository;
+    @Autowired protected CondicionMedicaRepository condicionMedicaRepository;
+    @Autowired protected ContratoRepository contratoRepository;
+    @Autowired protected DocumentoRepository documentoRepository;
+    @Autowired protected PagoDocumentoRepository pagoDocumentoRepository;
+    @Autowired protected PagoRepository pagoRepository;
+    @Autowired protected ReembolsoDocumentoRepository reembolsoDocumentoRepository;
+    @Autowired protected ReembolsoRepository reembolsoRepository;
+    @Autowired protected TarjetaRepository tarjetaRepository;
 }

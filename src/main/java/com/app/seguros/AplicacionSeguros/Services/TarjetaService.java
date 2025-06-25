@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TarjetaService {
@@ -51,7 +50,7 @@ public class TarjetaService {
 
     public TarjetaRespuestaDTO editarTarjeta(Long id, TarjetaResgistroDTO dto) {
         Tarjeta tarjeta = tarjetaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje()));
 
         Cliente cliente = clienteRepository.findById(dto.getIdCliente())
                 .orElseThrow(() -> new RuntimeException(MensajeError.CLIENTE_NO_ENCONTRADO.getMensaje()));
@@ -68,10 +67,10 @@ public class TarjetaService {
     }
     public void eliminarTarjeta(Long id) {
         Tarjeta tarjeta = tarjetaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje()));
 
         if (tarjeta.getEstado() == EstadoTarjeta.Principal) {
-            throw new RuntimeException("No se puede eliminar una tarjeta Principal");
+            throw new RuntimeException(MensajeError.TARJETA_PRINCIPAL_NO_PUEDE_ELIMINARSE.getMensaje());
         }
 
         tarjetaRepository.delete(tarjeta);
@@ -79,28 +78,28 @@ public class TarjetaService {
 
     public TarjetaRespuestaDTO obtenerTarjetaPorId(Long id) {
         Tarjeta tarjeta = tarjetaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje()));
         return mapToDTO(tarjeta);
     }
 
     public List<TarjetaRespuestaDTO> obtenerTarjetasPorCliente(Long idCliente) {
         return tarjetaRepository.findByClienteId(idCliente).stream()
                 .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public TarjetaRespuestaDTO obtenerTarjetaPrincipal(Long idCliente) {
         Tarjeta tarjeta = tarjetaRepository.findByClienteId(idCliente).stream()
                 .filter(t -> t.getEstado() == EstadoTarjeta.Principal)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Tarjeta principal no encontrada"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.TARJETA_PRINCIPAL_NO_ENCONTRADA.getMensaje()));
         return mapToDTO(tarjeta);
     }
 
     @Transactional
     public void inactivarTarjeta(Long id) {
         Tarjeta tarjeta = tarjetaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada"));
+                .orElseThrow(() -> new RuntimeException(MensajeError.TARJETA_NO_ENCONTRADA.getMensaje()));
         tarjeta.setEstado(EstadoTarjeta.Inactivo);
         tarjetaRepository.save(tarjeta);
     }
@@ -108,7 +107,7 @@ public class TarjetaService {
     @Transactional
     public void cambiarEstadoTarjetaAPrincipal(Long id) {
         Tarjeta nuevaTarjetaPrincipal = tarjetaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada con id: " + id));
+                .orElseThrow(() -> new RuntimeException(MensajeError.TARJETA_PRINCIPAL_ACTUAL_NO_ENCONTRADA.getMensaje() + id));
 
         if (nuevaTarjetaPrincipal.getEstado() == EstadoTarjeta.Principal) {
             // Ya es principal, no se hace nada
@@ -118,7 +117,7 @@ public class TarjetaService {
         Tarjeta tarjetaActualPrincipal = tarjetaRepository.findByEstado(EstadoTarjeta.Principal);
 
         if (tarjetaActualPrincipal == null) {
-            throw new RuntimeException("No se encontró una tarjeta con estado 'Principal'.");
+            throw new RuntimeException(MensajeError.TARJETA_PRINCIPAL_NO_ENCONTRADA.getMensaje());
         }
 
         // Actualizamos estados

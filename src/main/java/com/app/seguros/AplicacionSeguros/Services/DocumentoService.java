@@ -9,7 +9,6 @@ import com.app.seguros.AplicacionSeguros.Entities.*;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.MensajeError;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoDocumento;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.TipoReembolso;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.DocumentoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.SeguroRepository;
@@ -28,9 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -247,7 +244,7 @@ public class DocumentoService {
     public List<Documento> obtenerDocumentosPorContrato(Long idContrato) {
         return documentoRepository.findByContratoId(idContrato).stream()
                 .map(this::desencriptarCampos)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Documento obtenerDocumento(Long idDocumento) {
@@ -295,11 +292,11 @@ public class DocumentoService {
     public List<Documento> obtenerDocumentosPendientes() {
         return documentoRepository.findDocumentosPendiente().stream()
                 .map(this::desencriptarCampos)
-                .collect(Collectors.toList());
+                .toList();
     }
     public List<Documento> obtenerDocumentosPendientes(int idAgente) {
         return documentoRepository.findDocumentosPendiente(idAgente).stream()
                 .map(this::desencriptarCampos)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

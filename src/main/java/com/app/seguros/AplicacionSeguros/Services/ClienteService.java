@@ -11,7 +11,6 @@ import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Repositories.ClienteRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -167,7 +166,7 @@ public class ClienteService {
         return clienteRepository.findAll()
                 .stream()
                 .map(cliente -> {
-                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                    return ClienteRespuestaDTO.builder()
                             .estaturaMetros(cliente.getEstaturaMetros())
                             .fecha_nacimiento(cliente.getFecha_nacimiento())
                             .direccion(cliente.getDireccion())
@@ -183,9 +182,8 @@ public class ClienteService {
                             .nombre(cliente.getNombre())
                             .numeroCuenta(cliente.getNumeroCuenta())
                             .build();
-                    return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ClienteRespuestaDTO updateCliente(Long id, ClienteDTO clienteDTO) {
@@ -327,7 +325,7 @@ public class ClienteService {
         return clienteRepository.findClientesPorAgente(idAgente)
                 .stream()
                 .map(cliente -> {
-                    ClienteRespuestaDTO dto = ClienteRespuestaDTO.builder()
+                    return ClienteRespuestaDTO.builder()
                             .estaturaMetros(cliente.getEstaturaMetros())
                             .fecha_nacimiento(cliente.getFecha_nacimiento())
                             .direccion(cliente.getDireccion())
@@ -343,8 +341,7 @@ public class ClienteService {
                             .nombre(cliente.getNombre())
                             .numeroCuenta(cliente.getNumeroCuenta())
                             .build();
-                    return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 }

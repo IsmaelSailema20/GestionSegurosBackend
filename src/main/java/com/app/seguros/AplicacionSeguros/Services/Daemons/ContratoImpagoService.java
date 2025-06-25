@@ -2,25 +2,15 @@ package com.app.seguros.AplicacionSeguros.Services.Daemons;
 
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
-import com.app.seguros.AplicacionSeguros.Entities.Enums.MetodoPago;
 import com.app.seguros.AplicacionSeguros.Entities.Pago;
-import com.app.seguros.AplicacionSeguros.Entities.Tarjeta;
 import com.app.seguros.AplicacionSeguros.Repositories.ContratoRepository;
 import com.app.seguros.AplicacionSeguros.Repositories.PagoRepository;
-import com.app.seguros.AplicacionSeguros.Repositories.TarjetaRepository;
-import com.app.seguros.AplicacionSeguros.Services.ClienteService;
-import com.app.seguros.AplicacionSeguros.Services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ContratoImpagoService {

@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Services.Daemons;
 
-import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.Contrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoContrato;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.EstadoDocumento;
@@ -51,7 +50,7 @@ public class CobroAutomaticoService {
             // Filtrar pagos confirmados
             List<Pago> pagosConfirmados = pagos.stream()
                     .filter(pago -> pago.getConfirmado() == EstadoDocumento.Aprobado)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Si no hay pagos confirmados, saltar
             if (pagosConfirmados.isEmpty()) {

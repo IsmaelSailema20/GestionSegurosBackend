@@ -788,7 +788,6 @@ public class ContratoServiceTest {
     void testListarImpagos_Success() {
         // Arrange
         when(contratoRepo.findContratosImpagos()).thenReturn(List.of(contrato));
-        when(contratoRepo.findContratosSinPagos()).thenReturn(Collections.emptyList());
         when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
         when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
         when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
@@ -806,14 +805,12 @@ public class ContratoServiceTest {
         assertEquals(1, dto.getBeneficiarios().size());
         assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
         verify(contratoRepo, times(1)).findContratosImpagos();
-        verify(contratoRepo, times(1)).findContratosSinPagos();
     }
 
     @Test
     void testListarImpagos_Empty() {
         // Arrange
         when(contratoRepo.findContratosImpagos()).thenReturn(Collections.emptyList());
-        when(contratoRepo.findContratosSinPagos()).thenReturn(Collections.emptyList());
 
         // Act
         List<ContratoRespuestaDTO> result = contratoService.listarImpagos();
@@ -822,7 +819,6 @@ public class ContratoServiceTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(contratoRepo, times(1)).findContratosImpagos();
-        verify(contratoRepo, times(1)).findContratosSinPagos();
     }
 
     @Test
@@ -903,7 +899,6 @@ public class ContratoServiceTest {
     void testListarImpagosPorAgente_Success() {
         // Arrange
         when(contratoRepo.findContratosImpagos(1)).thenReturn(List.of(contrato));
-        when(contratoRepo.findContratosSinPagos(1)).thenReturn(Collections.emptyList());
         when(usuarioRepo.findById(1)).thenReturn(Optional.of(agente));
         when(benService.listarPorContrato(1)).thenReturn(List.of(beneficiario));
         when(condRepo.findByClienteId(1)).thenReturn(List.of(condicionMedica));
@@ -921,14 +916,12 @@ public class ContratoServiceTest {
         assertEquals(1, dto.getBeneficiarios().size());
         assertEquals("Hipertension", dto.getCliente().getCondicionesMedicas().get(0).getDiagnostico());
         verify(contratoRepo, times(1)).findContratosImpagos(1);
-        verify(contratoRepo, times(1)).findContratosSinPagos(1);
     }
 
     @Test
     void testListarImpagosPorAgente_Empty() {
         // Arrange
         when(contratoRepo.findContratosImpagos(1)).thenReturn(Collections.emptyList());
-        when(contratoRepo.findContratosSinPagos(1)).thenReturn(Collections.emptyList());
 
         // Act
         List<ContratoRespuestaDTO> result = contratoService.listarImpagos(1);
@@ -937,7 +930,6 @@ public class ContratoServiceTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(contratoRepo, times(1)).findContratosImpagos(1);
-        verify(contratoRepo, times(1)).findContratosSinPagos(1);
     }
 
     @Test

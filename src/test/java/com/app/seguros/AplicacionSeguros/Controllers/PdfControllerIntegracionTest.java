@@ -11,12 +11,11 @@ import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;
 import com.app.seguros.AplicacionSeguros.Entities.Seguro;
 import com.app.seguros.AplicacionSeguros.Entities.Usuario;
 import com.app.seguros.AplicacionSeguros.Auth.Jwt.JwtService;
-import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
+import com.app.seguros.AplicacionSeguros.Repositories.*;
 import com.app.seguros.AplicacionSeguros.Services.ContratoPdfService;
 import com.app.seguros.AplicacionSeguros.Services.ContratoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,8 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -121,7 +119,7 @@ class PdfControllerIntegracionTest {
 
     @BeforeEach
     void setUp() {
-        usuariosRepository.deleteAll();
+        borrarTodo();
 
         Usuario usuario = createUsuario();
         usuariosRepository.save(usuario);
@@ -181,4 +179,43 @@ class PdfControllerIntegracionTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Error al procesar el PDF: Error generating PDF"));
     }
+
+
+    private void borrarTodo() {
+        pagoDocumentoRepository.deleteAll();
+        documentoRepository.deleteAll();
+        beneficiarioContratoRepository.deleteAll();
+        condicionMedicaClienteRepository.deleteAll();
+        beneficioSeguroRepository.deleteAll();
+        reembolsoDocumentoRepository.deleteAll();
+
+        // Entidades dependientes de contrato/cliente/seguro
+        pagoRepository.deleteAll();
+        reembolsoRepository.deleteAll();
+        contratoRepository.deleteAll();
+        tarjetaRepository.deleteAll();
+        beneficiarioRepository.deleteAll();
+        beneficioRepository.deleteAll();
+        clienteRepository.deleteAll();
+
+        // Entidades base
+        condicionMedicaRepository.deleteAll();
+        seguroRepository.deleteAll();
+        usuariosRepository.deleteAll();
+    }
+    @Autowired protected BeneficiarioContratoRepository beneficiarioContratoRepository;
+    @Autowired protected BeneficiarioRepository beneficiarioRepository;
+    @Autowired protected BeneficioRepository beneficioRepository;
+    @Autowired protected BeneficioSeguroRepository beneficioSeguroRepository;
+    @Autowired protected ClienteRepository clienteRepository;
+    @Autowired protected CondicionMedicaClienteRepository condicionMedicaClienteRepository;
+    @Autowired protected CondicionMedicaRepository condicionMedicaRepository;
+    @Autowired protected ContratoRepository contratoRepository;
+    @Autowired protected DocumentoRepository documentoRepository;
+    @Autowired protected PagoDocumentoRepository pagoDocumentoRepository;
+    @Autowired protected PagoRepository pagoRepository;
+    @Autowired protected ReembolsoDocumentoRepository reembolsoDocumentoRepository;
+    @Autowired protected ReembolsoRepository reembolsoRepository;
+    @Autowired protected SeguroRepository seguroRepository;
+    @Autowired protected TarjetaRepository tarjetaRepository;
 }

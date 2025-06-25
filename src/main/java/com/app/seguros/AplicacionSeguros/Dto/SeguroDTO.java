@@ -1,6 +1,5 @@
 package com.app.seguros.AplicacionSeguros.Dto;
 
-import com.app.seguros.AplicacionSeguros.Entities.Beneficiario;
 import com.app.seguros.AplicacionSeguros.Entities.Beneficio;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Estado;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Tipo;

@@ -1,7 +1,6 @@
 package com.app.seguros.AplicacionSeguros.Controllers;
 
 import com.app.seguros.AplicacionSeguros.Dto.ClienteDTO;
-import com.app.seguros.AplicacionSeguros.Dto.ClienteRespuestaDTO;
 import com.app.seguros.AplicacionSeguros.Dto.EstadoDTO;
 import com.app.seguros.AplicacionSeguros.Entities.Cliente;
 import com.app.seguros.AplicacionSeguros.Entities.CondicionMedica;
@@ -67,7 +66,7 @@ class ClienteControllerIntegracionTest {
         CondicionMedica cond = new CondicionMedica();
         cond.setDiagnostico("Hipertensión");
 
-        ClienteDTO dto = ClienteDTO.builder()
+        return ClienteDTO.builder()
             .id_Cliente(id)
             .nombre("Juan")
             .apellido("Pérez")
@@ -83,14 +82,14 @@ class ClienteControllerIntegracionTest {
             .numeroCuenta(numeroCuenta)
             .condicionesMedicas(List.of(cond))
             .build();
-        return dto;
     }
 
-    private Cliente createEntity(String cedula, String email, String numeroCuenta) {
+    private Cliente createEntity(String cedula, String email, String numeroCuenta,int idAgente) {
         return Cliente.builder()
                 .nombre("Juan")
                 .apellido("Pérez")
                 .cedula(cedula)
+                .agente(Usuario.builder().ID_Usuario(idAgente).build())
                 .direccion("Calle Principal 123")
                 .telefono("987654321")
                 .email(email)
@@ -111,9 +110,11 @@ class ClienteControllerIntegracionTest {
                 .nombre("nombre")
                 .estado(Estado.Activo)
                 .email("email@example.com")
-                .rol(Rol.Administrador)
+                .rol(Rol.Agente)
                 .build();
     }
+
+    private int agenteId=0;
 
     @BeforeEach
     void setUp() {
@@ -122,13 +123,15 @@ class ClienteControllerIntegracionTest {
         clienteRepository.deleteAll();
         usuariosRepository.deleteAll();
 
-        Cliente cliente = createEntity("1234567890", "juan.perez@example.com", "1234567890");
+        Usuario u = createUsuario();
+        agenteId= usuariosRepository.save(u).getID_Usuario();
+
+        Cliente cliente = createEntity("1234567890", "juan.perez@example.com", "1234567890",agenteId);
         idGenerado = clienteRepository.save(cliente).getId();
 
-        clienteRepository.save(createEntity("0987654321", "juan2.perez@example.com", "0987654321"));
+        clienteRepository.save(createEntity("0987654321", "juan2.perez@example.com", "0987654321",agenteId));
 
-        Usuario u = createUsuario();
-        usuariosRepository.save(u);
+
 
         token = jwtService.getToken(u);
     }
