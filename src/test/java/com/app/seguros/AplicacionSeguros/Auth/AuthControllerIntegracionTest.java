@@ -3,6 +3,7 @@ package com.app.seguros.AplicacionSeguros.Auth;
 import com.app.seguros.AplicacionSeguros.Entities.Enums.Rol;
 import com.app.seguros.AplicacionSeguros.Dto.UsuarioCrearRequest;
 import com.app.seguros.AplicacionSeguros.Services.UsuarioService;
+import com.app.seguros.AplicacionSeguros.Repositories.UsuariosRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,9 +30,12 @@ class AuthControllerIntegracionTest {
     private PasswordEncoder passwordEncoder;
     @Autowired
     UsuarioService usuarioService;
+    @Autowired
+    UsuariosRepository usuarioRepository;
 
     @BeforeEach
     public void setUp(){
+        usuarioRepository.deleteAll();
         usuarioService.deleteUsuario(1);
         usuarioService.register(new UsuarioCrearRequest("email","clave","nombre","apellido", Rol.Administrador));
     }
