@@ -16,7 +16,7 @@ services:
       - spring-network
 
   tomcat-app:
-    image: tomcat:9.0
+    image: tomcat:10.1-jdk17
     container_name: tomcat-app
     depends_on:
       - postgres-db
