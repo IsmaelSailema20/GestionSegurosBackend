@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    stages{
+        stage('Checkout'){
+            steps{
+                git credentialsId: 'isma-proyecto-backend',
+                    url: 'https://github.com/IsmaelSailema20/GestionSegurosBackend.git',
+                    branch: 'feature/jenkins'
+            }
+        }
+        stage('Compilar'){
+            steps{
+                sh 'mvn clean compile'
+            }
+        }
+        stage('Prueba y cobertura'){
+            steps{
+                sh 'mvn test'
+                sh 'mvn verify'
+            }
+        }
+        stage('Publicar reporte de cobertura'){
+            steps{
+                jacoco execPattern: '**/target/jacoco.exec', classPattern: '**/target/classes',sourcePattern:'/src/main/java',exclusionPattern:'**/src/test*'
+            }
+        }
+        stage('Construir'){
+            steps{
+                sh 'mvn package'
+            }
+        } 
+        stage('Desplegar'){
+            steps{
+                sh 'docker cp /var/jenkins_home/workspace/ProyectoBackend/target/AplicacionSeguros-0.0.1-SNAPSHOT.war tomcat-app:/usr/local/tomcat/webapps/'
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
+        }
+    }
+}

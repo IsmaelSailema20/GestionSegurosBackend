@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: aplicacionseguros
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5454:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - spring-network
+
+  tomcat-app:
+    image: tomcat:9.0
+    container_name: tomcat-app
+    depends_on:
+      - postgres-db
+    ports:
+      - "8585:8080"
+    volumes:
+      - ./deploy:/usr/local/tomcat/webapps
+    networks:
+      - spring-network
+
+volumes:
+  postgres-data:
+
+networks:
+  spring-network:
